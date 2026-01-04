@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Pemprov Babel">
+  <rect width="120" height="120" rx="16" fill="#1E3A8A"/>
+  <circle cx="60" cy="50" r="26" fill="#F8B400"/>
+  <path d="M44 74 L76 74 L60 92 Z" fill="#FFFFFF"/>
+  <text x="60" y="108" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">
+    BABEL
+  </text>
+</svg>

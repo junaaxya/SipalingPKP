@@ -1,0 +1,12 @@
+/**
+ * src/styles/settings.scss
+ *
+ * Configures SASS variables and Vuetify overwrites
+ */
+
+// https://vuetifyjs.com/en/getting-started/installation/#configure-scss-variables
+
+// Custom primary color
+:root {
+  --v-theme-primary: #33497a;
+}
