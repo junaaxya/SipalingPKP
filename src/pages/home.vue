@@ -2745,6 +2745,10 @@ const utmToLatLng = (easting, northing, zoneNumber, isSouthernHemisphere) => {
   return [lat * (180 / Math.PI), lonOrigin + lon * (180 / Math.PI)];
 };
 
+const COORD_PRECISION = 6;
+const roundCoord = (value) =>
+  Number.isFinite(value) ? Number(value.toFixed(COORD_PRECISION)) : 0;
+
 const coordsToLatLng = (coords) => {
   if (!coords || coords.length < 2) {
     return L.latLng(0, 0);
@@ -2757,40 +2761,18 @@ const coordsToLatLng = (coords) => {
     return L.latLng(0, 0);
   }
 
-  const isIndoLat = x >= -11 && x <= 6;
-  const isIndoLon = y >= 95 && y <= 141;
-  const isIndoLonFirst = x >= 95 && x <= 141 && y >= -11 && y <= 6;
+  const isLonLat = x >= 95 && x <= 141 && y >= -11 && y <= 6;
+  const isLatLon = x >= -11 && x <= 6 && y >= 95 && y <= 141;
 
-  if (isIndoLat && isIndoLon) {
-    return L.latLng(x, y);
+  if (isLonLat) {
+    return L.latLng(roundCoord(y), roundCoord(x));
   }
 
-  if (isIndoLonFirst) {
-    return L.latLng(y, x);
+  if (isLatLon) {
+    return L.latLng(roundCoord(x), roundCoord(y));
   }
 
-  if (Math.abs(x) <= 180 && Math.abs(y) <= 90) {
-    return L.latLng(y, x);
-  }
-
-  const looksLikeUtm = x >= 100000 && x <= 900000 && y >= 0 && y <= 10000000;
-  if (looksLikeUtm) {
-    const isSouthernHemisphere = y >= 9000000;
-    const [lat, lon] = utmToLatLng(x, y, 48, isSouthernHemisphere);
-    return L.latLng(lat, lon);
-  }
-
-  const looksLikeWebMercator = Math.abs(x) > 2000000 || Math.abs(y) > 2000000;
-  if (looksLikeWebMercator) {
-    if (Math.abs(x) > 2000000) {
-      const [lat, lon] = webMercatorToLatLng(x, y);
-      return L.latLng(lat, lon);
-    }
-    const [lat, lon] = webMercatorToLatLng(y, x);
-    return L.latLng(lat, lon);
-  }
-
-  return L.latLng(y, x);
+  return L.latLng(roundCoord(y), roundCoord(x));
 };
 
 const markerIconMap = {
@@ -3606,63 +3588,89 @@ const resolveLayerStyle = (categoryKey, layerId, feature) => {
 };
 
 const getLayerKey = (categoryKey, layerId) => `${categoryKey}:${layerId}`;
+const parseLayerKey = (layerKey) => {
+  const [categoryKey, layerId] = String(layerKey).split(':');
+  return { categoryKey, layerId };
+};
 
-const syncGeoJsonLayers = () => {
+const syncGeoJsonLayerByKey = (layerKey) => {
   if (!mapInstance.value) {
     return;
   }
 
-  Object.entries(mapLayersStore.availableLayers).forEach(
-    ([categoryKey, category]) => {
-      category.layers.forEach((layer) => {
-        const layerKey = getLayerKey(categoryKey, layer.id);
-        const data = mapLayersStore.loadedData[categoryKey]?.[layer.id];
-        const existingLayer = geoJsonLayerCache.get(layerKey);
+  const { categoryKey, layerId } = parseLayerKey(layerKey);
+  const category = mapLayersStore.availableLayers?.[categoryKey];
+  if (!category) {
+    return;
+  }
 
-        if (layer.active && data) {
-          if (!existingLayer) {
-            const geoLayer = L.geoJSON(data, {
-              coordsToLatLng,
-              style: (feature) =>
-                resolveLayerStyle(categoryKey, layer.id, feature),
-              pointToLayer: (feature, latlng) => {
-                const style = resolveLayerStyle(categoryKey, layer.id, feature);
-                return L.circleMarker(latlng, {
-                  radius: 5,
-                  color: style.color,
-                  weight: 1,
-                  fillColor: style.fillColor || style.color,
-                  fillOpacity: 0.8,
-                });
-              },
-              onEachFeature: (feature, layerInstance) => {
-                const popupContent = buildPopupContent(feature?.properties);
-                if (popupContent) {
-                  layerInstance.bindPopup(popupContent);
-                }
-              },
-            });
+  const layer = category.layers.find((item) => item.id === layerId);
+  if (!layer) {
+    return;
+  }
 
-            geoLayer.addTo(mapInstance.value);
-            geoJsonLayerCache.set(layerKey, geoLayer);
+  const data = mapLayersStore.loadedData[categoryKey]?.[layer.id];
+  const existingLayer = geoJsonLayerCache.get(layerKey);
 
-            const bounds = geoLayer.getBounds();
-            if (
-              autoFitEnabled.value &&
-              bounds &&
-              bounds.isValid &&
-              bounds.isValid()
-            ) {
-              mapInstance.value.fitBounds(bounds, { padding: [20, 20] });
-            }
+  if (layer.active && data) {
+    if (!existingLayer) {
+      const geoLayer = L.geoJSON(data, {
+        coordsToLatLng,
+        precision: 6,
+        style: (feature) => resolveLayerStyle(categoryKey, layer.id, feature),
+        pointToLayer: (feature, latlng) => {
+          const style = resolveLayerStyle(categoryKey, layer.id, feature);
+          return L.circleMarker(latlng, {
+            radius: 5,
+            color: style.color,
+            weight: 1,
+            fillColor: style.fillColor || style.color,
+            fillOpacity: 0.8,
+          });
+        },
+        onEachFeature: (feature, layerInstance) => {
+          const popupContent = buildPopupContent(feature?.properties);
+          if (popupContent) {
+            layerInstance.bindPopup(popupContent);
           }
-        } else if (existingLayer) {
-          mapInstance.value.removeLayer(existingLayer);
-          geoJsonLayerCache.delete(layerKey);
-        }
+        },
       });
+
+      geoLayer.addTo(mapInstance.value);
+      geoJsonLayerCache.set(layerKey, geoLayer);
+
+      const bounds = geoLayer.getBounds();
+      if (
+        autoFitEnabled.value &&
+        bounds &&
+        bounds.isValid &&
+        bounds.isValid()
+      ) {
+        mapInstance.value.fitBounds(bounds, { padding: [20, 20] });
+      }
     }
-  );
+  } else if (existingLayer) {
+    mapInstance.value.removeLayer(existingLayer);
+    geoJsonLayerCache.delete(layerKey);
+  }
+};
+
+const syncGeoJsonLayers = (layerKeys = null) => {
+  if (!mapInstance.value) {
+    return;
+  }
+
+  const keys =
+    layerKeys && layerKeys.length
+      ? layerKeys
+      : [
+          ...new Set([
+            ...activeLayerKeys.value,
+            ...loadedLayerKeys.value,
+          ]),
+        ];
+
+  keys.forEach((layerKey) => syncGeoJsonLayerByKey(layerKey));
 };
 
 const activeLayerKeys = computed(() => {
@@ -3695,8 +3703,34 @@ const loadedLayerKeys = computed(() => {
 
 watch(
   [activeLayerKeys, loadedLayerKeys],
-  () => {
-    syncGeoJsonLayers();
+  (current, previous) => {
+    const [nextActive, nextLoaded] = current || [];
+    const [prevActive = [], prevLoaded = []] = previous || [];
+
+    const nextActiveSet = new Set(nextActive || []);
+    const nextLoadedSet = new Set(nextLoaded || []);
+    const prevActiveSet = new Set(prevActive || []);
+    const prevLoadedSet = new Set(prevLoaded || []);
+
+    const allKeys = new Set([
+      ...nextActiveSet,
+      ...nextLoadedSet,
+      ...prevActiveSet,
+      ...prevLoadedSet,
+    ]);
+
+    const changedKeys = [];
+    allKeys.forEach((key) => {
+      const activeChanged = nextActiveSet.has(key) !== prevActiveSet.has(key);
+      const loadedChanged = nextLoadedSet.has(key) !== prevLoadedSet.has(key);
+      if (activeChanged || loadedChanged) {
+        changedKeys.push(key);
+      }
+    });
+
+    if (changedKeys.length) {
+      syncGeoJsonLayers(changedKeys);
+    }
   },
   { flush: "post" }
 );
