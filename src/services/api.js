@@ -2,13 +2,10 @@ import axios from "axios";
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_BASE_URL ||
-    "https://untense-gustier-yolande.ngrok-free.dev/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api",
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
-    "ngrok-skip-browser-warning": "69420",
   },
 });
 

@@ -3515,7 +3515,7 @@ const applyLocationResult = async (result) => {
 async function reverseGeocode(lat, lng) {
   try {
     const response = await locationAPI.reverseGeocode(lat, lng);
-    console.log("Response Debug:", response);
+    
 
     if (response.success && response.data) {
       const mapped = mapReverseGeocodeResponse(response.data);
