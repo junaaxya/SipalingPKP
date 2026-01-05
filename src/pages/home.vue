@@ -2640,6 +2640,35 @@ watch(
   }
 );
 
+const MAP_PANES = {
+  polygons: "pane-polygons",
+  lines: "pane-lines",
+  boundaries: "pane-boundaries",
+  points: "pane-points",
+  search: "pane-search",
+};
+
+const initMapPanes = (map) => {
+  const panes = [
+    { name: MAP_PANES.polygons, zIndex: 400 },
+    { name: MAP_PANES.lines, zIndex: 450 },
+    { name: MAP_PANES.boundaries, zIndex: 500 },
+    { name: MAP_PANES.points, zIndex: 550 },
+    { name: MAP_PANES.search, zIndex: 650 },
+  ];
+
+  panes.forEach(({ name, zIndex }) => {
+    if (!map.getPane(name)) {
+      map.createPane(name);
+    }
+    const pane = map.getPane(name);
+    if (pane) {
+      pane.style.zIndex = zIndex;
+      pane.style.pointerEvents = "auto";
+    }
+  });
+};
+
 // Initialize Leaflet map
 const initializeMap = () => {
   if (mapInstance.value || !mapRef.value) {
@@ -2649,7 +2678,10 @@ const initializeMap = () => {
   mapInstance.value = L.map(mapRef.value, {
     zoomControl: true,
     attributionControl: true,
+    renderer: L.canvas(),
   }).setView([-2.5, 118], 5);
+
+  initMapPanes(mapInstance.value);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
@@ -2673,8 +2705,7 @@ const initializeMap = () => {
 const webMercatorToLatLng = (x, y) => {
   const radius = 6378137;
   const lon = (x / radius) * (180 / Math.PI);
-  const lat =
-    (2 * Math.atan(Math.exp(y / radius)) - Math.PI / 2) * (180 / Math.PI);
+  const lat = (2 * Math.atan(Math.exp(y / radius)) - Math.PI / 2) * (180 / Math.PI);
   return [lat, lon];
 };
 
@@ -2745,10 +2776,6 @@ const utmToLatLng = (easting, northing, zoneNumber, isSouthernHemisphere) => {
   return [lat * (180 / Math.PI), lonOrigin + lon * (180 / Math.PI)];
 };
 
-const COORD_PRECISION = 6;
-const roundCoord = (value) =>
-  Number.isFinite(value) ? Number(value.toFixed(COORD_PRECISION)) : 0;
-
 const coordsToLatLng = (coords) => {
   if (!coords || coords.length < 2) {
     return L.latLng(0, 0);
@@ -2761,18 +2788,21 @@ const coordsToLatLng = (coords) => {
     return L.latLng(0, 0);
   }
 
-  const isLonLat = x >= 95 && x <= 141 && y >= -11 && y <= 6;
-  const isLatLon = x >= -11 && x <= 6 && y >= 95 && y <= 141;
-
-  if (isLonLat) {
-    return L.latLng(roundCoord(y), roundCoord(x));
+  if (Math.abs(x) <= 180 && Math.abs(y) <= 90) {
+    return L.latLng(y, x);
   }
 
-  if (isLatLon) {
-    return L.latLng(roundCoord(x), roundCoord(y));
+  if (Math.abs(x) > 2000000) {
+    const [lat, lon] = webMercatorToLatLng(x, y);
+    return L.latLng(lat, lon);
   }
 
-  return L.latLng(roundCoord(y), roundCoord(x));
+  if (Math.abs(y) > 2000000) {
+    const [lat, lon] = utmToLatLng(x, y, 48, true);
+    return L.latLng(lat, lon);
+  }
+
+  return L.latLng(y, x);
 };
 
 const markerIconMap = {
@@ -2921,10 +2951,17 @@ const createDynamicGeoLayer = (type, data) => {
   });
 
   const geoLayer = L.geoJSON(data, {
+    pane: MAP_PANES.points,
+    interactive: true,
     coordsToLatLng,
     pointToLayer: (feature, latlng) =>
-      L.marker(latlng, { icon: createMarkerIcon(type, feature?.properties) }),
+      L.marker(latlng, {
+        icon: createMarkerIcon(type, feature?.properties),
+        pane: MAP_PANES.points,
+        interactive: true,
+      }),
     onEachFeature: (feature, layer) => {
+      ensureLayerInteractivity(layer);
       const popup = buildDynamicPopupContent(type, feature?.properties);
       if (popup) {
         layer.bindPopup(popup);
@@ -2998,10 +3035,9 @@ const GIS_STANDARDS = {
     },
   },
   infrastruktur: {
-    infrastruktur_desa: { color: "#FB8C00", weight: 2, opacity: 1 },
-    jalan_kolektor_primer_1: { color: "#1565C0", weight: 2.5, opacity: 1 },
-    jalan_kolektor_primer_2: { color: "#1E88E5", weight: 2, opacity: 1 },
-    jalan_jalan_lokal: { color: "#90CAF9", weight: 1.2, opacity: 1 },
+    jalan_kolektor_primer_1: { color: "#FF8C00", weight: 2.5, opacity: 1 },
+    jalan_kolektor_primer_2: { color: "#FF8C00", weight: 2, opacity: 1 },
+    jalan_jalan_lokal: { color: "#C0C0C0", weight: 1, opacity: 1 },
   },
   tata_ruang: {
     rtrw_hutan_lindung: {
@@ -3061,45 +3097,45 @@ const GIS_STANDARDS = {
   },
   bencana: {
     banjir_bandang_tinggi: {
-      fillColor: "#EF5350",
-      fillOpacity: 0.55,
-      color: "#C62828",
+      fillColor: "#0000FF",
+      fillOpacity: 0.6,
+      color: "#00008B",
       weight: 1,
     },
     banjir_tinggi: {
-      fillColor: "#E53935",
-      fillOpacity: 0.55,
-      color: "#B71C1C",
+      fillColor: "#0000FF",
+      fillOpacity: 0.6,
+      color: "#00008B",
       weight: 1,
     },
     tanah_longsor_tinggi: {
-      fillColor: "#F44336",
-      fillOpacity: 0.55,
-      color: "#C62828",
+      fillColor: "#8B4513",
+      fillOpacity: 0.6,
+      color: "#5D2E0C",
       weight: 1,
     },
     kebakaran_hutan_tinggi: {
-      fillColor: "#D32F2F",
-      fillOpacity: 0.55,
-      color: "#B71C1C",
+      fillColor: "#FF4500",
+      fillOpacity: 0.6,
+      color: "#8B0000",
       weight: 1,
     },
     kekeringan_tinggi: {
-      fillColor: "#FFCDD2",
-      fillOpacity: 0.45,
-      color: "#C62828",
+      fillColor: "#FBC02D",
+      fillOpacity: 0.5,
+      color: "#F57F17",
       weight: 1,
     },
     cuaca_ekstrem_tinggi: {
-      fillColor: "#E57373",
+      fillColor: "#7E57C2",
       fillOpacity: 0.5,
-      color: "#C62828",
+      color: "#5E35B1",
       weight: 1,
     },
     gelombang_abrasi_tinggi: {
-      fillColor: "#FF8A80",
+      fillColor: "#00ACC1",
       fillOpacity: 0.5,
-      color: "#D32F2F",
+      color: "#00838F",
       weight: 1,
     },
   },
@@ -3146,6 +3182,20 @@ const hexToRgba = (hex, alpha) => {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
+const ensureLayerInteractivity = (layerInstance) => {
+  if (!layerInstance) {
+    return;
+  }
+
+  layerInstance.options = layerInstance.options || {};
+  layerInstance.options.interactive = true;
+
+  const element = layerInstance.getElement?.();
+  if (element?.style) {
+    element.style.pointerEvents = "auto";
+  }
+};
+
 const legendSwatchStyle = (style) => {
   const weight = Math.max(style.weight ?? 2, 1);
   const fillOpacity = style.fillOpacity ?? 0;
@@ -3172,13 +3222,21 @@ const clearSearchPopup = () => {
   searchPopup = null;
 };
 
+const stripBoundaryPrefix = (value) =>
+  String(value || "")
+    .replace(
+      /^(KAB\.?|KABUPATEN|KOTA|KEC\.?|KECAMATAN|DESA|KEL\.?|KELURAHAN)\s*/i,
+      ""
+    )
+    .trim();
+
 const parseDesaParent = (parentText) => {
   if (!parentText) {
     return { district: "", regency: "" };
   }
 
-  const cleaned = parentText.replace(/^Kec\.?\s*/i, "");
-  const parts = cleaned.split(",").map((part) => part.trim());
+  const cleaned = String(parentText).replace(/\s+/g, " ").trim();
+  const parts = cleaned.split(",").map((part) => stripBoundaryPrefix(part));
   return {
     district: parts[0] || "",
     regency: parts[1] || "",
@@ -3215,7 +3273,7 @@ const addSearchHighlight = (latlng, category) => {
     iconAnchor: [16, 16],
   });
 
-  const marker = L.marker(latlng, { icon: pulseIcon });
+  const marker = L.marker(latlng, { icon: pulseIcon, pane: MAP_PANES.search });
   const radius =
     category === "desa" ? 200 : category === "kecamatan" ? 800 : 2000;
   const halo = L.circle(latlng, {
@@ -3224,6 +3282,7 @@ const addSearchHighlight = (latlng, category) => {
     weight: 2,
     opacity: 0.6,
     fillOpacity: 0.08,
+    pane: MAP_PANES.search,
   });
 
   searchHighlightLayer.addLayer(halo);
@@ -3248,10 +3307,65 @@ const boundaryLayerConfig = {
   },
 };
 
-const normalizeBoundaryValue = (value) =>
-  String(value || "").trim().toUpperCase();
+const normalizeBoundaryText = (value) =>
+  String(value || "")
+    .toUpperCase()
+    .replace(
+      /\b(PROVINSI|PROV|KABUPATEN|KAB|KOTA|KECAMATAN|KEC|DESA|KELURAHAN|KEL)\b/g,
+      " "
+    )
+    .replace(/[^A-Z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
-const findBoundaryFeature = (item) => {
+const getFeatureCenter = (feature) => {
+  const bounds = L.latLngBounds([]);
+
+  const walkCoords = (coords) => {
+    if (!Array.isArray(coords)) {
+      return;
+    }
+
+    if (
+      typeof coords[0] === "number" &&
+      typeof coords[1] === "number"
+    ) {
+      bounds.extend(coordsToLatLng(coords));
+      return;
+    }
+
+    coords.forEach((child) => walkCoords(child));
+  };
+
+  walkCoords(feature?.geometry?.coordinates);
+
+  return bounds.isValid() ? bounds.getCenter() : null;
+};
+
+const findClosestBoundaryFeature = (features, targetLatLng) => {
+  if (!targetLatLng) {
+    return null;
+  }
+
+  let closestFeature = null;
+  let closestDistance = Number.POSITIVE_INFINITY;
+
+  features.forEach((feature) => {
+    const center = getFeatureCenter(feature);
+    if (!center) {
+      return;
+    }
+    const distance = center.distanceTo(targetLatLng);
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      closestFeature = feature;
+    }
+  });
+
+  return closestFeature;
+};
+
+const findBoundaryFeature = (item, layerDataOverride = null) => {
   const category = item?.category;
   const config = boundaryLayerConfig[category];
   if (!config) {
@@ -3259,29 +3373,91 @@ const findBoundaryFeature = (item) => {
   }
 
   const layerData =
+    layerDataOverride ||
     mapLayersStore.loadedData?.[config.category]?.[config.layerId];
   if (!layerData?.features?.length) {
     return null;
   }
 
-  const target = normalizeBoundaryValue(item.name);
-  return (
+  const target = normalizeBoundaryText(item.name);
+  const { district, regency } =
+    category === "desa" ? parseDesaParent(item.parent) : {};
+  const targetDistrict = normalizeBoundaryText(district);
+  const targetRegency = normalizeBoundaryText(regency);
+  const targetParent = normalizeBoundaryText(item.parent);
+
+  const matchesName = (feature) => {
+    const props = feature?.properties || {};
+    return config.properties.some(
+      (key) => normalizeBoundaryText(props[key]) === target
+    );
+  };
+
+  const exactMatch =
     layerData.features.find((feature) => {
+      if (!matchesName(feature)) {
+        return false;
+      }
+
       const props = feature?.properties || {};
-      return config.properties.some(
-        (key) => normalizeBoundaryValue(props[key]) === target
-      );
-    }) || null
+
+      if (category === "desa") {
+        const districtMatch = normalizeBoundaryText(props.KECAMATAN);
+        const regencyMatch = normalizeBoundaryText(props.KAB_KOTA);
+        if (targetDistrict && districtMatch !== targetDistrict) {
+          return false;
+        }
+        if (targetRegency && regencyMatch !== targetRegency) {
+          return false;
+        }
+      }
+
+      if (category === "kecamatan") {
+        const regencyMatch = normalizeBoundaryText(props.KAB_KOTA);
+        if (targetParent && regencyMatch !== targetParent) {
+          return false;
+        }
+      }
+
+      return true;
+    }) || null;
+
+  if (exactMatch) {
+    return exactMatch;
+  }
+
+  const nameMatches = layerData.features.filter((feature) =>
+    matchesName(feature)
   );
+
+  if (nameMatches.length <= 1) {
+    return nameMatches[0] || null;
+  }
+
+  const lat = Number(item?.lat);
+  const lng = Number(item?.lng);
+  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+    const closest = findClosestBoundaryFeature(
+      nameMatches,
+      L.latLng(lat, lng)
+    );
+    if (closest) {
+      return closest;
+    }
+  }
+
+  return nameMatches[0] || null;
 };
 
-const addSearchBoundary = (item) => {
-  const feature = findBoundaryFeature(item);
+const addSearchBoundary = (item, layerDataOverride = null) => {
+  const feature = findBoundaryFeature(item, layerDataOverride);
   if (!feature || !mapInstance.value) {
     return;
   }
 
   const boundaryLayer = L.geoJSON(feature, {
+    pane: MAP_PANES.search,
+    interactive: true,
     coordsToLatLng,
     style: {
       color: "#1E88E5",
@@ -3289,6 +3465,9 @@ const addSearchBoundary = (item) => {
       fillColor: "#90CAF9",
       fillOpacity: 0.15,
       dashArray: "6, 4",
+    },
+    onEachFeature: (featureItem, layerInstance) => {
+      ensureLayerInteractivity(layerInstance);
     },
   });
 
@@ -3348,11 +3527,11 @@ const handleSearchSelect = async (value) => {
 
   const boundaryConfig = boundaryLayerConfig[category];
   if (boundaryConfig) {
-    await mapLayersStore.loadLayerData(
+    const layerData = await mapLayersStore.loadLayerData(
       boundaryConfig.category,
       boundaryConfig.layerId
     );
-    addSearchBoundary(item);
+    addSearchBoundary(item, layerData);
   }
 };
 
@@ -3587,90 +3766,85 @@ const resolveLayerStyle = (categoryKey, layerId, feature) => {
   };
 };
 
-const getLayerKey = (categoryKey, layerId) => `${categoryKey}:${layerId}`;
-const parseLayerKey = (layerKey) => {
-  const [categoryKey, layerId] = String(layerKey).split(':');
-  return { categoryKey, layerId };
-};
-
-const syncGeoJsonLayerByKey = (layerKey) => {
-  if (!mapInstance.value) {
-    return;
+const resolveLayerPane = (categoryKey, layerId) => {
+  if (categoryKey === "administrasi") {
+    return MAP_PANES.boundaries;
   }
 
-  const { categoryKey, layerId } = parseLayerKey(layerKey);
-  const category = mapLayersStore.availableLayers?.[categoryKey];
-  if (!category) {
-    return;
+  if (categoryKey === "tata_ruang" || categoryKey === "bencana") {
+    return MAP_PANES.polygons;
   }
 
-  const layer = category.layers.find((item) => item.id === layerId);
-  if (!layer) {
-    return;
-  }
-
-  const data = mapLayersStore.loadedData[categoryKey]?.[layer.id];
-  const existingLayer = geoJsonLayerCache.get(layerKey);
-
-  if (layer.active && data) {
-    if (!existingLayer) {
-      const geoLayer = L.geoJSON(data, {
-        coordsToLatLng,
-        precision: 6,
-        style: (feature) => resolveLayerStyle(categoryKey, layer.id, feature),
-        pointToLayer: (feature, latlng) => {
-          const style = resolveLayerStyle(categoryKey, layer.id, feature);
-          return L.circleMarker(latlng, {
-            radius: 5,
-            color: style.color,
-            weight: 1,
-            fillColor: style.fillColor || style.color,
-            fillOpacity: 0.8,
-          });
-        },
-        onEachFeature: (feature, layerInstance) => {
-          const popupContent = buildPopupContent(feature?.properties);
-          if (popupContent) {
-            layerInstance.bindPopup(popupContent);
-          }
-        },
-      });
-
-      geoLayer.addTo(mapInstance.value);
-      geoJsonLayerCache.set(layerKey, geoLayer);
-
-      const bounds = geoLayer.getBounds();
-      if (
-        autoFitEnabled.value &&
-        bounds &&
-        bounds.isValid &&
-        bounds.isValid()
-      ) {
-        mapInstance.value.fitBounds(bounds, { padding: [20, 20] });
-      }
+  if (categoryKey === "infrastruktur") {
+    if (layerId === "infrastruktur_desa") {
+      return MAP_PANES.points;
     }
-  } else if (existingLayer) {
-    mapInstance.value.removeLayer(existingLayer);
-    geoJsonLayerCache.delete(layerKey);
+    return MAP_PANES.lines;
   }
+
+  return MAP_PANES.polygons;
 };
 
-const syncGeoJsonLayers = (layerKeys = null) => {
+const getLayerKey = (categoryKey, layerId) => `${categoryKey}:${layerId}`;
+
+const syncGeoJsonLayers = () => {
   if (!mapInstance.value) {
     return;
   }
 
-  const keys =
-    layerKeys && layerKeys.length
-      ? layerKeys
-      : [
-          ...new Set([
-            ...activeLayerKeys.value,
-            ...loadedLayerKeys.value,
-          ]),
-        ];
+  Object.entries(mapLayersStore.availableLayers).forEach(
+    ([categoryKey, category]) => {
+      category.layers.forEach((layer) => {
+        const layerKey = getLayerKey(categoryKey, layer.id);
+        const data = mapLayersStore.loadedData[categoryKey]?.[layer.id];
+        const existingLayer = geoJsonLayerCache.get(layerKey);
 
-  keys.forEach((layerKey) => syncGeoJsonLayerByKey(layerKey));
+        if (layer.active && data) {
+          if (!existingLayer) {
+            const geoLayer = L.geoJSON(data, {
+              pane: resolveLayerPane(categoryKey, layer.id),
+              coordsToLatLng,
+              style: (feature) =>
+                resolveLayerStyle(categoryKey, layer.id, feature),
+              pointToLayer: (feature, latlng) => {
+                const style = resolveLayerStyle(categoryKey, layer.id, feature);
+                return L.circleMarker(latlng, {
+                  radius: 5,
+                  color: style.color,
+                  weight: 1,
+                  fillColor: style.fillColor || style.color,
+                  fillOpacity: 0.8,
+                  pane: MAP_PANES.points,
+                });
+              },
+              onEachFeature: (feature, layerInstance) => {
+                const popupContent = buildPopupContent(feature?.properties);
+                if (popupContent) {
+                  layerInstance.bindPopup(popupContent);
+                }
+              },
+            });
+
+            geoLayer.addTo(mapInstance.value);
+            geoJsonLayerCache.set(layerKey, geoLayer);
+
+            const bounds = geoLayer.getBounds();
+            if (
+              autoFitEnabled.value &&
+              bounds &&
+              bounds.isValid &&
+              bounds.isValid()
+            ) {
+              mapInstance.value.fitBounds(bounds, { padding: [20, 20] });
+            }
+          }
+        } else if (existingLayer) {
+          mapInstance.value.removeLayer(existingLayer);
+          geoJsonLayerCache.delete(layerKey);
+        }
+      });
+    }
+  );
 };
 
 const activeLayerKeys = computed(() => {
@@ -3703,34 +3877,8 @@ const loadedLayerKeys = computed(() => {
 
 watch(
   [activeLayerKeys, loadedLayerKeys],
-  (current, previous) => {
-    const [nextActive, nextLoaded] = current || [];
-    const [prevActive = [], prevLoaded = []] = previous || [];
-
-    const nextActiveSet = new Set(nextActive || []);
-    const nextLoadedSet = new Set(nextLoaded || []);
-    const prevActiveSet = new Set(prevActive || []);
-    const prevLoadedSet = new Set(prevLoaded || []);
-
-    const allKeys = new Set([
-      ...nextActiveSet,
-      ...nextLoadedSet,
-      ...prevActiveSet,
-      ...prevLoadedSet,
-    ]);
-
-    const changedKeys = [];
-    allKeys.forEach((key) => {
-      const activeChanged = nextActiveSet.has(key) !== prevActiveSet.has(key);
-      const loadedChanged = nextLoadedSet.has(key) !== prevLoadedSet.has(key);
-      if (activeChanged || loadedChanged) {
-        changedKeys.push(key);
-      }
-    });
-
-    if (changedKeys.length) {
-      syncGeoJsonLayers(changedKeys);
-    }
+  () => {
+    syncGeoJsonLayers();
   },
   { flush: "post" }
 );
