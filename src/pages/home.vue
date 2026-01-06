@@ -2739,6 +2739,10 @@ const getInfrastructureCoordinates = (item) => {
 // Create markers on map
 // Ganti function createMarkers yang lama dengan yang ini:
 
+// Ganti seluruh isi function createMarkers dengan ini:
+
+// src/pages/home.vue
+
 const createMarkers = (
   housingData,
   housingDevelopmentData,
@@ -2748,29 +2752,27 @@ const createMarkers = (
     return;
   }
 
-  // Bersihkan layer yang ada
+  // Bersihkan layer lama
   markerLayers.housing.clearLayers();
   markerLayers["housing-development"].clearLayers();
   markerLayers.infrastructure.clearLayers();
 
   const markerColors = {
-    housing: "#1976D2", // Biru
+    housing: "#1976D2",     // Biru
     "housing-development": "#4CAF50", // Hijau
     infrastructure: "#00ACC1", // Cyan
   };
 
-  // --- SOLUSI PERFORMA: Gunakan circleMarker (Canvas) ---
-  // Fungsi ini membuat titik ringan menggunakan renderer Canvas
+  // Helper membuat titik ringan (Canvas)
   const createOptimizedMarker = (latLng, color) => {
     return L.circleMarker(latLng, {
-      radius: 5, // Ukuran titik (kecil agar tidak menumpuk)
-      fillColor: color, // Warna titik
-      color: "#ffffff", // Warna garis tepi (putih)
-      weight: 1, // Tebal garis tepi
+      radius: 6,
+      fillColor: color,
+      color: "#ffffff",
+      weight: 1,
       opacity: 1,
-      fillOpacity: 0.8, // Transparansi isi
-      // PENTING: Memaksa menggunakan Canvas renderer yang sudah diset di initializeMap
-      renderer: mapInstance.value.getRenderer(mapInstance.value),
+      fillOpacity: 0.85,
+      renderer: mapInstance.value.getRenderer(mapInstance.value)
     });
   };
 
@@ -2781,159 +2783,81 @@ const createMarkers = (
       const latLng = toLatLng(coordinates);
 
       if (latLng) {
-        // Gunakan fungsi optimized marker
         const marker = createOptimizedMarker(latLng, markerColors.housing);
-
-        // Bind Popup (isi info saat diklik)
         marker.bindPopup(`
-          <div style="font-family: sans-serif; font-size: 12px; min-width: 150px;">
-            <h3 style="margin: 0 0 6px 0; font-size: 14px; color: ${
-              markerColors.housing
-            }; border-bottom: 1px solid #eee; padding-bottom: 4px;">
+          <div style="font-family: sans-serif; font-size: 12px; min-width: 160px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 14px; color: ${markerColors.housing}; border-bottom: 1px solid #eee; padding-bottom: 4px;">
               🏠 Rumah Masyarakat
             </h3>
-            <div style="margin-bottom: 4px;"><strong>Pemilik:</strong> ${
-              item.householdOwner?.ownerName || "Tidak ada"
-            }</div>
-            <div style="margin-bottom: 4px;"><strong>Alamat:</strong> ${
-              item.householdOwner?.houseNumber || "-"
-            }, RT ${item.householdOwner?.rt || "-"} / RW ${
-          item.householdOwner?.rw || "-"
-        }</div>
-            <div style="margin-bottom: 4px;"><strong>Kelurahan:</strong> ${
-              item.householdOwner?.village?.name || "-"
-            }</div>
+            <div style="margin-bottom: 4px;"><strong>Pemilik:</strong> ${item.householdOwner?.ownerName || "Tidak ada"}</div>
+            <div style="margin-bottom: 4px;"><strong>Alamat:</strong> ${item.householdOwner?.houseNumber || "-"}, RT ${item.householdOwner?.rt || "-"} / RW ${item.householdOwner?.rw || "-"}</div>
+            <div style="margin-bottom: 4px;"><strong>Kelurahan:</strong> ${item.householdOwner?.village?.name || "-"}</div>
             <div><strong>Status:</strong> ${item.status || "-"}</div>
           </div>
         `);
-
         markerLayers.housing.addLayer(marker);
       }
     });
   }
 
-  // 2. Render Perumahan Pengembang
-  if (
-    mapFilters.value.find((filter) => filter.type === "housing-development")
-      ?.enabled
-  ) {
+  // 2. Render Perumahan Pengembang (SUDAH FIX)
+  if (mapFilters.value.find((filter) => filter.type === "housing-development")?.enabled) {
     housingDevelopmentData.forEach((item) => {
-      let coordinates = item.coordinates;
+      // Koordinat sudah dinormalisasi di loadMapData
+      const latLng = toLatLng(item.coordinates);
 
-      // Handle jika data memiliki sub-unit housingDevelopments
-      if (item.housingDevelopments && Array.isArray(item.housingDevelopments)) {
-        item.housingDevelopments.forEach((housing) => {
-          if (housing.koordinat) {
-            coordinates = parseCoordinates(housing.koordinat);
-            const latLng = toLatLng(coordinates);
-            if (latLng) {
-              const marker = createOptimizedMarker(
-                latLng,
-                markerColors["housing-development"]
-              );
-
-              marker.bindPopup(`
-                <div style="font-family: sans-serif; font-size: 12px; min-width: 150px;">
-                  <h3 style="margin: 0 0 6px 0; font-size: 14px; color: ${
-                    markerColors["housing-development"]
-                  }; border-bottom: 1px solid #eee; padding-bottom: 4px;">
-                    🏢 Perumahan
-                  </h3>
-                  <div style="margin-bottom: 4px;"><strong>Nama:</strong> ${
-                    housing.namaPerumahan || item.developmentName || "-"
-                  }</div>
-                  <div style="margin-bottom: 4px;"><strong>Pengembang:</strong> ${
-                    housing.namaPengembang || "-"
-                  }</div>
-                  <div style="margin-bottom: 4px;"><strong>Jenis:</strong> ${
-                    housing.jenisPerumahan || "-"
-                  }</div>
-                  <div><strong>Unit:</strong> ${
-                    housing.jumlahRumahRencana || "-"
-                  }</div>
-                </div>
-              `);
-
-              markerLayers["housing-development"].addLayer(marker);
-            }
-          }
-        });
-      } else if (coordinates) {
-        // Handle data flat
-        if (typeof coordinates === "string") {
-          coordinates = parseCoordinates(coordinates);
-        }
-        const latLng = toLatLng(coordinates);
-        if (latLng) {
-          const marker = createOptimizedMarker(
-            latLng,
-            markerColors["housing-development"]
-          );
-
-          marker.bindPopup(`
-            <div style="font-family: sans-serif; font-size: 12px; min-width: 150px;">
-              <h3 style="margin: 0 0 6px 0; font-size: 14px; color: ${
-                markerColors["housing-development"]
-              }; border-bottom: 1px solid #eee; padding-bottom: 4px;">
-                🏢 Perumahan
-              </h3>
-              <div><strong>Nama:</strong> ${item.developmentName || "-"}</div>
-            </div>
-          `);
-
-          markerLayers["housing-development"].addLayer(marker);
-        }
+      if (latLng) {
+        const marker = createOptimizedMarker(latLng, markerColors["housing-development"]);
+        // Tampilkan data yang sudah dimapping
+        marker.bindPopup(`
+          <div style="font-family: sans-serif; font-size: 12px; min-width: 160px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 14px; color: ${markerColors["housing-development"]}; border-bottom: 1px solid #eee; padding-bottom: 4px;">
+              🏢 Perumahan
+            </h3>
+            <div style="margin-bottom: 4px;"><strong>Nama:</strong> ${item.developmentName || "-"}</div>
+            <div style="margin-bottom: 4px;"><strong>Pengembang:</strong> ${item.developerName || "-"}</div>
+            <div style="margin-bottom: 4px;"><strong>Jenis:</strong> ${item.housingType || "-"}</div>
+            <div style="margin-bottom: 4px;"><strong>Rencana Unit:</strong> ${item.jumlahRumahRencana || "0"} Unit</div>
+            <div style="margin-bottom: 4px;"><strong>Lokasi:</strong> ${item.location?.village || "-"}, ${item.location?.district || "-"}</div>
+          </div>
+        `);
+        markerLayers["housing-development"].addLayer(marker);
       }
     });
   }
 
-  // 3. Render Infrastruktur
-  if (
-    mapFilters.value.find((filter) => filter.type === "infrastructure")?.enabled
-  ) {
+  // 3. Render Infrastruktur (SUDAH FIX)
+  if (mapFilters.value.find((filter) => filter.type === "infrastructure")?.enabled) {
     (infrastructureData || []).forEach((item) => {
       const coordinates = getInfrastructureCoordinates(item);
       const latLng = toLatLng(coordinates);
 
       if (latLng) {
-        const marker = createOptimizedMarker(
-          latLng,
-          markerColors.infrastructure
-        );
-
-        const villageName =
-          item.profil?.namaDesa ||
-          item.villageName ||
-          item.location?.village?.name ||
-          "Tidak ada";
-        const submittedAt = item.submittedAt
-          ? new Date(item.submittedAt).toLocaleDateString("id-ID")
-          : "-";
+        const marker = createOptimizedMarker(latLng, markerColors.infrastructure);
+        
+        // Ambil data yang sudah dimapping di loadMapData
+        const villageName = item.villageName || item.location?.village?.name || "Tidak ada";
+        const submittedAt = item.submittedAt ? new Date(item.submittedAt).toLocaleDateString("id-ID") : "-";
 
         marker.bindPopup(`
-          <div style="font-family: sans-serif; font-size: 12px; min-width: 150px;">
-            <h3 style="margin: 0 0 6px 0; font-size: 14px; color: ${
-              markerColors.infrastructure
-            }; border-bottom: 1px solid #eee; padding-bottom: 4px;">
+          <div style="font-family: sans-serif; font-size: 12px; min-width: 160px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 14px; color: ${markerColors.infrastructure}; border-bottom: 1px solid #eee; padding-bottom: 4px;">
               🏗️ Infrastruktur
             </h3>
-            <div style="margin-bottom: 4px;"><strong>Desa:</strong> ${villageName}</div>
-            <div style="margin-bottom: 4px;"><strong>Status:</strong> ${
-              item.status || "-"
-            }</div>
-            <div><strong>Tanggal:</strong> ${submittedAt}</div>
+            <div style="margin-bottom: 4px;"><strong>Desa/Kel:</strong> ${villageName}</div>
+            <div style="margin-bottom: 4px;"><strong>Tahun:</strong> ${item.surveyYear || "-"}</div>
+            <div style="margin-bottom: 4px;"><strong>Status:</strong> ${item.status || "-"}</div>
+            <div><strong>Tgl Input:</strong> ${submittedAt}</div>
           </div>
         `);
-
         markerLayers.infrastructure.addLayer(marker);
       }
     });
   }
 
-  // Fit Bounds (Auto Zoom ke data)
+  // Auto Zoom
   const bounds = L.latLngBounds([]);
   let hasBounds = false;
-
   Object.values(markerLayers).forEach((layerGroup) => {
     layerGroup.eachLayer((layer) => {
       if (layer.getLatLng) {
@@ -2942,98 +2866,86 @@ const createMarkers = (
       }
     });
   });
-
   if (hasBounds) {
     mapInstance.value.fitBounds(bounds, { padding: [20, 20], maxZoom: 15 });
   }
 };
-
 // Load map data for markers
+// src/pages/home.vue
+
 const loadMapData = async () => {
-  // Jika user adalah masyarakat, tidak perlu memuat peta dashboard ini
   if (isMasyarakat.value) {
     return;
   }
 
   try {
-    // 1. Ambil Parameter Filter
     const locationParams = getDashboardFilterParams();
-
+    
+    // Gunakan limit besar agar semua titik terlihat
     const mapQueryParams = {
       page: 1,
-      limit: 10000, // OPTIMASI: Batasi 1000 per kategori agar tidak terlalu berat
-      status: "approved",
-      ...locationParams,
+      limit: 10000, 
+      status: 'approved', 
+      ...locationParams
     };
 
-    console.time("LoadMapData"); // Debugging waktu load
+    console.time("LoadMapData");
 
-    // 2. REQUEST PARALEL (OPTIMASI UTAMA)
-    // Mengambil ke-3 data secara bersamaan, bukan satu per satu
+    // 1. Request Paralel (Cepat)
     const [housingRes, devRes, infraRes] = await Promise.all([
-      housingAPI.getSubmissions(mapQueryParams).catch((err) => {
-        console.error("Gagal load housing:", err);
-        return { success: false };
-      }),
-      housingDevelopmentAPI.getDevelopments(mapQueryParams).catch((err) => {
-        console.error("Gagal load developments:", err);
-        return { success: false };
-      }),
-      facilityAPI.getSurveys(mapQueryParams).catch((err) => {
-        console.error("Gagal load infrastruktur:", err);
-        return { success: false };
-      }),
+      housingAPI.getSubmissions(mapQueryParams).catch(e => ({ success: false })),
+      housingDevelopmentAPI.getDevelopments(mapQueryParams).catch(e => ({ success: false })),
+      facilityAPI.getSurveys(mapQueryParams).catch(e => ({ success: false }))
     ]);
 
-    // 3. Proses Data Rumah Masyarakat
+    // 2. Data Rumah Masyarakat
     let housingData = [];
     if (housingRes?.success) {
-      housingData =
-        housingRes.data?.submissions?.rows ||
-        housingRes.data?.submissions ||
-        [];
+      housingData = housingRes.data?.submissions?.rows || housingRes.data?.submissions || [];
     }
 
-    // 4. Proses Data Perumahan Pengembang
+    // 3. Data Perumahan (FIX: Mapping nama field yang benar)
     let housingDevelopmentData = [];
     if (devRes?.success) {
-      const rows =
-        devRes.data?.developments?.rows || devRes.data?.developments || [];
-
-      // Mapping data agar ringan
-      housingDevelopmentData = rows.map((item) => ({
+      const rows = devRes.data?.developments?.rows || devRes.data?.developments || [];
+      
+      housingDevelopmentData = rows.map(item => ({
         id: item.id,
         developmentName: item.developmentName,
         developerName: item.developerName,
         housingType: item.housingType,
-        coordinates: {
-          lat: parseFloat(item.latitude),
-          lng: parseFloat(item.longitude),
+        // FIX: Ambil dari 'plannedUnitCount' (nama field di database/API)
+        jumlahRumahRencana: item.plannedUnitCount, 
+        coordinates: { 
+          lat: parseFloat(item.latitude), 
+          lng: parseFloat(item.longitude) 
         },
         location: {
-          village: item.village?.name,
-          district: item.district?.name,
-          regency: item.regency?.name,
-        },
-        // Ambil properti yang perlu saja untuk popup, jangan pakai spread (...item)
-        // agar memori browser tidak penuh jika objeknya besar
-        jumlahRumahRencana: item.jumlahRumahRencana,
+            village: item.village?.name,
+            district: item.district?.name,
+            regency: item.regency?.name
+        }
       }));
     }
 
-    // 5. Proses Data Infrastruktur
+    // 4. Data Infrastruktur (Tambahkan mapping agar aman)
     let infrastructureData = [];
     if (infraRes?.success) {
-      infrastructureData =
-        infraRes.data?.surveys?.rows || infraRes.data?.surveys || [];
+      const rows = infraRes.data?.surveys?.rows || infraRes.data?.surveys || [];
+      // Kita map juga agar field villageName pasti ada
+      infrastructureData = rows.map(item => ({
+        ...item, // Salin semua properti asli (termasuk latitude/longitude/surveyYear)
+        // Pastikan nama desa terambil dari relasi database
+        villageName: item.village?.name || item.profil?.namaDesa 
+      }));
     }
 
-    console.timeEnd("LoadMapData"); // Lihat durasi di console browser
+    console.timeEnd("LoadMapData");
 
-    // 6. Render ke Peta
     await nextTick();
     initializeMap();
     createMarkers(housingData, housingDevelopmentData, infrastructureData);
+    
   } catch (error) {
     console.error("Error fatal saat memuat peta:", error);
   }
