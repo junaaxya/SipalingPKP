@@ -9,12 +9,25 @@
       <!-- Header Section -->
       <v-row class="mb-4">
         <v-col cols="12">
-          <v-card>
-            <v-card-title class="d-flex align-center">
-              <v-icon class="mr-3" color="primary"> mdi-city </v-icon>
-              <div>
-                <h2 class="text-h5">Data Survei Infrastruktur</h2>
-                <p class="text-subtitle-1 text-medium-emphasis mb-0">
+          <v-card variant="flat" class="border">
+            <v-card-title
+              class="d-flex flex-column flex-sm-row align-center align-sm-start pa-4 pa-sm-6"
+            >
+              <v-icon
+                :size="$vuetify.display.mobile ? '32' : '48'"
+                class="mr-sm-4 mb-3 mb-sm-0"
+                color="primary"
+              >
+                mdi-city
+              </v-icon>
+
+              <div class="text-center text-sm-left">
+                <h2 class="text-h6 text-sm-h5 font-weight-bold mb-1">
+                  Data Survei Infrastruktur
+                </h2>
+                <p
+                  class="text-caption text-sm-subtitle-1 text-medium-emphasis mb-0"
+                >
                   Kelola dan tinjau formulir survei infrastruktur yang telah
                   diajukan
                 </p>
@@ -304,147 +317,147 @@
                 @update:page="handlePageChange"
                 @update:items-per-page="handleItemsPerPageChange"
               >
-              <!-- Status Column -->
-              <template #item.status="{ item }">
-                <v-chip
-                  :color="getStatusColor(resolveItemStatus(item))"
-                  variant="tonal"
-                  size="small"
-                >
-                  <v-icon
-                    :icon="getStatusIcon(resolveItemStatus(item))"
-                    start
+                <!-- Status Column -->
+                <template #item.status="{ item }">
+                  <v-chip
+                    :color="getStatusColor(resolveItemStatus(item))"
+                    variant="tonal"
                     size="small"
-                  />
-                  {{ getStatusLabel(resolveItemStatus(item)) }}
-                </v-chip>
-              </template>
+                  >
+                    <v-icon
+                      :icon="getStatusIcon(resolveItemStatus(item))"
+                      start
+                      size="small"
+                    />
+                    {{ getStatusLabel(resolveItemStatus(item)) }}
+                  </v-chip>
+                </template>
 
-              <!-- Village Name Column -->
-              <template #item.villageName="{ item }">
-                <div>
-                  <div class="font-weight-medium">
-                    {{ item.villageName || "N/A" }}
+                <!-- Village Name Column -->
+                <template #item.villageName="{ item }">
+                  <div>
+                    <div class="font-weight-medium">
+                      {{ item.villageName || "N/A" }}
+                    </div>
                   </div>
-                </div>
-              </template>
+                </template>
 
-              <!-- Population Column -->
-              <template #item.population="{ item }">
-                <div class="text-body-2">
-                  {{ item.population || "N/A" }}
-                </div>
-              </template>
-
-              <!-- Submitted Date Column -->
-              <template #item.submittedAt="{ item }">
-                <div>
+                <!-- Population Column -->
+                <template #item.population="{ item }">
                   <div class="text-body-2">
-                    {{ formatDate(item.submittedAt) }}
+                    {{ item.population || "N/A" }}
                   </div>
-                  <div class="text-caption text-medium-emphasis">
-                    {{ formatTime(item.submittedAt) }}
+                </template>
+
+                <!-- Submitted Date Column -->
+                <template #item.submittedAt="{ item }">
+                  <div>
+                    <div class="text-body-2">
+                      {{ formatDate(item.submittedAt) }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{ formatTime(item.submittedAt) }}
+                    </div>
                   </div>
-                </div>
-              </template>
+                </template>
 
-              <!-- Reviewer Column -->
-              <template #item.reviewer="{ item }">
-                <div v-if="item.reviewer">
-                  <div class="text-body-2">
-                    {{ item.reviewer.fullName || "N/A" }}
+                <!-- Reviewer Column -->
+                <template #item.reviewer="{ item }">
+                  <div v-if="item.reviewer">
+                    <div class="text-body-2">
+                      {{ item.reviewer.fullName || "N/A" }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{ formatDate(item.reviewedAt) }}
+                    </div>
                   </div>
-                  <div class="text-caption text-medium-emphasis">
-                    {{ formatDate(item.reviewedAt) }}
+                  <div v-else class="text-caption text-medium-emphasis">
+                    Belum ditinjau
                   </div>
-                </div>
-                <div v-else class="text-caption text-medium-emphasis">
-                  Belum ditinjau
-                </div>
-              </template>
+                </template>
 
-              <!-- Actions Column -->
-              <template #item.actions="{ item }">
-                <div class="d-flex align-center">
-                  <v-btn
-                    icon="mdi-eye"
-                    size="small"
-                    variant="text"
-                    color="primary"
-                    @click="viewSubmission(item)"
-                  >
-                    <v-icon>mdi-eye</v-icon>
-                    <v-tooltip activator="parent" location="top">
-                      Tinjau Detail
-                    </v-tooltip>
-                  </v-btn>
+                <!-- Actions Column -->
+                <template #item.actions="{ item }">
+                  <div class="d-flex align-center">
+                    <v-btn
+                      icon="mdi-eye"
+                      size="small"
+                      variant="text"
+                      color="primary"
+                      @click="viewSubmission(item)"
+                    >
+                      <v-icon>mdi-eye</v-icon>
+                      <v-tooltip activator="parent" location="top">
+                        Tinjau Detail
+                      </v-tooltip>
+                    </v-btn>
 
-                  <v-btn
-                    v-if="canEditSubmission(item)"
-                    icon="mdi-pencil"
-                    size="small"
-                    variant="text"
-                    color="primary"
-                    @click="goToEditForm(item)"
-                  >
-                    <v-icon>mdi-pencil</v-icon>
-                    <v-tooltip activator="parent" location="top">
-                      Edit Data
-                    </v-tooltip>
-                  </v-btn>
+                    <v-btn
+                      v-if="canEditSubmission(item)"
+                      icon="mdi-pencil"
+                      size="small"
+                      variant="text"
+                      color="primary"
+                      @click="goToEditForm(item)"
+                    >
+                      <v-icon>mdi-pencil</v-icon>
+                      <v-tooltip activator="parent" location="top">
+                        Edit Data
+                      </v-tooltip>
+                    </v-btn>
 
-                  <v-btn
-                    v-if="canReviewSubmission(item) && canApproveStatus(item)"
-                    icon="mdi-check-circle"
-                    size="small"
-                    variant="text"
-                    color="success"
-                    @click="reviewSubmission(item, 'approved')"
-                  >
-                    <v-icon>mdi-check-circle</v-icon>
-                    <v-tooltip activator="parent" location="top">
-                      Setujui
-                    </v-tooltip>
-                  </v-btn>
+                    <v-btn
+                      v-if="canReviewSubmission(item) && canApproveStatus(item)"
+                      icon="mdi-check-circle"
+                      size="small"
+                      variant="text"
+                      color="success"
+                      @click="reviewSubmission(item, 'approved')"
+                    >
+                      <v-icon>mdi-check-circle</v-icon>
+                      <v-tooltip activator="parent" location="top">
+                        Setujui
+                      </v-tooltip>
+                    </v-btn>
 
-                  <v-btn
-                    v-if="canReviewSubmission(item) && canRejectStatus(item)"
-                    icon="mdi-close-circle"
-                    size="small"
-                    variant="text"
-                    color="error"
-                    @click="reviewSubmission(item, 'rejected')"
-                  >
-                    <v-icon>mdi-close-circle</v-icon>
-                    <v-tooltip activator="parent" location="top">
-                      Tolak
-                    </v-tooltip>
-                  </v-btn>
-                </div>
-              </template>
+                    <v-btn
+                      v-if="canReviewSubmission(item) && canRejectStatus(item)"
+                      icon="mdi-close-circle"
+                      size="small"
+                      variant="text"
+                      color="error"
+                      @click="reviewSubmission(item, 'rejected')"
+                    >
+                      <v-icon>mdi-close-circle</v-icon>
+                      <v-tooltip activator="parent" location="top">
+                        Tolak
+                      </v-tooltip>
+                    </v-btn>
+                  </div>
+                </template>
 
-              <!-- Empty State -->
-              <template #no-data>
-                <div class="text-center py-8">
-                  <v-icon size="64" color="grey-lighten-1" class="mb-4">
-                    mdi-city-off-outline
-                  </v-icon>
-                  <h3 class="text-h6 text-medium-emphasis mb-2">
-                    Tidak Ada Data Infrastruktur Ditemukan
-                  </h3>
-                  <p class="text-body-2 text-medium-emphasis mb-4">
-                    Tidak ada pengajuan survei infrastruktur yang sesuai dengan
-                    filter Anda.
-                  </p>
-                  <v-btn
-                    color="primary"
-                    variant="outlined"
-                    @click="clearFilters"
-                  >
-                    Hapus Filter
-                  </v-btn>
-                </div>
-              </template>
+                <!-- Empty State -->
+                <template #no-data>
+                  <div class="text-center py-8">
+                    <v-icon size="64" color="grey-lighten-1" class="mb-4">
+                      mdi-city-off-outline
+                    </v-icon>
+                    <h3 class="text-h6 text-medium-emphasis mb-2">
+                      Tidak Ada Data Infrastruktur Ditemukan
+                    </h3>
+                    <p class="text-body-2 text-medium-emphasis mb-4">
+                      Tidak ada pengajuan survei infrastruktur yang sesuai
+                      dengan filter Anda.
+                    </p>
+                    <v-btn
+                      color="primary"
+                      variant="outlined"
+                      @click="clearFilters"
+                    >
+                      Hapus Filter
+                    </v-btn>
+                  </div>
+                </template>
               </v-data-table-server>
             </div>
           </v-card>
@@ -708,14 +721,18 @@
                         <v-card-text>
                           <v-list density="comfortable">
                             <v-list-item
-                              v-for="(item, index) in selectedSubmission.pendidikan"
+                              v-for="(
+                                item, index
+                              ) in selectedSubmission.pendidikan"
                               :key="`pendidikan-${index}`"
                             >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 {{ formatFacilityLabel(item) }}
                               </v-list-item-title>
                             </v-list-item>
-                            <v-list-item v-if="!selectedSubmission.pendidikan?.length">
+                            <v-list-item
+                              v-if="!selectedSubmission.pendidikan?.length"
+                            >
                               <v-list-item-title class="text-medium-emphasis">
                                 Belum ada sarana terdaftar
                               </v-list-item-title>
@@ -737,14 +754,18 @@
                         <v-card-text>
                           <v-list density="comfortable">
                             <v-list-item
-                              v-for="(item, index) in selectedSubmission.kesehatan"
+                              v-for="(
+                                item, index
+                              ) in selectedSubmission.kesehatan"
                               :key="`kesehatan-${index}`"
                             >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 {{ formatFacilityLabel(item) }}
                               </v-list-item-title>
                             </v-list-item>
-                            <v-list-item v-if="!selectedSubmission.kesehatan?.length">
+                            <v-list-item
+                              v-if="!selectedSubmission.kesehatan?.length"
+                            >
                               <v-list-item-title class="text-medium-emphasis">
                                 Belum ada sarana terdaftar
                               </v-list-item-title>
@@ -766,14 +787,18 @@
                         <v-card-text>
                           <v-list density="comfortable">
                             <v-list-item
-                              v-for="(item, index) in selectedSubmission.peribadatan"
+                              v-for="(
+                                item, index
+                              ) in selectedSubmission.peribadatan"
                               :key="`peribadatan-${index}`"
                             >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 {{ formatFacilityLabel(item) }}
                               </v-list-item-title>
                             </v-list-item>
-                            <v-list-item v-if="!selectedSubmission.peribadatan?.length">
+                            <v-list-item
+                              v-if="!selectedSubmission.peribadatan?.length"
+                            >
                               <v-list-item-title class="text-medium-emphasis">
                                 Belum ada sarana terdaftar
                               </v-list-item-title>
@@ -987,14 +1012,18 @@
                         <v-card-text>
                           <v-list density="comfortable">
                             <v-list-item
-                              v-for="(item, index) in selectedSubmission.perniagaan"
+                              v-for="(
+                                item, index
+                              ) in selectedSubmission.perniagaan"
                               :key="`perniagaan-${index}`"
                             >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 {{ formatFacilityLabel(item) }}
                               </v-list-item-title>
                             </v-list-item>
-                            <v-list-item v-if="!selectedSubmission.perniagaan?.length">
+                            <v-list-item
+                              v-if="!selectedSubmission.perniagaan?.length"
+                            >
                               <v-list-item-title class="text-medium-emphasis">
                                 Belum ada sarana terdaftar
                               </v-list-item-title>
@@ -1016,14 +1045,18 @@
                         <v-card-text>
                           <v-list density="comfortable">
                             <v-list-item
-                              v-for="(item, index) in selectedSubmission.pelayananUmum"
+                              v-for="(
+                                item, index
+                              ) in selectedSubmission.pelayananUmum"
                               :key="`pelayanan-umum-${index}`"
                             >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 {{ formatFacilityLabel(item) }}
                               </v-list-item-title>
                             </v-list-item>
-                            <v-list-item v-if="!selectedSubmission.pelayananUmum?.length">
+                            <v-list-item
+                              v-if="!selectedSubmission.pelayananUmum?.length"
+                            >
                               <v-list-item-title class="text-medium-emphasis">
                                 Belum ada sarana terdaftar
                               </v-list-item-title>
@@ -1045,14 +1078,18 @@
                         <v-card-text>
                           <v-list density="comfortable">
                             <v-list-item
-                              v-for="(item, index) in selectedSubmission.rekreasi"
+                              v-for="(
+                                item, index
+                              ) in selectedSubmission.rekreasi"
                               :key="`rekreasi-${index}`"
                             >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 {{ formatFacilityLabel(item) }}
                               </v-list-item-title>
                             </v-list-item>
-                            <v-list-item v-if="!selectedSubmission.rekreasi?.length">
+                            <v-list-item
+                              v-if="!selectedSubmission.rekreasi?.length"
+                            >
                               <v-list-item-title class="text-medium-emphasis">
                                 Belum ada sarana terdaftar
                               </v-list-item-title>
@@ -1074,14 +1111,18 @@
                         <v-card-text>
                           <v-list density="comfortable">
                             <v-list-item
-                              v-for="(item, index) in selectedSubmission.pemakaman"
+                              v-for="(
+                                item, index
+                              ) in selectedSubmission.pemakaman"
                               :key="`pemakaman-${index}`"
                             >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 {{ formatFacilityLabel(item) }}
                               </v-list-item-title>
                             </v-list-item>
-                            <v-list-item v-if="!selectedSubmission.pemakaman?.length">
+                            <v-list-item
+                              v-if="!selectedSubmission.pemakaman?.length"
+                            >
                               <v-list-item-title class="text-medium-emphasis">
                                 Belum ada sarana terdaftar
                               </v-list-item-title>
@@ -1103,14 +1144,18 @@
                         <v-card-text>
                           <v-list density="comfortable">
                             <v-list-item
-                              v-for="(item, index) in selectedSubmission.pertamanan"
+                              v-for="(
+                                item, index
+                              ) in selectedSubmission.pertamanan"
                               :key="`pertamanan-${index}`"
                             >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 {{ formatFacilityLabel(item) }}
                               </v-list-item-title>
                             </v-list-item>
-                            <v-list-item v-if="!selectedSubmission.pertamanan?.length">
+                            <v-list-item
+                              v-if="!selectedSubmission.pertamanan?.length"
+                            >
                               <v-list-item-title class="text-medium-emphasis">
                                 Belum ada sarana terdaftar
                               </v-list-item-title>
@@ -1139,7 +1184,9 @@
                                 {{ formatFacilityLabel(item) }}
                               </v-list-item-title>
                             </v-list-item>
-                            <v-list-item v-if="!selectedSubmission.parkir?.length">
+                            <v-list-item
+                              v-if="!selectedSubmission.parkir?.length"
+                            >
                               <v-list-item-title class="text-medium-emphasis">
                                 Belum ada sarana terdaftar
                               </v-list-item-title>
@@ -1263,7 +1310,10 @@
           <v-card-actions>
             <v-spacer />
             <v-btn
-              v-if="canReviewSubmission(selectedSubmission) && canApproveStatus(selectedSubmission)"
+              v-if="
+                canReviewSubmission(selectedSubmission) &&
+                canApproveStatus(selectedSubmission)
+              "
               color="success"
               variant="elevated"
               @click="reviewSubmission(selectedSubmission, 'approved')"
@@ -1271,7 +1321,10 @@
               Setujui
             </v-btn>
             <v-btn
-              v-if="canReviewSubmission(selectedSubmission) && canRejectStatus(selectedSubmission)"
+              v-if="
+                canReviewSubmission(selectedSubmission) &&
+                canRejectStatus(selectedSubmission)
+              "
               color="error"
               variant="outlined"
               @click="reviewSubmission(selectedSubmission, 'rejected')"
@@ -1302,7 +1355,8 @@
                 variant="tonal"
                 class="mb-4"
               >
-                Alasan penolakan wajib diisi agar pengajuan dapat ditindaklanjuti.
+                Alasan penolakan wajib diisi agar pengajuan dapat
+                ditindaklanjuti.
               </v-alert>
               <v-select
                 v-model="reviewData.status"
@@ -1478,11 +1532,11 @@ const canExportInfrastructure = computed(() =>
   appStore.hasPermission("export_infrastructure")
 );
 const canCreateInfrastructure = computed(
-    () =>
-      !appStore.isVerifikator &&
-      !appStore.isAdminKabupaten &&
-      appStore.hasPermission("facility:create")
-  );
+  () =>
+    !appStore.isVerifikator &&
+    !appStore.isAdminKabupaten &&
+    appStore.hasPermission("facility:create")
+);
 const resolveStatus = (status, verificationStatus = null) => {
   const normalizedStatus = String(status || "").toLowerCase();
   const normalizedVerification = String(verificationStatus || "").toLowerCase();
@@ -1495,7 +1549,10 @@ const resolveStatus = (status, verificationStatus = null) => {
   }
   if (normalizedStatus === "pending") return "submitted";
   if (normalizedVerification === "rejected") return "rejected";
-  if (normalizedVerification === "verified" || normalizedStatus === "approved") {
+  if (
+    normalizedVerification === "verified" ||
+    normalizedStatus === "approved"
+  ) {
     return "approved";
   }
   if (["verified", "reviewed", "under_review"].includes(normalizedStatus)) {
@@ -1530,9 +1587,10 @@ const submissionCounts = computed(() => {
   return counts;
 });
 
-const canReview = computed(() =>
-  appStore.hasAnyRole(["verifikator", "super_admin"])
-  || appStore.hasAnyPermission(["facility:verify", "facility:approve"])
+const canReview = computed(
+  () =>
+    appStore.hasAnyRole(["verifikator", "super_admin"]) ||
+    appStore.hasAnyPermission(["facility:verify", "facility:approve"])
 );
 
 const isWithinScope = (item) => {
@@ -1567,12 +1625,10 @@ const canApproveStatus = (item) =>
 const canRejectStatus = (item) =>
   ["submitted", "under_review"].includes(resolveItemStatus(item));
 const canEditSubmission = (item) =>
-  canReviewSubmission(item)
-  && ["submitted", "under_review"].includes(resolveItemStatus(item))
-  && (
-    appStore.hasPermission("facility:update")
-    || appStore.hasAnyRole(["verifikator", "super_admin"])
-  );
+  canReviewSubmission(item) &&
+  ["submitted", "under_review"].includes(resolveItemStatus(item)) &&
+  (appStore.hasPermission("facility:update") ||
+    appStore.hasAnyRole(["verifikator", "super_admin"]));
 
 // Computed property to check if there are active filters
 const hasActiveFilters = computed(() => {
@@ -1709,7 +1765,9 @@ const buildStatisticsParams = (params = {}) => {
     villageId: params.villageId,
   };
   return Object.fromEntries(
-    Object.entries(payload).filter(([, value]) => value !== undefined && value !== null)
+    Object.entries(payload).filter(
+      ([, value]) => value !== undefined && value !== null
+    )
   );
 };
 
@@ -1814,12 +1872,14 @@ const mapSurveyDetail = (survey) => ({
   profil: {
     namaDesa: survey.village?.name || "",
     jumlahPenduduk: survey.villageInfo?.populationCount ?? null,
-    jumlahKK: parseNumericNote(survey.villageInfo?.notes, "Jumlah KK")
-      ?? survey.villageInfo?.householdCount
-      ?? null,
-    jumlahRumah: parseNumericNote(survey.villageInfo?.notes, "Jumlah Rumah")
-      ?? survey.villageInfo?.houseCount
-      ?? null,
+    jumlahKK:
+      parseNumericNote(survey.villageInfo?.notes, "Jumlah KK") ??
+      survey.villageInfo?.householdCount ??
+      null,
+    jumlahRumah:
+      parseNumericNote(survey.villageInfo?.notes, "Jumlah Rumah") ??
+      survey.villageInfo?.houseCount ??
+      null,
   },
   pendidikan: normalizeFacilityList(survey.education),
   kesehatan: normalizeFacilityList(survey.health),

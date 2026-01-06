@@ -3,7 +3,7 @@
     <v-container fluid class="px-2 px-sm-6 py-4">
       <v-card class="mx-auto w-100 form-card" max-width="1200">
         <!-- Header -->
-        <v-card-title class="text-h5 text-center py-4">
+        <v-card-title class="text-h6 text-sm-h5 text-center py-4">
           {{
             isEditMode
               ? "Edit Survei Infrastruktur Desa/Kelurahan"

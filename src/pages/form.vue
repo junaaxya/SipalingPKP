@@ -23,7 +23,7 @@
       </v-alert>
       <v-card class="mx-auto w-100 form-card" max-width="1000">
         <!-- Header -->
-        <v-card-title class="text-h5 text-center py-4">
+        <v-card-title class="text-h6 text-sm-h5 text-center py-4">
           Formulir Survey Rumah Masyarakat
         </v-card-title>
 

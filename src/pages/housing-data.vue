@@ -1,35 +1,35 @@
 <template>
   <div>
     <!-- Loading Overlay -->
-    <v-overlay
-      :model-value="isLoading"
-      class="align-center justify-center"
-    >
-      <v-progress-circular
-        color="primary"
-        indeterminate
-        size="64"
-      />
+    <v-overlay :model-value="isLoading" class="align-center justify-center">
+      <v-progress-circular color="primary" indeterminate size="64" />
     </v-overlay>
 
     <v-container fluid class="px-2 px-sm-6 py-4">
       <!-- Header Section -->
       <v-row class="mb-4">
         <v-col cols="12">
-          <v-card>
-            <v-card-title class="d-flex align-center">
+          <v-card variant="flat" class="border">
+            <v-card-title
+              class="d-flex flex-column flex-sm-row align-center align-sm-start pa-4 pa-sm-6"
+            >
               <v-icon
-                class="mr-3"
+                :size="$vuetify.display.mobile ? '32' : '48'"
+                class="mr-sm-4 mb-3 mb-sm-0"
                 color="primary"
               >
                 mdi-home-search
               </v-icon>
-              <div>
-                <h2 class="text-h5">
+
+              <div class="text-center text-sm-left">
+                <h2 class="text-h6 text-sm-h5 font-weight-bold mb-1">
                   Data Survei Rumah Masyarakat
                 </h2>
-                <p class="text-subtitle-1 text-medium-emphasis mb-0">
-                  Kelola dan tinjau formulir survei rumah masyarakat yang telah diajukan
+                <p
+                  class="text-tiny-mobile text-sm-subtitle-1 text-medium-emphasis mb-0"
+                >
+                  Kelola dan tinjau formulir survei rumah masyarakat yang telah
+                  diajukan
                 </p>
               </div>
             </v-card-title>
@@ -38,16 +38,9 @@
       </v-row>
 
       <!-- Location Filters Info -->
-      <v-row 
-        v-if="currentLocationFilters.length > 0"
-        class="mb-4"
-      >
+      <v-row v-if="currentLocationFilters.length > 0" class="mb-4">
         <v-col cols="12">
-          <v-alert
-            type="info"
-            variant="tonal"
-            class="mb-0"
-          >
+          <v-alert type="info" variant="tonal" class="mb-0">
             <template #prepend>
               <v-icon>mdi-map-marker</v-icon>
             </template>
@@ -71,7 +64,9 @@
                 {{ filter }}
               </v-chip>
               <span
-                v-if="!locationFiltersLoading && currentLocationFilters.length === 0"
+                v-if="
+                  !locationFiltersLoading && currentLocationFilters.length === 0
+                "
                 class="text-caption text-medium-emphasis"
               >
                 Tidak ada filter lokasi
@@ -82,10 +77,7 @@
       </v-row>
 
       <!-- Statistics Cards (Expandable) -->
-      <v-row 
-        v-if="Object.keys(submissionCounts).length > 0"
-        class="mb-6"
-      >
+      <v-row v-if="Object.keys(submissionCounts).length > 0" class="mb-6">
         <v-col cols="12">
           <v-expansion-panels v-model="expandedStatistics">
             <v-expansion-panel>
@@ -146,23 +138,21 @@
                 @click="showAllFilters = !showAllFilters"
               >
                 <v-icon>
-                  {{ showAllFilters ? 'mdi-filter-remove' : 'mdi-filter' }}
+                  {{ showAllFilters ? "mdi-filter-remove" : "mdi-filter" }}
                 </v-icon>
-                <v-tooltip
-                  activator="parent"
-                  location="top"
-                >
-                  {{ showAllFilters ? 'Sembunyikan Filter' : 'Tampilkan Semua Filter' }}
+                <v-tooltip activator="parent" location="top">
+                  {{
+                    showAllFilters
+                      ? "Sembunyikan Filter"
+                      : "Tampilkan Semua Filter"
+                  }}
                 </v-tooltip>
               </v-btn>
             </v-card-title>
             <v-card-text>
               <!-- Search Form (Always Visible) -->
               <v-row>
-                <v-col
-                  cols="12"
-                  md="4"
-                >
+                <v-col cols="12" md="4">
                   <v-text-field
                     v-model="searchQuery"
                     label="Cari Nama Pemilik"
@@ -173,10 +163,7 @@
                     @input="debouncedSearch"
                   />
                 </v-col>
-                <v-col
-                  cols="12"
-                  md="4"
-                >
+                <v-col cols="12" md="4">
                   <v-btn
                     color="primary"
                     variant="outlined"
@@ -184,9 +171,7 @@
                     class="mr-2"
                     @click="refreshData"
                   >
-                    <v-icon start>
-                      mdi-refresh
-                    </v-icon>
+                    <v-icon start> mdi-refresh </v-icon>
                     Muat Ulang
                   </v-btn>
                   <v-btn
@@ -195,9 +180,7 @@
                     variant="outlined"
                     @click="clearFilters"
                   >
-                    <v-icon start>
-                      mdi-filter-off
-                    </v-icon>
+                    <v-icon start> mdi-filter-off </v-icon>
                     Hapus
                   </v-btn>
                 </v-col>
@@ -208,10 +191,7 @@
                 <div v-show="showAllFilters">
                   <v-divider class="my-4" />
                   <v-row>
-                    <v-col
-                      cols="12"
-                      md="3"
-                    >
+                    <v-col cols="12" md="3">
                       <v-select
                         v-model="filterLocation.province"
                         label="Provinsi"
@@ -226,10 +206,7 @@
                         @update:model-value="handleFilterLocationChange"
                       />
                     </v-col>
-                    <v-col
-                      cols="12"
-                      md="3"
-                    >
+                    <v-col cols="12" md="3">
                       <v-select
                         v-model="filterLocation.regency"
                         label="Kabupaten / Kota"
@@ -245,10 +222,7 @@
                         @update:model-value="handleFilterLocationChange"
                       />
                     </v-col>
-                    <v-col
-                      cols="12"
-                      md="3"
-                    >
+                    <v-col cols="12" md="3">
                       <v-select
                         v-model="filterLocation.district"
                         label="Kecamatan"
@@ -264,10 +238,7 @@
                         @update:model-value="handleFilterLocationChange"
                       />
                     </v-col>
-                    <v-col
-                      cols="12"
-                      md="3"
-                    >
+                    <v-col cols="12" md="3">
                       <v-select
                         v-model="filterLocation.village"
                         label="Kelurahan"
@@ -285,10 +256,7 @@
                     </v-col>
                   </v-row>
                   <v-row>
-                    <v-col
-                      cols="12"
-                      md="4"
-                    >
+                    <v-col cols="12" md="4">
                       <v-select
                         v-model="filters.status"
                         label="Status"
@@ -299,10 +267,7 @@
                         @update:model-value="applyFilters"
                       />
                     </v-col>
-                    <v-col
-                      cols="12"
-                      md="4"
-                    >
+                    <v-col cols="12" md="4">
                       <v-select
                         v-model="filters.housingStatus"
                         label="Status Rumah"
@@ -342,9 +307,7 @@
         <v-col cols="12">
           <v-card>
             <v-card-title class="d-flex flex-wrap align-center">
-              <v-icon class="mr-2">
-                mdi-table
-              </v-icon>
+              <v-icon class="mr-2"> mdi-table </v-icon>
               Survei
               <v-spacer />
               <div class="d-flex flex-wrap align-center gap-2">
@@ -357,10 +320,7 @@
                 >
                   Ekspor Excel
                 </v-btn>
-                <v-chip
-                  color="primary"
-                  variant="tonal"
-                >
+                <v-chip color="primary" variant="tonal">
                   {{ pagination.totalItems }} Total
                 </v-chip>
               </div>
@@ -381,201 +341,190 @@
                 @update:page="handlePageChange"
                 @update:items-per-page="handleItemsPerPageChange"
               >
-              <!-- Status Column -->
-              <template #item.status="{ item }">
-                <v-chip
-                  :color="getStatusColor(resolveItemStatus(item))"
-                  variant="tonal"
-                  size="small"
-                >
-                  <v-icon
-                    :icon="getStatusIcon(resolveItemStatus(item))"
-                    start
+                <!-- Status Column -->
+                <template #item.status="{ item }">
+                  <v-chip
+                    :color="getStatusColor(resolveItemStatus(item))"
+                    variant="tonal"
                     size="small"
-                  />
-                  {{ getStatusLabel(resolveItemStatus(item)) }}
-                </v-chip>
-              </template>
-
-              <!-- Status Layak Huni Column -->
-              <template #item.isLivable="{ item }">
-                <v-chip
-                  :color="item.isLivable ? 'success' : 'error'"
-                  variant="tonal"
-                  size="small"
-                >
-                  <v-icon
-                    :icon="item.isLivable ? 'mdi-home-check' : 'mdi-home-alert'"
-                    start
-                    size="small"
-                  />
-                  {{ item.isLivable !== undefined && item.isLivable !== null
-                    ? (item.isLivable ? 'Layak Huni' : 'Tidak Layak Huni')
-                    : 'N/A' }}
-                </v-chip>
-              </template>
-
-              <!-- Owner Name Column -->
-              <template #item.ownerName="{ item }">
-                <div>
-                  <div class="font-weight-medium">
-                    {{ item.householdOwner?.ownerName || 'N/A' }}
-                  </div>
-                  <div class="text-caption text-medium-emphasis">
-                    {{ item.householdOwner?.headOfFamilyName || 'N/A' }}
-                  </div>
-                </div>
-              </template>
-
-              <!-- No KK Column -->
-              <template #item.familyCardNumber="{ item }">
-                <span class="text-body-2">
-                  {{ formatNoKk(getNoKkValue(item)) }}
-                </span>
-              </template>
-
-              <!-- Address Column -->
-              <template #item.address="{ item }">
-                <div>
-                  <div class="text-body-2">
-                    {{ item.householdOwner?.houseNumber || 'N/A' }}
-                  </div>
-                  <div class="text-caption text-medium-emphasis">
-                    RT {{ item.householdOwner?.rt || 'N/A' }} / RW {{ item.householdOwner?.rw || 'N/A' }}
-                  </div>
-                  <div class="text-caption text-medium-emphasis">
-                    {{ item.householdOwner?.village?.name || 'N/A' }}
-                  </div>
-                </div>
-              </template>
-
-              <!-- Submitted Date Column -->
-              <template #item.submittedAt="{ item }">
-                <div>
-                  <div class="text-body-2">
-                    {{ formatDate(item.submittedAt) }}
-                  </div>
-                  <div class="text-caption text-medium-emphasis">
-                    {{ formatTime(item.submittedAt) }}
-                  </div>
-                </div>
-              </template>
-
-              <!-- Reviewer Column -->
-              <template #item.reviewer="{ item }">
-                <div v-if="item.reviewer">
-                  <div class="text-body-2">
-                    {{ item.reviewer.fullName || 'N/A' }}
-                  </div>
-                  <div class="text-caption text-medium-emphasis">
-                    {{ formatDate(item.reviewedAt) }}
-                  </div>
-                </div>
-                <div
-                  v-else
-                  class="text-caption text-medium-emphasis"
-                >
-                  Belum ditinjau
-                </div>
-              </template>
-
-              <!-- Actions Column -->
-              <template #item.actions="{ item }">
-                <div class="d-flex align-center">
-                  <v-btn
-                    icon="mdi-eye"
-                    size="small"
-                    variant="text"
-                    color="primary"
-                    @click="viewSubmission(item)"
                   >
-                    <v-icon>mdi-eye</v-icon>
-                    <v-tooltip
-                      activator="parent"
-                      location="top"
+                    <v-icon
+                      :icon="getStatusIcon(resolveItemStatus(item))"
+                      start
+                      size="small"
+                    />
+                    {{ getStatusLabel(resolveItemStatus(item)) }}
+                  </v-chip>
+                </template>
+
+                <!-- Status Layak Huni Column -->
+                <template #item.isLivable="{ item }">
+                  <v-chip
+                    :color="item.isLivable ? 'success' : 'error'"
+                    variant="tonal"
+                    size="small"
+                  >
+                    <v-icon
+                      :icon="
+                        item.isLivable ? 'mdi-home-check' : 'mdi-home-alert'
+                      "
+                      start
+                      size="small"
+                    />
+                    {{
+                      item.isLivable !== undefined && item.isLivable !== null
+                        ? item.isLivable
+                          ? "Layak Huni"
+                          : "Tidak Layak Huni"
+                        : "N/A"
+                    }}
+                  </v-chip>
+                </template>
+
+                <!-- Owner Name Column -->
+                <template #item.ownerName="{ item }">
+                  <div>
+                    <div class="font-weight-medium">
+                      {{ item.householdOwner?.ownerName || "N/A" }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{ item.householdOwner?.headOfFamilyName || "N/A" }}
+                    </div>
+                  </div>
+                </template>
+
+                <!-- No KK Column -->
+                <template #item.familyCardNumber="{ item }">
+                  <span class="text-body-2">
+                    {{ formatNoKk(getNoKkValue(item)) }}
+                  </span>
+                </template>
+
+                <!-- Address Column -->
+                <template #item.address="{ item }">
+                  <div>
+                    <div class="text-body-2">
+                      {{ item.householdOwner?.houseNumber || "N/A" }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      RT {{ item.householdOwner?.rt || "N/A" }} / RW
+                      {{ item.householdOwner?.rw || "N/A" }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{ item.householdOwner?.village?.name || "N/A" }}
+                    </div>
+                  </div>
+                </template>
+
+                <!-- Submitted Date Column -->
+                <template #item.submittedAt="{ item }">
+                  <div>
+                    <div class="text-body-2">
+                      {{ formatDate(item.submittedAt) }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{ formatTime(item.submittedAt) }}
+                    </div>
+                  </div>
+                </template>
+
+                <!-- Reviewer Column -->
+                <template #item.reviewer="{ item }">
+                  <div v-if="item.reviewer">
+                    <div class="text-body-2">
+                      {{ item.reviewer.fullName || "N/A" }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{ formatDate(item.reviewedAt) }}
+                    </div>
+                  </div>
+                  <div v-else class="text-caption text-medium-emphasis">
+                    Belum ditinjau
+                  </div>
+                </template>
+
+                <!-- Actions Column -->
+                <template #item.actions="{ item }">
+                  <div class="d-flex align-center">
+                    <v-btn
+                      icon="mdi-eye"
+                      size="small"
+                      variant="text"
+                      color="primary"
+                      @click="viewSubmission(item)"
                     >
-                      Tinjau Detail
-                    </v-tooltip>
-                  </v-btn>
-                  
-                  <v-btn
-                    v-if="canEditSubmission(item)"
-                    icon="mdi-pencil"
-                    size="small"
-                    variant="text"
-                    color="warning"
-                    @click="openEditDialog(item)"
-                  >
-                    <v-icon>mdi-pencil</v-icon>
-                    <v-tooltip
-                      activator="parent"
-                      location="top"
-                    >
-                      Edit Form
-                    </v-tooltip>
-                  </v-btn>
-                  
-                  <v-btn
-                    v-if="canReviewSubmission(item) && canApproveStatus(item)"
-                    icon="mdi-check-circle"
-                    size="small"
-                    variant="text"
-                    color="success"
-                    @click="reviewSubmission(item, 'approved')"
-                  >
-                    <v-icon>mdi-check-circle</v-icon>
-                    <v-tooltip
-                      activator="parent"
-                      location="top"
-                    >
-                      Setujui
-                    </v-tooltip>
-                  </v-btn>
-                  
-                  <v-btn
-                    v-if="canReviewSubmission(item) && canRejectStatus(item)"
-                    icon="mdi-close-circle"
-                    size="small"
-                    variant="text"
-                    color="error"
-                    @click="reviewSubmission(item, 'rejected')"
-                  >
-                    <v-icon>mdi-close-circle</v-icon>
-                    <v-tooltip
-                      activator="parent"
-                      location="top"
-                    >
-                      Tolak
-                    </v-tooltip>
-                  </v-btn>
-                </div>
-              </template>
+                      <v-icon>mdi-eye</v-icon>
+                      <v-tooltip activator="parent" location="top">
+                        Tinjau Detail
+                      </v-tooltip>
+                    </v-btn>
 
-              <!-- Empty State -->
-              <template #no-data>
-                <div class="text-center py-8">
-                  <v-icon
-                    size="64"
-                    color="grey-lighten-1"
-                    class="mb-4"
-                  >
-                    mdi-home-search-outline
-                  </v-icon>
-                  <h3 class="text-h6 text-medium-emphasis mb-2">
-                    Tidak Ada Data Survei Ditemukan
-                  </h3>
-                  <p class="text-body-2 text-medium-emphasis mb-4">
-                    Tidak ada pengajuan survei rumah masyarakat yang sesuai dengan filter Anda.
-                  </p>
-                  <v-btn
-                    color="primary"
-                    variant="outlined"
-                    @click="clearFilters"
-                  >
-                    Hapus Filter
-                  </v-btn>
-                </div>
-              </template>
+                    <v-btn
+                      v-if="canEditSubmission(item)"
+                      icon="mdi-pencil"
+                      size="small"
+                      variant="text"
+                      color="warning"
+                      @click="openEditDialog(item)"
+                    >
+                      <v-icon>mdi-pencil</v-icon>
+                      <v-tooltip activator="parent" location="top">
+                        Edit Form
+                      </v-tooltip>
+                    </v-btn>
+
+                    <v-btn
+                      v-if="canReviewSubmission(item) && canApproveStatus(item)"
+                      icon="mdi-check-circle"
+                      size="small"
+                      variant="text"
+                      color="success"
+                      @click="reviewSubmission(item, 'approved')"
+                    >
+                      <v-icon>mdi-check-circle</v-icon>
+                      <v-tooltip activator="parent" location="top">
+                        Setujui
+                      </v-tooltip>
+                    </v-btn>
+
+                    <v-btn
+                      v-if="canReviewSubmission(item) && canRejectStatus(item)"
+                      icon="mdi-close-circle"
+                      size="small"
+                      variant="text"
+                      color="error"
+                      @click="reviewSubmission(item, 'rejected')"
+                    >
+                      <v-icon>mdi-close-circle</v-icon>
+                      <v-tooltip activator="parent" location="top">
+                        Tolak
+                      </v-tooltip>
+                    </v-btn>
+                  </div>
+                </template>
+
+                <!-- Empty State -->
+                <template #no-data>
+                  <div class="text-center py-8">
+                    <v-icon size="64" color="grey-lighten-1" class="mb-4">
+                      mdi-home-search-outline
+                    </v-icon>
+                    <h3 class="text-h6 text-medium-emphasis mb-2">
+                      Tidak Ada Data Survei Ditemukan
+                    </h3>
+                    <p class="text-body-2 text-medium-emphasis mb-4">
+                      Tidak ada pengajuan survei rumah masyarakat yang sesuai
+                      dengan filter Anda.
+                    </p>
+                    <v-btn
+                      color="primary"
+                      variant="outlined"
+                      @click="clearFilters"
+                    >
+                      Hapus Filter
+                    </v-btn>
+                  </div>
+                </template>
               </v-data-table-server>
             </div>
           </v-card>
@@ -583,15 +532,10 @@
       </v-row>
 
       <!-- Export Dialog -->
-      <v-dialog
-        v-model="exportDialogOpen"
-        max-width="760"
-      >
+      <v-dialog v-model="exportDialogOpen" max-width="760">
         <v-card>
           <v-card-title class="d-flex align-center">
-            <v-icon class="mr-2">
-              mdi-file-excel
-            </v-icon>
+            <v-icon class="mr-2"> mdi-file-excel </v-icon>
             Ekspor Excel
             <v-spacer />
             <v-btn
@@ -612,25 +556,15 @@
               {{ exportError }}
             </v-alert>
 
-            <div class="text-subtitle-2 mb-2">
-              Cakupan Data
-            </div>
+            <div class="text-subtitle-2 mb-2">Cakupan Data</div>
             <v-radio-group v-model="exportScope">
-              <v-radio
-                label="Semua Data"
-                value="all"
-              />
-              <v-radio
-                label="Data yang Difilter"
-                value="filtered"
-              />
+              <v-radio label="Semua Data" value="all" />
+              <v-radio label="Data yang Difilter" value="filtered" />
             </v-radio-group>
 
             <v-divider class="my-4" />
 
-            <div class="text-subtitle-2 mb-2">
-              Kategori Kolom (Data Rumah)
-            </div>
+            <div class="text-subtitle-2 mb-2">Kategori Kolom (Data Rumah)</div>
             <v-checkbox
               v-model="exportAllCategories"
               label="Semua Kategori"
@@ -655,10 +589,7 @@
             </v-row>
           </v-card-text>
           <v-card-actions class="justify-end">
-            <v-btn
-              variant="outlined"
-              @click="exportDialogOpen = false"
-            >
+            <v-btn variant="outlined" @click="exportDialogOpen = false">
               Batal
             </v-btn>
             <v-btn
@@ -673,16 +604,10 @@
       </v-dialog>
 
       <!-- Submission Detail Dialog -->
-      <v-dialog
-        v-model="showDetailDialog"
-        max-width="1200"
-        scrollable
-      >
+      <v-dialog v-model="showDetailDialog" max-width="1200" scrollable>
         <v-card>
           <v-card-title class="d-flex align-center">
-            <v-icon class="mr-2">
-              mdi-file-document-outline
-            </v-icon>
+            <v-icon class="mr-2"> mdi-file-document-outline </v-icon>
             Detail Survei Rumah Masyarakat
             <v-spacer />
             <v-btn
@@ -692,48 +617,41 @@
               class="mr-2"
               @click="openEditDialog(selectedSubmission)"
             >
-              <v-icon start>
-                mdi-pencil
-              </v-icon>
+              <v-icon start> mdi-pencil </v-icon>
               Edit Sambil Tinjau
             </v-btn>
-            <v-btn
-              icon="mdi-close"
-              variant="text"
-              @click="closeDetailDialog"
-            />
+            <v-btn icon="mdi-close" variant="text" @click="closeDetailDialog" />
           </v-card-title>
 
           <v-card-text v-if="!selectedSubmission && isLoading">
             <div class="d-flex align-center justify-center py-12">
-              <v-progress-circular
-                color="primary"
-                indeterminate
-                size="64"
-              />
+              <v-progress-circular color="primary" indeterminate size="64" />
             </div>
           </v-card-text>
 
           <v-card-text v-else-if="selectedSubmission">
             <v-row class="mb-4">
-              <v-col
-                cols="12"
-                md="7"
-              >
+              <v-col cols="12" md="7">
                 <v-card variant="outlined">
                   <v-card-text>
                     <div class="d-flex flex-wrap align-center mb-3">
                       <v-chip
-                        :color="getStatusColor(resolveItemStatus(selectedSubmission))"
+                        :color="
+                          getStatusColor(resolveItemStatus(selectedSubmission))
+                        "
                         variant="tonal"
                         class="mr-2 mb-2"
                       >
                         <v-icon
-                          :icon="getStatusIcon(resolveItemStatus(selectedSubmission))"
+                          :icon="
+                            getStatusIcon(resolveItemStatus(selectedSubmission))
+                          "
                           start
                           size="small"
                         />
-                        {{ getStatusLabel(resolveItemStatus(selectedSubmission)) }}
+                        {{
+                          getStatusLabel(resolveItemStatus(selectedSubmission))
+                        }}
                       </v-chip>
                       <v-chip
                         v-if="selectedSubmission.reviewNotes"
@@ -758,7 +676,10 @@
                           Verifikator
                         </div>
                         <div class="text-body-1">
-                          {{ selectedSubmission.reviewer?.fullName || 'Belum ditinjau' }}
+                          {{
+                            selectedSubmission.reviewer?.fullName ||
+                            "Belum ditinjau"
+                          }}
                         </div>
                       </v-col>
                       <v-col cols="12" sm="6">
@@ -766,11 +687,20 @@
                           Lokasi
                         </div>
                         <div class="text-body-1">
-                          {{ selectedSubmission.householdOwner?.village?.name || 'N/A' }}
+                          {{
+                            selectedSubmission.householdOwner?.village?.name ||
+                            "N/A"
+                          }}
                         </div>
                         <div class="text-caption text-medium-emphasis">
-                          {{ selectedSubmission.householdOwner?.district?.name || 'N/A' }},
-                          {{ selectedSubmission.householdOwner?.regency?.name || 'N/A' }}
+                          {{
+                            selectedSubmission.householdOwner?.district?.name ||
+                            "N/A"
+                          }},
+                          {{
+                            selectedSubmission.householdOwner?.regency?.name ||
+                            "N/A"
+                          }}
                         </div>
                       </v-col>
                       <v-col cols="12" sm="6">
@@ -778,18 +708,21 @@
                           Koordinat
                         </div>
                         <div class="text-body-1">
-                          {{ selectedSubmission.householdOwner?.latitude || 'N/A' }},
-                          {{ selectedSubmission.householdOwner?.longitude || 'N/A' }}
+                          {{
+                            selectedSubmission.householdOwner?.latitude ||
+                            "N/A"
+                          }},
+                          {{
+                            selectedSubmission.householdOwner?.longitude ||
+                            "N/A"
+                          }}
                         </div>
                       </v-col>
                     </v-row>
                   </v-card-text>
                 </v-card>
               </v-col>
-              <v-col
-                cols="12"
-                md="5"
-              >
+              <v-col cols="12" md="5">
                 <v-card variant="outlined">
                   <v-card-title class="text-subtitle-1">
                     Foto Bukti Lapangan
@@ -823,10 +756,7 @@
                         </div>
                       </v-col>
                     </v-row>
-                    <div
-                      v-else
-                      class="text-caption text-medium-emphasis"
-                    >
+                    <div v-else class="text-caption text-medium-emphasis">
                       Belum ada foto dokumentasi.
                     </div>
                   </v-card-text>
@@ -834,15 +764,9 @@
               </v-col>
             </v-row>
 
-            <v-card
-              variant="outlined"
-              class="mb-4"
-            >
+            <v-card variant="outlined" class="mb-4">
               <v-card-title class="text-subtitle-1 d-flex align-center">
-                <v-icon
-                  size="18"
-                  class="mr-2"
-                >
+                <v-icon size="18" class="mr-2">
                   mdi-timeline-text-outline
                 </v-icon>
                 Riwayat Survei Warga
@@ -870,11 +794,7 @@
                 >
                   Belum ada riwayat survei untuk warga ini.
                 </div>
-                <v-timeline
-                  v-else
-                  align="start"
-                  density="compact"
-                >
+                <v-timeline v-else align="start" density="compact">
                   <v-timeline-item
                     v-for="item in submissionHistory"
                     :key="item.id"
@@ -909,28 +829,41 @@
                       </div>
                       <div v-if="item.houseData">
                         <div>
-                          Jenis Rumah: {{ formatHouseType(item.houseData.houseType) || 'N/A' }}
+                          Jenis Rumah:
+                          {{
+                            formatHouseType(item.houseData.houseType) || "N/A"
+                          }}
                         </div>
                         <div>
-                          Luas Bangunan: {{ item.houseData.buildingArea || 'N/A' }}
+                          Luas Bangunan:
+                          {{ item.houseData.buildingArea || "N/A" }}
                         </div>
                         <div>
-                          Luas Tanah: {{ item.houseData.landArea || 'N/A' }}
+                          Luas Tanah: {{ item.houseData.landArea || "N/A" }}
                         </div>
                         <div>
-                          Material Lantai: {{ formatFloorMaterial(item.houseData.floorMaterial) || 'N/A' }}
+                          Material Lantai:
+                          {{
+                            formatFloorMaterial(item.houseData.floorMaterial) ||
+                            "N/A"
+                          }}
                         </div>
                         <div>
-                          Material Dinding: {{ formatWallMaterial(item.houseData.wallMaterial) || 'N/A' }}
+                          Material Dinding:
+                          {{
+                            formatWallMaterial(item.houseData.wallMaterial) ||
+                            "N/A"
+                          }}
                         </div>
                         <div>
-                          Material Atap: {{ formatRoofMaterial(item.houseData.roofMaterial) || 'N/A' }}
+                          Material Atap:
+                          {{
+                            formatRoofMaterial(item.houseData.roofMaterial) ||
+                            "N/A"
+                          }}
                         </div>
                       </div>
-                      <div
-                        v-else
-                        class="text-caption text-medium-emphasis"
-                      >
+                      <div v-else class="text-caption text-medium-emphasis">
                         Data rumah belum tersedia.
                       </div>
                     </div>
@@ -945,70 +878,49 @@
               </v-card-text>
             </v-card>
 
-            <v-tabs
-              v-model="activeTab"
-              color="primary"
-            >
+            <v-tabs v-model="activeTab" color="primary">
               <v-tab value="pengisi">
-                <v-icon start>
-                  mdi-account
-                </v-icon>
+                <v-icon start> mdi-account </v-icon>
                 Data Pengisi
               </v-tab>
-              
+
               <v-tab value="pemilik">
-                <v-icon start>
-                  mdi-account-outline
-                </v-icon>
+                <v-icon start> mdi-account-outline </v-icon>
                 Data Pemilik
               </v-tab>
-              
+
               <v-tab value="rumah">
-                <v-icon start>
-                  mdi-home
-                </v-icon>
+                <v-icon start> mdi-home </v-icon>
                 Data Rumah
               </v-tab>
-              
+
               <v-tab value="bangunan">
-                <v-icon start>
-                  mdi-hammer-wrench
-                </v-icon>
+                <v-icon start> mdi-hammer-wrench </v-icon>
                 Bahan Bangunan
               </v-tab>
-              
+
               <v-tab value="kesehatan">
-                <v-icon start>
-                  mdi-water
-                </v-icon>
+                <v-icon start> mdi-water </v-icon>
                 Akses Air Bersih
               </v-tab>
-              
+
               <v-tab value="sanitasi">
-                <v-icon start>
-                  mdi-toilet
-                </v-icon>
+                <v-icon start> mdi-toilet </v-icon>
                 Akses Sanitasi
               </v-tab>
-              
+
               <v-tab value="persampahan">
-                <v-icon start>
-                  mdi-delete
-                </v-icon>
+                <v-icon start> mdi-delete </v-icon>
                 Akses Persampahan
               </v-tab>
-              
+
               <v-tab value="jalan">
-                <v-icon start>
-                  mdi-road
-                </v-icon>
+                <v-icon start> mdi-road </v-icon>
                 Akses Jalan
               </v-tab>
-              
+
               <v-tab value="energi">
-                <v-icon start>
-                  mdi-lightning-bolt
-                </v-icon>
+                <v-icon start> mdi-lightning-bolt </v-icon>
                 Akses Energi
               </v-tab>
             </v-tabs>
@@ -1018,10 +930,7 @@
               <v-tabs-window-item value="pengisi">
                 <v-container class="mt-4">
                   <v-row>
-                    <v-col
-                      cols="12"
-                      md="12"
-                    >
+                    <v-col cols="12" md="12">
                       <v-card variant="outlined">
                         <v-card-text>
                           <v-list density="comfortable">
@@ -1030,7 +939,11 @@
                                 Nama
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.formRespondent?.name || selectedSubmission.respondent?.name || 'N/A' }}
+                                {{
+                                  selectedSubmission.formRespondent?.name ||
+                                  selectedSubmission.respondent?.name ||
+                                  "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1039,7 +952,11 @@
                                 Email
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.formRespondent?.email || selectedSubmission.respondent?.email || 'N/A' }}
+                                {{
+                                  selectedSubmission.formRespondent?.email ||
+                                  selectedSubmission.respondent?.email ||
+                                  "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1048,9 +965,26 @@
                                 Jabatan
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatPosition(selectedSubmission.formRespondent?.position || selectedSubmission.respondent?.position) }}
-                                <span v-if="selectedSubmission.formRespondent?.positionOther || selectedSubmission.respondent?.positionOther">
-                                  - {{ selectedSubmission.formRespondent?.positionOther || selectedSubmission.respondent?.positionOther }}
+                                {{
+                                  formatPosition(
+                                    selectedSubmission.formRespondent
+                                      ?.position ||
+                                      selectedSubmission.respondent?.position
+                                  )
+                                }}
+                                <span
+                                  v-if="
+                                    selectedSubmission.formRespondent
+                                      ?.positionOther ||
+                                    selectedSubmission.respondent?.positionOther
+                                  "
+                                >
+                                  -
+                                  {{
+                                    selectedSubmission.formRespondent
+                                      ?.positionOther ||
+                                    selectedSubmission.respondent?.positionOther
+                                  }}
                                 </span>
                               </v-list-item-subtitle>
                             </v-list-item>
@@ -1060,7 +994,11 @@
                                 No. Telp
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.formRespondent?.phone || selectedSubmission.respondent?.phone || 'N/A' }}
+                                {{
+                                  selectedSubmission.formRespondent?.phone ||
+                                  selectedSubmission.respondent?.phone ||
+                                  "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                           </v-list>
@@ -1075,10 +1013,7 @@
               <v-tabs-window-item value="pemilik">
                 <v-container class="mt-4">
                   <v-row>
-                    <v-col
-                      cols="12"
-                      md="12"
-                    >
+                    <v-col cols="12" md="12">
                       <v-card variant="outlined">
                         <v-card-text>
                           <v-list density="comfortable">
@@ -1087,7 +1022,10 @@
                                 Nama Pemilik Rumah
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.householdOwner?.ownerName || 'N/A' }}
+                                {{
+                                  selectedSubmission.householdOwner
+                                    ?.ownerName || "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1096,7 +1034,10 @@
                                 No. Telp
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.householdOwner?.ownerPhone || 'N/A' }}
+                                {{
+                                  selectedSubmission.householdOwner
+                                    ?.ownerPhone || "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1105,7 +1046,10 @@
                                 Nama Kepala Keluarga
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.householdOwner?.headOfFamilyName || 'N/A' }}
+                                {{
+                                  selectedSubmission.householdOwner
+                                    ?.headOfFamilyName || "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1114,7 +1058,10 @@
                                 No. Telp Kepala Keluarga
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.householdOwner?.headOfFamilyPhone || 'N/A' }}
+                                {{
+                                  selectedSubmission.householdOwner
+                                    ?.headOfFamilyPhone || "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1123,7 +1070,12 @@
                                 Usia
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.householdOwner?.headOfFamilyAge ? `${selectedSubmission.householdOwner.headOfFamilyAge} tahun` : 'N/A' }}
+                                {{
+                                  selectedSubmission.householdOwner
+                                    ?.headOfFamilyAge
+                                    ? `${selectedSubmission.householdOwner.headOfFamilyAge} tahun`
+                                    : "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1132,7 +1084,10 @@
                                 No. KK
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.householdOwner?.familyCardNumber || 'N/A' }}
+                                {{
+                                  selectedSubmission.householdOwner
+                                    ?.familyCardNumber || "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1141,7 +1096,10 @@
                                 Jumlah KK dalam 1 Rumah
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.householdOwner?.totalFamilyMembers || 'N/A' }}
+                                {{
+                                  selectedSubmission.householdOwner
+                                    ?.totalFamilyMembers || "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1150,7 +1108,10 @@
                                 Alamat
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.householdOwner?.houseNumber || 'N/A' }}
+                                {{
+                                  selectedSubmission.householdOwner
+                                    ?.houseNumber || "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1159,7 +1120,14 @@
                                 RT/RW
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                RT {{ selectedSubmission.householdOwner?.rt || 'N/A' }} / RW {{ selectedSubmission.householdOwner?.rw || 'N/A' }}
+                                RT
+                                {{
+                                  selectedSubmission.householdOwner?.rt || "N/A"
+                                }}
+                                / RW
+                                {{
+                                  selectedSubmission.householdOwner?.rw || "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1168,7 +1136,10 @@
                                 Kode Pos
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.householdOwner?.postalCode || 'N/A' }}
+                                {{
+                                  selectedSubmission.householdOwner
+                                    ?.postalCode || "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1177,10 +1148,22 @@
                                 Lokasi
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.householdOwner?.village?.name || 'N/A' }}, 
-                                {{ selectedSubmission.householdOwner?.district?.name || 'N/A' }}, 
-                                {{ selectedSubmission.householdOwner?.regency?.name || 'N/A' }}, 
-                                {{ selectedSubmission.householdOwner?.province?.name || 'N/A' }}
+                                {{
+                                  selectedSubmission.householdOwner?.village
+                                    ?.name || "N/A"
+                                }},
+                                {{
+                                  selectedSubmission.householdOwner?.district
+                                    ?.name || "N/A"
+                                }},
+                                {{
+                                  selectedSubmission.householdOwner?.regency
+                                    ?.name || "N/A"
+                                }},
+                                {{
+                                  selectedSubmission.householdOwner?.province
+                                    ?.name || "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1189,9 +1172,23 @@
                                 Pendidikan
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatEducationLevel(selectedSubmission.householdOwner?.educationLevel) }}
-                                <span v-if="selectedSubmission.householdOwner?.educationLevelOther">
-                                  - {{ selectedSubmission.householdOwner.educationLevelOther }}
+                                {{
+                                  formatEducationLevel(
+                                    selectedSubmission.householdOwner
+                                      ?.educationLevel
+                                  )
+                                }}
+                                <span
+                                  v-if="
+                                    selectedSubmission.householdOwner
+                                      ?.educationLevelOther
+                                  "
+                                >
+                                  -
+                                  {{
+                                    selectedSubmission.householdOwner
+                                      .educationLevelOther
+                                  }}
                                 </span>
                               </v-list-item-subtitle>
                             </v-list-item>
@@ -1201,7 +1198,12 @@
                                 Pekerjaan
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatOccupation(selectedSubmission.householdOwner?.occupation) }}
+                                {{
+                                  formatOccupation(
+                                    selectedSubmission.householdOwner
+                                      ?.occupation
+                                  )
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1210,7 +1212,15 @@
                                 Besar Penghasilan/Pengeluaran per Bulan
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.householdOwner?.monthlyIncome ? `Rp ${parseFloat(selectedSubmission.householdOwner.monthlyIncome || 0).toLocaleString('id-ID')}` : 'N/A' }}
+                                {{
+                                  selectedSubmission.householdOwner
+                                    ?.monthlyIncome
+                                    ? `Rp ${parseFloat(
+                                        selectedSubmission.householdOwner
+                                          .monthlyIncome || 0
+                                      ).toLocaleString("id-ID")}`
+                                    : "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1219,7 +1229,12 @@
                                 Status Kepemilikan Tanah
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatLandOwnership(selectedSubmission.householdOwner?.landOwnershipStatus) }}
+                                {{
+                                  formatLandOwnership(
+                                    selectedSubmission.householdOwner
+                                      ?.landOwnershipStatus
+                                  )
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1228,7 +1243,12 @@
                                 Status Kepemilikan Rumah
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatHouseOwnership(selectedSubmission.householdOwner?.houseOwnershipStatus) }}
+                                {{
+                                  formatHouseOwnership(
+                                    selectedSubmission.householdOwner
+                                      ?.houseOwnershipStatus
+                                  )
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1237,7 +1257,15 @@
                                 Pernah Menerima Bantuan Perumahan
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.householdOwner?.hasReceivedHousingAssistance ? `Ya, Tahun ${selectedSubmission.householdOwner.housingAssistanceYear || ''}` : 'Belum Pernah' }}
+                                {{
+                                  selectedSubmission.householdOwner
+                                    ?.hasReceivedHousingAssistance
+                                    ? `Ya, Tahun ${
+                                        selectedSubmission.householdOwner
+                                          .housingAssistanceYear || ""
+                                      }`
+                                    : "Belum Pernah"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1246,7 +1274,13 @@
                                 Teregistrasi dalam Kriteria Miskin
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.householdOwner?.isRegisteredAsPoor ? (selectedSubmission.householdOwner.poorRegistrationAttachment || 'Ya') : 'Tidak' }}
+                                {{
+                                  selectedSubmission.householdOwner
+                                    ?.isRegisteredAsPoor
+                                    ? selectedSubmission.householdOwner
+                                        .poorRegistrationAttachment || "Ya"
+                                    : "Tidak"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                           </v-list>
@@ -1261,10 +1295,7 @@
               <v-tabs-window-item value="rumah">
                 <v-container class="mt-4">
                   <v-row>
-                    <v-col
-                      cols="12"
-                      md="12"
-                    >
+                    <v-col cols="12" md="12">
                       <v-card variant="outlined">
                         <v-card-text>
                           <v-list density="comfortable">
@@ -1273,7 +1304,10 @@
                                 Luas Bangunan (m²)
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.houseData?.buildingArea || 'N/A' }}
+                                {{
+                                  selectedSubmission.houseData?.buildingArea ||
+                                  "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1282,7 +1316,10 @@
                                 Luas Tanah (m²)
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.houseData?.landArea || 'N/A' }}
+                                {{
+                                  selectedSubmission.houseData?.landArea ||
+                                  "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1291,7 +1328,12 @@
                                 Memiliki IMB/PBG
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.houseData?.hasBuildingPermit ? 'Ya' : 'Tidak' }}
+                                {{
+                                  selectedSubmission.houseData
+                                    ?.hasBuildingPermit
+                                    ? "Ya"
+                                    : "Tidak"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1300,7 +1342,11 @@
                                 Jenis Rumah
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatHouseType(selectedSubmission.houseData?.houseType) }}
+                                {{
+                                  formatHouseType(
+                                    selectedSubmission.houseData?.houseType
+                                  )
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1309,7 +1355,10 @@
                                 Jumlah Penghuni dalam 1 Rumah
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.houseData?.totalOccupants || 'N/A' }}
+                                {{
+                                  selectedSubmission.houseData
+                                    ?.totalOccupants || "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1318,9 +1367,13 @@
                                 Status Layak Huni
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.isLivable !== undefined 
-                                  ? (selectedSubmission.isLivable ? 'Layak Huni' : 'Tidak Layak Huni')
-                                  : 'N/A' }}
+                                {{
+                                  selectedSubmission.isLivable !== undefined
+                                    ? selectedSubmission.isLivable
+                                      ? "Layak Huni"
+                                      : "Tidak Layak Huni"
+                                    : "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                           </v-list>
@@ -1328,10 +1381,13 @@
                       </v-card>
                     </v-col>
                   </v-row>
-                  
+
                   <!-- Photo Gallery for Rumah -->
                   <v-row
-                    v-if="selectedSubmission.houseData?.photos && selectedSubmission.houseData.photos.length > 0"
+                    v-if="
+                      selectedSubmission.houseData?.photos &&
+                      selectedSubmission.houseData.photos.length > 0
+                    "
                     class="mt-4"
                   >
                     <v-col cols="12">
@@ -1342,7 +1398,8 @@
                         <v-card-text>
                           <v-row>
                             <v-col
-                              v-for="(photo, index) in selectedSubmission.houseData.photos"
+                              v-for="(photo, index) in selectedSubmission
+                                .houseData.photos"
                               :key="index"
                               cols="12"
                               sm="6"
@@ -1355,7 +1412,7 @@
                                 class="rounded-lg"
                               />
                               <div class="text-caption mt-1">
-                                {{ getPhotoLabel(photo, 'Rumah') }}
+                                {{ getPhotoLabel(photo, "Rumah") }}
                               </div>
                             </v-col>
                           </v-row>
@@ -1370,10 +1427,7 @@
               <v-tabs-window-item value="bangunan">
                 <v-container class="mt-4">
                   <v-row>
-                    <v-col
-                      cols="12"
-                      md="12"
-                    >
+                    <v-col cols="12" md="12">
                       <v-card variant="outlined">
                         <v-card-text>
                           <v-list density="comfortable">
@@ -1382,7 +1436,11 @@
                                 Lantai
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatFloorMaterial(selectedSubmission.houseData?.floorMaterial) }}
+                                {{
+                                  formatFloorMaterial(
+                                    selectedSubmission.houseData?.floorMaterial
+                                  )
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1391,9 +1449,22 @@
                                 Dinding
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatWallMaterial(selectedSubmission.houseData?.wallMaterial) }}
-                                <span v-if="selectedSubmission.houseData?.wallMaterialOther">
-                                  - {{ selectedSubmission.houseData.wallMaterialOther }}
+                                {{
+                                  formatWallMaterial(
+                                    selectedSubmission.houseData?.wallMaterial
+                                  )
+                                }}
+                                <span
+                                  v-if="
+                                    selectedSubmission.houseData
+                                      ?.wallMaterialOther
+                                  "
+                                >
+                                  -
+                                  {{
+                                    selectedSubmission.houseData
+                                      .wallMaterialOther
+                                  }}
                                 </span>
                               </v-list-item-subtitle>
                             </v-list-item>
@@ -1403,9 +1474,22 @@
                                 Atap
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatRoofMaterial(selectedSubmission.houseData?.roofMaterial) }}
-                                <span v-if="selectedSubmission.houseData?.roofMaterialOther">
-                                  - {{ selectedSubmission.houseData.roofMaterialOther }}
+                                {{
+                                  formatRoofMaterial(
+                                    selectedSubmission.houseData?.roofMaterial
+                                  )
+                                }}
+                                <span
+                                  v-if="
+                                    selectedSubmission.houseData
+                                      ?.roofMaterialOther
+                                  "
+                                >
+                                  -
+                                  {{
+                                    selectedSubmission.houseData
+                                      .roofMaterialOther
+                                  }}
                                 </span>
                               </v-list-item-subtitle>
                             </v-list-item>
@@ -1414,10 +1498,13 @@
                       </v-card>
                     </v-col>
                   </v-row>
-                  
+
                   <!-- Photo Gallery for Bangunan -->
                   <v-row
-                    v-if="selectedSubmission.houseData?.photos && selectedSubmission.houseData.photos.length > 0"
+                    v-if="
+                      selectedSubmission.houseData?.photos &&
+                      selectedSubmission.houseData.photos.length > 0
+                    "
                     class="mt-4"
                   >
                     <v-col cols="12">
@@ -1428,7 +1515,8 @@
                         <v-card-text>
                           <v-row>
                             <v-col
-                              v-for="(photo, index) in selectedSubmission.houseData.photos"
+                              v-for="(photo, index) in selectedSubmission
+                                .houseData.photos"
                               :key="index"
                               cols="12"
                               sm="6"
@@ -1441,7 +1529,7 @@
                                 class="rounded-lg"
                               />
                               <div class="text-caption mt-1">
-                                {{ getPhotoLabel(photo, 'Bangunan') }}
+                                {{ getPhotoLabel(photo, "Bangunan") }}
                               </div>
                             </v-col>
                           </v-row>
@@ -1456,10 +1544,7 @@
               <v-tabs-window-item value="kesehatan">
                 <v-container class="mt-4">
                   <v-row>
-                    <v-col
-                      cols="12"
-                      md="12"
-                    >
+                    <v-col cols="12" md="12">
                       <v-card variant="outlined">
                         <v-card-text>
                           <v-list density="comfortable">
@@ -1468,22 +1553,51 @@
                                 Sumber Air untuk Kebutuhan MCK
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatWaterSource(selectedSubmission.waterAccess?.sanitationWaterSource) }}
-                                <span v-if="selectedSubmission.waterAccess?.sanitationWaterSourceOther">
-                                  - {{ selectedSubmission.waterAccess.sanitationWaterSourceOther }}
+                                {{
+                                  formatWaterSource(
+                                    selectedSubmission.waterAccess
+                                      ?.sanitationWaterSource
+                                  )
+                                }}
+                                <span
+                                  v-if="
+                                    selectedSubmission.waterAccess
+                                      ?.sanitationWaterSourceOther
+                                  "
+                                >
+                                  -
+                                  {{
+                                    selectedSubmission.waterAccess
+                                      .sanitationWaterSourceOther
+                                  }}
                                 </span>
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider
-                              v-if="selectedSubmission.waterAccess?.sanitationWaterSource === 'sumur_bor' && selectedSubmission.waterAccess?.sanitationWaterDepth"
+                              v-if="
+                                selectedSubmission.waterAccess
+                                  ?.sanitationWaterSource === 'sumur_bor' &&
+                                selectedSubmission.waterAccess
+                                  ?.sanitationWaterDepth
+                              "
                               class="my-3"
                             />
-                            <v-list-item v-if="selectedSubmission.waterAccess?.sanitationWaterSource === 'sumur_bor' && selectedSubmission.waterAccess?.sanitationWaterDepth">
+                            <v-list-item
+                              v-if="
+                                selectedSubmission.waterAccess
+                                  ?.sanitationWaterSource === 'sumur_bor' &&
+                                selectedSubmission.waterAccess
+                                  ?.sanitationWaterDepth
+                              "
+                            >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 Kedalaman Sumur Bor (m)
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.waterAccess.sanitationWaterDepth }}
+                                {{
+                                  selectedSubmission.waterAccess
+                                    .sanitationWaterDepth
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1492,7 +1606,12 @@
                                 Lokasi Sumber Air
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatWaterLocation(selectedSubmission.waterAccess?.sanitationWaterLocation) }}
+                                {{
+                                  formatWaterLocation(
+                                    selectedSubmission.waterAccess
+                                      ?.sanitationWaterLocation
+                                  )
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1501,22 +1620,51 @@
                                 Sumber Air untuk Kebutuhan Minum/Memasak
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatWaterSource(selectedSubmission.waterAccess?.drinkingWaterSource) }}
-                                <span v-if="selectedSubmission.waterAccess?.drinkingWaterSourceOther">
-                                  - {{ selectedSubmission.waterAccess.drinkingWaterSourceOther }}
+                                {{
+                                  formatWaterSource(
+                                    selectedSubmission.waterAccess
+                                      ?.drinkingWaterSource
+                                  )
+                                }}
+                                <span
+                                  v-if="
+                                    selectedSubmission.waterAccess
+                                      ?.drinkingWaterSourceOther
+                                  "
+                                >
+                                  -
+                                  {{
+                                    selectedSubmission.waterAccess
+                                      .drinkingWaterSourceOther
+                                  }}
                                 </span>
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider
-                              v-if="selectedSubmission.waterAccess?.drinkingWaterSource === 'sumur_bor' && selectedSubmission.waterAccess?.drinkingWaterDepth"
+                              v-if="
+                                selectedSubmission.waterAccess
+                                  ?.drinkingWaterSource === 'sumur_bor' &&
+                                selectedSubmission.waterAccess
+                                  ?.drinkingWaterDepth
+                              "
                               class="my-3"
                             />
-                            <v-list-item v-if="selectedSubmission.waterAccess?.drinkingWaterSource === 'sumur_bor' && selectedSubmission.waterAccess?.drinkingWaterDepth">
+                            <v-list-item
+                              v-if="
+                                selectedSubmission.waterAccess
+                                  ?.drinkingWaterSource === 'sumur_bor' &&
+                                selectedSubmission.waterAccess
+                                  ?.drinkingWaterDepth
+                              "
+                            >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 Kedalaman Sumur Bor untuk Minum (m)
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.waterAccess.drinkingWaterDepth }}
+                                {{
+                                  selectedSubmission.waterAccess
+                                    .drinkingWaterDepth
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                           </v-list>
@@ -1524,10 +1672,13 @@
                       </v-card>
                     </v-col>
                   </v-row>
-                  
+
                   <!-- Photo Gallery for Kesehatan -->
                   <v-row
-                    v-if="selectedSubmission.waterAccess?.photos && selectedSubmission.waterAccess.photos.length > 0"
+                    v-if="
+                      selectedSubmission.waterAccess?.photos &&
+                      selectedSubmission.waterAccess.photos.length > 0
+                    "
                     class="mt-4"
                   >
                     <v-col cols="12">
@@ -1538,7 +1689,8 @@
                         <v-card-text>
                           <v-row>
                             <v-col
-                              v-for="(photo, index) in selectedSubmission.waterAccess.photos"
+                              v-for="(photo, index) in selectedSubmission
+                                .waterAccess.photos"
                               :key="index"
                               cols="12"
                               sm="6"
@@ -1551,7 +1703,7 @@
                                 class="rounded-lg"
                               />
                               <div class="text-caption mt-1">
-                                {{ getPhotoLabel(photo, 'Air Bersih') }}
+                                {{ getPhotoLabel(photo, "Air Bersih") }}
                               </div>
                             </v-col>
                           </v-row>
@@ -1566,10 +1718,7 @@
               <v-tabs-window-item value="sanitasi">
                 <v-container class="mt-4">
                   <v-row>
-                    <v-col
-                      cols="12"
-                      md="12"
-                    >
+                    <v-col cols="12" md="12">
                       <v-card variant="outlined">
                         <v-card-text>
                           <v-list density="comfortable">
@@ -1578,19 +1727,37 @@
                                 Kepemilikan Jamban
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatToiletOwnership(selectedSubmission.sanitationAccess?.toiletOwnership) }}
+                                {{
+                                  formatToiletOwnership(
+                                    selectedSubmission.sanitationAccess
+                                      ?.toiletOwnership
+                                  )
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider
-                              v-if="selectedSubmission.sanitationAccess?.toiletOwnership !== 'tidak_memiliki' && selectedSubmission.sanitationAccess?.toiletCount"
+                              v-if="
+                                selectedSubmission.sanitationAccess
+                                  ?.toiletOwnership !== 'tidak_memiliki' &&
+                                selectedSubmission.sanitationAccess?.toiletCount
+                              "
                               class="my-3"
                             />
-                            <v-list-item v-if="selectedSubmission.sanitationAccess?.toiletOwnership !== 'tidak_memiliki' && selectedSubmission.sanitationAccess?.toiletCount">
+                            <v-list-item
+                              v-if="
+                                selectedSubmission.sanitationAccess
+                                  ?.toiletOwnership !== 'tidak_memiliki' &&
+                                selectedSubmission.sanitationAccess?.toiletCount
+                              "
+                            >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 Jumlah Jamban yang Dimiliki
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.sanitationAccess.toiletCount }}
+                                {{
+                                  selectedSubmission.sanitationAccess
+                                    .toiletCount
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1599,7 +1766,12 @@
                                 Jenis Closet
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatToiletType(selectedSubmission.sanitationAccess?.toiletType) }}
+                                {{
+                                  formatToiletType(
+                                    selectedSubmission.sanitationAccess
+                                      ?.toiletType
+                                  )
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1608,55 +1780,128 @@
                                 Jenis Tangki Septic
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatSepticTankType(selectedSubmission.sanitationAccess?.septicTankType) }}
+                                {{
+                                  formatSepticTankType(
+                                    selectedSubmission.sanitationAccess
+                                      ?.septicTankType
+                                  )
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider
-                              v-if="selectedSubmission.sanitationAccess?.septicTankType && selectedSubmission.sanitationAccess.septicTankType !== 'tidak_memiliki' && selectedSubmission.sanitationAccess?.septicTankYear"
+                              v-if="
+                                selectedSubmission.sanitationAccess
+                                  ?.septicTankType &&
+                                selectedSubmission.sanitationAccess
+                                  .septicTankType !== 'tidak_memiliki' &&
+                                selectedSubmission.sanitationAccess
+                                  ?.septicTankYear
+                              "
                               class="my-3"
                             />
-                            <v-list-item v-if="selectedSubmission.sanitationAccess?.septicTankType && selectedSubmission.sanitationAccess.septicTankType !== 'tidak_memiliki' && selectedSubmission.sanitationAccess?.septicTankYear">
+                            <v-list-item
+                              v-if="
+                                selectedSubmission.sanitationAccess
+                                  ?.septicTankType &&
+                                selectedSubmission.sanitationAccess
+                                  .septicTankType !== 'tidak_memiliki' &&
+                                selectedSubmission.sanitationAccess
+                                  ?.septicTankYear
+                              "
+                            >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 Tahun Pembuatan Tangki Septic
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.sanitationAccess.septicTankYear }}
+                                {{
+                                  selectedSubmission.sanitationAccess
+                                    .septicTankYear
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider
-                              v-if="selectedSubmission.sanitationAccess?.hasSepticPumping !== null && selectedSubmission.sanitationAccess?.hasSepticPumping !== undefined"
+                              v-if="
+                                selectedSubmission.sanitationAccess
+                                  ?.hasSepticPumping !== null &&
+                                selectedSubmission.sanitationAccess
+                                  ?.hasSepticPumping !== undefined
+                              "
                               class="my-3"
                             />
-                            <v-list-item v-if="selectedSubmission.sanitationAccess?.hasSepticPumping !== null && selectedSubmission.sanitationAccess?.hasSepticPumping !== undefined">
+                            <v-list-item
+                              v-if="
+                                selectedSubmission.sanitationAccess
+                                  ?.hasSepticPumping !== null &&
+                                selectedSubmission.sanitationAccess
+                                  ?.hasSepticPumping !== undefined
+                              "
+                            >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 Apakah Tangki Septic Pernah Dilakukan Penyedotan
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.sanitationAccess.hasSepticPumping ? 'Ya' : 'Tidak' }}
+                                {{
+                                  selectedSubmission.sanitationAccess
+                                    .hasSepticPumping
+                                    ? "Ya"
+                                    : "Tidak"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider
-                              v-if="selectedSubmission.sanitationAccess?.hasSepticPumping && selectedSubmission.sanitationAccess?.septicPumpingYear"
+                              v-if="
+                                selectedSubmission.sanitationAccess
+                                  ?.hasSepticPumping &&
+                                selectedSubmission.sanitationAccess
+                                  ?.septicPumpingYear
+                              "
                               class="my-3"
                             />
-                            <v-list-item v-if="selectedSubmission.sanitationAccess?.hasSepticPumping && selectedSubmission.sanitationAccess?.septicPumpingYear">
+                            <v-list-item
+                              v-if="
+                                selectedSubmission.sanitationAccess
+                                  ?.hasSepticPumping &&
+                                selectedSubmission.sanitationAccess
+                                  ?.septicPumpingYear
+                              "
+                            >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 Tahun Penyedotan
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.sanitationAccess.septicPumpingYear }}
+                                {{
+                                  selectedSubmission.sanitationAccess
+                                    .septicPumpingYear
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider
-                              v-if="selectedSubmission.sanitationAccess?.hasSepticPumping && selectedSubmission.sanitationAccess?.septicPumpingService"
+                              v-if="
+                                selectedSubmission.sanitationAccess
+                                  ?.hasSepticPumping &&
+                                selectedSubmission.sanitationAccess
+                                  ?.septicPumpingService
+                              "
                               class="my-3"
                             />
-                            <v-list-item v-if="selectedSubmission.sanitationAccess?.hasSepticPumping && selectedSubmission.sanitationAccess?.septicPumpingService">
+                            <v-list-item
+                              v-if="
+                                selectedSubmission.sanitationAccess
+                                  ?.hasSepticPumping &&
+                                selectedSubmission.sanitationAccess
+                                  ?.septicPumpingService
+                              "
+                            >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 Jasa Sedot Tinja yang Digunakan
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatSepticPumpingService(selectedSubmission.sanitationAccess.septicPumpingService) }}
+                                {{
+                                  formatSepticPumpingService(
+                                    selectedSubmission.sanitationAccess
+                                      .septicPumpingService
+                                  )
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1665,7 +1910,12 @@
                                 Pengaliran Air Limbah
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatWastewaterDisposal(selectedSubmission.sanitationAccess?.wastewaterDisposal) }}
+                                {{
+                                  formatWastewaterDisposal(
+                                    selectedSubmission.sanitationAccess
+                                      ?.wastewaterDisposal
+                                  )
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                           </v-list>
@@ -1673,10 +1923,13 @@
                       </v-card>
                     </v-col>
                   </v-row>
-                  
+
                   <!-- Photo Gallery for Sanitasi -->
                   <v-row
-                    v-if="selectedSubmission.sanitationAccess?.photos && selectedSubmission.sanitationAccess.photos.length > 0"
+                    v-if="
+                      selectedSubmission.sanitationAccess?.photos &&
+                      selectedSubmission.sanitationAccess.photos.length > 0
+                    "
                     class="mt-4"
                   >
                     <v-col cols="12">
@@ -1687,7 +1940,8 @@
                         <v-card-text>
                           <v-row>
                             <v-col
-                              v-for="(photo, index) in selectedSubmission.sanitationAccess.photos"
+                              v-for="(photo, index) in selectedSubmission
+                                .sanitationAccess.photos"
                               :key="index"
                               cols="12"
                               sm="6"
@@ -1700,7 +1954,7 @@
                                 class="rounded-lg"
                               />
                               <div class="text-caption mt-1">
-                                {{ getPhotoLabel(photo, 'Sanitasi') }}
+                                {{ getPhotoLabel(photo, "Sanitasi") }}
                               </div>
                             </v-col>
                           </v-row>
@@ -1715,10 +1969,7 @@
               <v-tabs-window-item value="persampahan">
                 <v-container class="mt-4">
                   <v-row>
-                    <v-col
-                      cols="12"
-                      md="12"
-                    >
+                    <v-col cols="12" md="12">
                       <v-card variant="outlined">
                         <v-card-text>
                           <v-list density="comfortable">
@@ -1727,38 +1978,98 @@
                                 Telah Terdapat Akses Pengangkutan Sampah
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.wasteManagement?.hasWasteCollection !== null && selectedSubmission.wasteManagement?.hasWasteCollection !== undefined
-                                  ? (selectedSubmission.wasteManagement.hasWasteCollection ? 'Ya' : 'Tidak')
-                                  : 'N/A' }}
+                                {{
+                                  selectedSubmission.wasteManagement
+                                    ?.hasWasteCollection !== null &&
+                                  selectedSubmission.wasteManagement
+                                    ?.hasWasteCollection !== undefined
+                                    ? selectedSubmission.wasteManagement
+                                        .hasWasteCollection
+                                      ? "Ya"
+                                      : "Tidak"
+                                    : "N/A"
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider
-                              v-if="selectedSubmission.wasteManagement?.hasWasteCollection && selectedSubmission.wasteManagement?.wasteCollectionManager"
+                              v-if="
+                                selectedSubmission.wasteManagement
+                                  ?.hasWasteCollection &&
+                                selectedSubmission.wasteManagement
+                                  ?.wasteCollectionManager
+                              "
                               class="my-3"
                             />
-                            <v-list-item v-if="selectedSubmission.wasteManagement?.hasWasteCollection && selectedSubmission.wasteManagement?.wasteCollectionManager">
+                            <v-list-item
+                              v-if="
+                                selectedSubmission.wasteManagement
+                                  ?.hasWasteCollection &&
+                                selectedSubmission.wasteManagement
+                                  ?.wasteCollectionManager
+                              "
+                            >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 Pengelola Pengangkutan Sampah
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatWasteCollectionManager(selectedSubmission.wasteManagement.wasteCollectionManager) }}
-                                <span v-if="selectedSubmission.wasteManagement?.wasteCollectionManagerOther">
-                                  - {{ selectedSubmission.wasteManagement.wasteCollectionManagerOther }}
+                                {{
+                                  formatWasteCollectionManager(
+                                    selectedSubmission.wasteManagement
+                                      .wasteCollectionManager
+                                  )
+                                }}
+                                <span
+                                  v-if="
+                                    selectedSubmission.wasteManagement
+                                      ?.wasteCollectionManagerOther
+                                  "
+                                >
+                                  -
+                                  {{
+                                    selectedSubmission.wasteManagement
+                                      .wasteCollectionManagerOther
+                                  }}
                                 </span>
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider
-                              v-if="selectedSubmission.wasteManagement?.hasWasteCollection === false && selectedSubmission.wasteManagement?.wasteDisposalMethod"
+                              v-if="
+                                selectedSubmission.wasteManagement
+                                  ?.hasWasteCollection === false &&
+                                selectedSubmission.wasteManagement
+                                  ?.wasteDisposalMethod
+                              "
                               class="my-3"
                             />
-                            <v-list-item v-if="selectedSubmission.wasteManagement?.hasWasteCollection === false && selectedSubmission.wasteManagement?.wasteDisposalMethod">
+                            <v-list-item
+                              v-if="
+                                selectedSubmission.wasteManagement
+                                  ?.hasWasteCollection === false &&
+                                selectedSubmission.wasteManagement
+                                  ?.wasteDisposalMethod
+                              "
+                            >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 Bagaimana Pengelolaan Sampah
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatWasteDisposalMethod(selectedSubmission.wasteManagement.wasteDisposalMethod) }}
-                                <span v-if="selectedSubmission.wasteManagement?.wasteDisposalLocation">
-                                  - {{ selectedSubmission.wasteManagement.wasteDisposalLocation }}
+                                {{
+                                  formatWasteDisposalMethod(
+                                    selectedSubmission.wasteManagement
+                                      .wasteDisposalMethod
+                                  )
+                                }}
+                                <span
+                                  v-if="
+                                    selectedSubmission.wasteManagement
+                                      ?.wasteDisposalLocation
+                                  "
+                                >
+                                  -
+                                  {{
+                                    selectedSubmission.wasteManagement
+                                      .wasteDisposalLocation
+                                  }}
                                 </span>
                               </v-list-item-subtitle>
                             </v-list-item>
@@ -1767,10 +2078,13 @@
                       </v-card>
                     </v-col>
                   </v-row>
-                  
+
                   <!-- Photo Gallery for Persampahan -->
                   <v-row
-                    v-if="selectedSubmission.wasteManagement?.photos && selectedSubmission.wasteManagement.photos.length > 0"
+                    v-if="
+                      selectedSubmission.wasteManagement?.photos &&
+                      selectedSubmission.wasteManagement.photos.length > 0
+                    "
                     class="mt-4"
                   >
                     <v-col cols="12">
@@ -1781,7 +2095,8 @@
                         <v-card-text>
                           <v-row>
                             <v-col
-                              v-for="(photo, index) in selectedSubmission.wasteManagement.photos"
+                              v-for="(photo, index) in selectedSubmission
+                                .wasteManagement.photos"
                               :key="index"
                               cols="12"
                               sm="6"
@@ -1794,7 +2109,7 @@
                                 class="rounded-lg"
                               />
                               <div class="text-caption mt-1">
-                                {{ getPhotoLabel(photo, 'Persampahan') }}
+                                {{ getPhotoLabel(photo, "Persampahan") }}
                               </div>
                             </v-col>
                           </v-row>
@@ -1809,10 +2124,7 @@
               <v-tabs-window-item value="jalan">
                 <v-container class="mt-4">
                   <v-row>
-                    <v-col
-                      cols="12"
-                      md="12"
-                    >
+                    <v-col cols="12" md="12">
                       <v-card variant="outlined">
                         <v-card-text>
                           <v-list density="comfortable">
@@ -1821,7 +2133,11 @@
                                 Jenis Jalan Akses Menuju Rumah
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatRoadType(selectedSubmission.roadAccess?.roadType) }}
+                                {{
+                                  formatRoadType(
+                                    selectedSubmission.roadAccess?.roadType
+                                  )
+                                }}
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-3" />
@@ -1830,9 +2146,23 @@
                                 Jenis Konstruksi Jalan Akses
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatRoadConstruction(selectedSubmission.roadAccess?.roadConstruction) }}
-                                <span v-if="selectedSubmission.roadAccess?.roadConstructionOther">
-                                  - {{ selectedSubmission.roadAccess.roadConstructionOther }}
+                                {{
+                                  formatRoadConstruction(
+                                    selectedSubmission.roadAccess
+                                      ?.roadConstruction
+                                  )
+                                }}
+                                <span
+                                  v-if="
+                                    selectedSubmission.roadAccess
+                                      ?.roadConstructionOther
+                                  "
+                                >
+                                  -
+                                  {{
+                                    selectedSubmission.roadAccess
+                                      .roadConstructionOther
+                                  }}
                                 </span>
                               </v-list-item-subtitle>
                             </v-list-item>
@@ -1841,10 +2171,13 @@
                       </v-card>
                     </v-col>
                   </v-row>
-                  
+
                   <!-- Photo Gallery for Jalan -->
                   <v-row
-                    v-if="selectedSubmission.roadAccess?.photos && selectedSubmission.roadAccess.photos.length > 0"
+                    v-if="
+                      selectedSubmission.roadAccess?.photos &&
+                      selectedSubmission.roadAccess.photos.length > 0
+                    "
                     class="mt-4"
                   >
                     <v-col cols="12">
@@ -1855,7 +2188,8 @@
                         <v-card-text>
                           <v-row>
                             <v-col
-                              v-for="(photo, index) in selectedSubmission.roadAccess.photos"
+                              v-for="(photo, index) in selectedSubmission
+                                .roadAccess.photos"
                               :key="index"
                               cols="12"
                               sm="6"
@@ -1868,7 +2202,7 @@
                                 class="rounded-lg"
                               />
                               <div class="text-caption mt-1">
-                                {{ getPhotoLabel(photo, 'Akses Jalan') }}
+                                {{ getPhotoLabel(photo, "Akses Jalan") }}
                               </div>
                             </v-col>
                           </v-row>
@@ -1883,10 +2217,7 @@
               <v-tabs-window-item value="energi">
                 <v-container class="mt-4">
                   <v-row>
-                    <v-col
-                      cols="12"
-                      md="12"
-                    >
+                    <v-col cols="12" md="12">
                       <v-card variant="outlined">
                         <v-card-text>
                           <v-list density="comfortable">
@@ -1895,22 +2226,53 @@
                                 Sumber Listrik di Rumah
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ formatElectricitySource(selectedSubmission.energyAccess?.electricitySource) }}
-                                <span v-if="selectedSubmission.energyAccess?.electricitySourceOther">
-                                  - {{ selectedSubmission.energyAccess.electricitySourceOther }}
+                                {{
+                                  formatElectricitySource(
+                                    selectedSubmission.energyAccess
+                                      ?.electricitySource
+                                  )
+                                }}
+                                <span
+                                  v-if="
+                                    selectedSubmission.energyAccess
+                                      ?.electricitySourceOther
+                                  "
+                                >
+                                  -
+                                  {{
+                                    selectedSubmission.energyAccess
+                                      .electricitySourceOther
+                                  }}
                                 </span>
                               </v-list-item-subtitle>
                             </v-list-item>
                             <v-divider
-                              v-if="(selectedSubmission.energyAccess?.electricitySource === 'pln_sendiri' || selectedSubmission.energyAccess?.electricitySource === 'pln_menumpang') && selectedSubmission.energyAccess?.plnCapacity"
+                              v-if="
+                                (selectedSubmission.energyAccess
+                                  ?.electricitySource === 'pln_sendiri' ||
+                                  selectedSubmission.energyAccess
+                                    ?.electricitySource === 'pln_menumpang') &&
+                                selectedSubmission.energyAccess?.plnCapacity
+                              "
                               class="my-3"
                             />
-                            <v-list-item v-if="(selectedSubmission.energyAccess?.electricitySource === 'pln_sendiri' || selectedSubmission.energyAccess?.electricitySource === 'pln_menumpang') && selectedSubmission.energyAccess?.plnCapacity">
+                            <v-list-item
+                              v-if="
+                                (selectedSubmission.energyAccess
+                                  ?.electricitySource === 'pln_sendiri' ||
+                                  selectedSubmission.energyAccess
+                                    ?.electricitySource === 'pln_menumpang') &&
+                                selectedSubmission.energyAccess?.plnCapacity
+                              "
+                            >
                               <v-list-item-title class="font-weight-bold mb-2">
                                 Kapasitas Listrik (Watt)
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
-                                {{ selectedSubmission.energyAccess.plnCapacity }} Watt
+                                {{
+                                  selectedSubmission.energyAccess.plnCapacity
+                                }}
+                                Watt
                               </v-list-item-subtitle>
                             </v-list-item>
                           </v-list>
@@ -1918,10 +2280,13 @@
                       </v-card>
                     </v-col>
                   </v-row>
-                  
+
                   <!-- Photo Gallery for Energi -->
                   <v-row
-                    v-if="selectedSubmission.energyAccess?.photos && selectedSubmission.energyAccess.photos.length > 0"
+                    v-if="
+                      selectedSubmission.energyAccess?.photos &&
+                      selectedSubmission.energyAccess.photos.length > 0
+                    "
                     class="mt-4"
                   >
                     <v-col cols="12">
@@ -1932,7 +2297,8 @@
                         <v-card-text>
                           <v-row>
                             <v-col
-                              v-for="(photo, index) in selectedSubmission.energyAccess.photos"
+                              v-for="(photo, index) in selectedSubmission
+                                .energyAccess.photos"
                               :key="index"
                               cols="12"
                               sm="6"
@@ -1945,7 +2311,7 @@
                                 class="rounded-lg"
                               />
                               <div class="text-caption mt-1">
-                                {{ getPhotoLabel(photo, 'Akses Energi') }}
+                                {{ getPhotoLabel(photo, "Akses Energi") }}
                               </div>
                             </v-col>
                           </v-row>
@@ -1972,34 +2338,19 @@
       </v-dialog>
 
       <!-- Edit Dialog (Verifier) -->
-      <v-dialog
-        v-model="showEditDialog"
-        max-width="720"
-        scrollable
-      >
+      <v-dialog v-model="showEditDialog" max-width="720" scrollable>
         <v-card>
           <v-card-title class="d-flex align-center">
-            <v-icon
-              class="mr-2"
-              color="warning"
-            >
-              mdi-pencil
-            </v-icon>
+            <v-icon class="mr-2" color="warning"> mdi-pencil </v-icon>
             Edit Data Survei
           </v-card-title>
 
           <v-card-text>
-            <v-alert
-              type="info"
-              variant="tonal"
-              class="mb-4"
-            >
-              Simpan perubahan akan menandai data sebagai <strong>Ditinjau</strong>.
+            <v-alert type="info" variant="tonal" class="mb-4">
+              Simpan perubahan akan menandai data sebagai
+              <strong>Ditinjau</strong>.
             </v-alert>
-            <v-form
-              ref="editFormRef"
-              v-model="editFormValid"
-            >
+            <v-form ref="editFormRef" v-model="editFormValid">
               <v-expansion-panels multiple>
                 <v-expansion-panel>
                   <v-expansion-panel-title>
@@ -2007,10 +2358,7 @@
                   </v-expansion-panel-title>
                   <v-expansion-panel-text>
                     <v-row>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-text-field
                           v-model="editForm.formRespondent.name"
                           label="Nama"
@@ -2018,10 +2366,7 @@
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-text-field
                           v-model="editForm.formRespondent.email"
                           label="Email"
@@ -2029,20 +2374,14 @@
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-text-field
                           v-model="editForm.formRespondent.phone"
                           label="No. Telp"
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-select
                           v-model="editForm.formRespondent.position"
                           label="Jabatan"
@@ -2070,10 +2409,7 @@
                   </v-expansion-panel-title>
                   <v-expansion-panel-text>
                     <v-row>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-text-field
                           v-model="editForm.householdOwner.ownerName"
                           label="Nama Pemilik"
@@ -2081,20 +2417,14 @@
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-text-field
                           v-model="editForm.householdOwner.ownerPhone"
                           label="No. Telp Pemilik"
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-text-field
                           v-model="editForm.householdOwner.headOfFamilyName"
                           label="Nama Kepala Keluarga"
@@ -2102,20 +2432,14 @@
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-text-field
                           v-model="editForm.householdOwner.headOfFamilyPhone"
                           label="No. Telp Kepala Keluarga"
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="4"
-                      >
+                      <v-col cols="12" md="4">
                         <v-text-field
                           v-model="editForm.householdOwner.headOfFamilyAge"
                           label="Usia Kepala Keluarga"
@@ -2123,20 +2447,14 @@
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="4"
-                      >
+                      <v-col cols="12" md="4">
                         <v-text-field
                           v-model="editForm.householdOwner.familyCardNumber"
                           label="No. KK"
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="4"
-                      >
+                      <v-col cols="12" md="4">
                         <v-text-field
                           v-model="editForm.householdOwner.totalFamilyMembers"
                           label="Jumlah KK dalam 1 Rumah"
@@ -2144,40 +2462,28 @@
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-text-field
                           v-model="editForm.householdOwner.houseNumber"
                           label="Alamat"
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="3"
-                      >
+                      <v-col cols="12" md="3">
                         <v-text-field
                           v-model="editForm.householdOwner.rt"
                           label="RT"
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="3"
-                      >
+                      <v-col cols="12" md="3">
                         <v-text-field
                           v-model="editForm.householdOwner.rw"
                           label="RW"
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-text-field
                           v-model="editForm.householdOwner.latitude"
                           label="Latitude"
@@ -2185,10 +2491,7 @@
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-text-field
                           v-model="editForm.householdOwner.longitude"
                           label="Longitude"
@@ -2196,10 +2499,7 @@
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-select
                           v-model="editForm.householdOwner.provinceId"
                           label="Provinsi"
@@ -2211,10 +2511,7 @@
                           :rules="[rules.required]"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-select
                           v-model="editForm.householdOwner.regencyId"
                           label="Kabupaten / Kota"
@@ -2227,10 +2524,7 @@
                           :rules="[rules.required]"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-select
                           v-model="editForm.householdOwner.districtId"
                           label="Kecamatan"
@@ -2243,10 +2537,7 @@
                           :rules="[rules.required]"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-select
                           v-model="editForm.householdOwner.villageId"
                           label="Kelurahan"
@@ -2259,10 +2550,7 @@
                           :rules="[rules.required]"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-select
                           v-model="editForm.householdOwner.educationLevel"
                           label="Pendidikan"
@@ -2271,7 +2559,9 @@
                         />
                       </v-col>
                       <v-col
-                        v-if="editForm.householdOwner.educationLevel === 'lainnya'"
+                        v-if="
+                          editForm.householdOwner.educationLevel === 'lainnya'
+                        "
                         cols="12"
                         md="6"
                       >
@@ -2281,20 +2571,14 @@
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-text-field
                           v-model="editForm.householdOwner.occupation"
                           label="Pekerjaan"
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-text-field
                           v-model="editForm.householdOwner.monthlyIncome"
                           label="Penghasilan Bulanan"
@@ -2303,10 +2587,7 @@
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-select
                           v-model="editForm.householdOwner.landOwnershipStatus"
                           label="Status Kepemilikan Tanah"
@@ -2314,10 +2595,7 @@
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-select
                           v-model="editForm.householdOwner.houseOwnershipStatus"
                           label="Status Kepemilikan Rumah"
@@ -2325,33 +2603,33 @@
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-select
-                          v-model="editForm.householdOwner.hasReceivedHousingAssistance"
+                          v-model="
+                            editForm.householdOwner.hasReceivedHousingAssistance
+                          "
                           label="Pernah Menerima Bantuan Perumahan"
                           :items="yesNoOptions"
                           variant="outlined"
                         />
                       </v-col>
                       <v-col
-                        v-if="editForm.householdOwner.hasReceivedHousingAssistance"
+                        v-if="
+                          editForm.householdOwner.hasReceivedHousingAssistance
+                        "
                         cols="12"
                         md="6"
                       >
                         <v-text-field
-                          v-model="editForm.householdOwner.housingAssistanceYear"
+                          v-model="
+                            editForm.householdOwner.housingAssistanceYear
+                          "
                           label="Tahun Bantuan"
                           type="number"
                           variant="outlined"
                         />
                       </v-col>
-                      <v-col
-                        cols="12"
-                        md="6"
-                      >
+                      <v-col cols="12" md="6">
                         <v-select
                           v-model="editForm.householdOwner.isRegisteredAsPoor"
                           label="Kriteria Miskin"
@@ -2365,7 +2643,9 @@
                         md="6"
                       >
                         <v-text-field
-                          v-model="editForm.householdOwner.poorRegistrationAttachment"
+                          v-model="
+                            editForm.householdOwner.poorRegistrationAttachment
+                          "
                           label="Keterangan Kriteria Miskin"
                           variant="outlined"
                         />
@@ -2399,27 +2679,22 @@
       </v-dialog>
 
       <!-- Review Dialog -->
-      <v-dialog
-        v-model="showReviewDialog"
-        max-width="600"
-      >
+      <v-dialog v-model="showReviewDialog" max-width="600">
         <v-card>
           <v-card-title>
             {{ reviewDialogTitle }}
           </v-card-title>
-          
+
           <v-card-text>
-            <v-form
-              ref="reviewFormRef"
-              v-model="reviewFormValid"
-            >
+            <v-form ref="reviewFormRef" v-model="reviewFormValid">
               <v-alert
                 v-if="reviewData.status === 'rejected'"
                 type="warning"
                 variant="tonal"
                 class="mb-4"
               >
-                Alasan penolakan wajib diisi agar pengajuan dapat ditindaklanjuti.
+                Alasan penolakan wajib diisi agar pengajuan dapat
+                ditindaklanjuti.
               </v-alert>
               <v-select
                 v-if="reviewData.status !== 'rejected'"
@@ -2429,7 +2704,7 @@
                 :rules="[rules.required]"
                 variant="outlined"
               />
-              
+
               <v-textarea
                 v-model="reviewData.reviewNotes"
                 label="Review Notes"
@@ -2466,322 +2741,349 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, onMounted, watch } from 'vue'
-import { definePage } from 'unplugin-vue-router/runtime'
-import { useHousingStore } from '@/stores/housing'
-import { useAppStore } from '@/stores/app'
-import { useMapDataStore } from '@/stores/mapData'
-import { exportAPI, housingAPI, locationAPI } from '@/services'
+import { ref, computed, reactive, onMounted, watch } from "vue";
+import { definePage } from "unplugin-vue-router/runtime";
+import { useHousingStore } from "@/stores/housing";
+import { useAppStore } from "@/stores/app";
+import { useMapDataStore } from "@/stores/mapData";
+import { exportAPI, housingAPI, locationAPI } from "@/services";
 import {
   buildMetaRows,
   exportToExcel,
   getColumnsForCategories,
-  getExportCategories
-} from '@/utils/exportUtils'
-import { debounce } from 'lodash-es'
+  getExportCategories,
+} from "@/utils/exportUtils";
+import { debounce } from "lodash-es";
 
 definePage({
   meta: {
-    layout: 'dashboard'
-  }
-})
+    layout: "dashboard",
+  },
+});
 
-const housingStore = useHousingStore()
-const appStore = useAppStore()
-const mapStore = useMapDataStore()
+const housingStore = useHousingStore();
+const appStore = useAppStore();
+const mapStore = useMapDataStore();
 
 // Reactive state
-const isLoading = ref(false)
-const searchQuery = ref('')
-const showDetailDialog = ref(false)
-const showReviewDialog = ref(false)
-const showEditDialog = ref(false)
-const selectedSubmission = ref(null)
-const submissionHistory = ref([])
-const submissionHistoryLoading = ref(false)
-const submissionHistoryError = ref('')
-const activeTab = ref('pengisi')
-const reviewFormValid = ref(false)
-const reviewFormRef = ref(null)
-const editFormValid = ref(false)
-const editFormRef = ref(null)
-const expandedStatistics = ref([]) // For expansion panel ([] = collapsed, [0] = expanded)
-const showAllFilters = ref(false) // For showing/hiding additional filters
-const exportDialogOpen = ref(false)
-const exportScope = ref('all')
-const exportLoading = ref(false)
-const exportError = ref('')
-const housingExportCategories = getExportCategories('housing')
-const exportCategoryIds = ref(housingExportCategories.map((category) => category.id))
+const isLoading = ref(false);
+const searchQuery = ref("");
+const showDetailDialog = ref(false);
+const showReviewDialog = ref(false);
+const showEditDialog = ref(false);
+const selectedSubmission = ref(null);
+const submissionHistory = ref([]);
+const submissionHistoryLoading = ref(false);
+const submissionHistoryError = ref("");
+const activeTab = ref("pengisi");
+const reviewFormValid = ref(false);
+const reviewFormRef = ref(null);
+const editFormValid = ref(false);
+const editFormRef = ref(null);
+const expandedStatistics = ref([]); // For expansion panel ([] = collapsed, [0] = expanded)
+const showAllFilters = ref(false); // For showing/hiding additional filters
+const exportDialogOpen = ref(false);
+const exportScope = ref("all");
+const exportLoading = ref(false);
+const exportError = ref("");
+const housingExportCategories = getExportCategories("housing");
+const exportCategoryIds = ref(
+  housingExportCategories.map((category) => category.id)
+);
 const exportAllCategories = computed({
   get: () => exportCategoryIds.value.length === housingExportCategories.length,
   set: (value) => {
     exportCategoryIds.value = value
       ? housingExportCategories.map((category) => category.id)
-      : []
-  }
-})
+      : [];
+  },
+});
 
 const createEmptyEditForm = () => ({
   formRespondent: {
-    name: '',
-    email: '',
-    phone: '',
-    position: '',
-    positionOther: ''
+    name: "",
+    email: "",
+    phone: "",
+    position: "",
+    positionOther: "",
   },
   householdOwner: {
-    ownerName: '',
-    ownerPhone: '',
-    headOfFamilyName: '',
-    headOfFamilyPhone: '',
+    ownerName: "",
+    ownerPhone: "",
+    headOfFamilyName: "",
+    headOfFamilyPhone: "",
     headOfFamilyAge: null,
-    familyCardNumber: '',
+    familyCardNumber: "",
     totalFamilyMembers: null,
-    houseNumber: '',
-    rt: '',
-    rw: '',
+    houseNumber: "",
+    rt: "",
+    rw: "",
     provinceId: null,
     regencyId: null,
     districtId: null,
     villageId: null,
     latitude: null,
     longitude: null,
-    educationLevel: '',
-    educationLevelOther: '',
-    occupation: '',
+    educationLevel: "",
+    educationLevelOther: "",
+    occupation: "",
     monthlyIncome: null,
-    landOwnershipStatus: '',
-    houseOwnershipStatus: '',
+    landOwnershipStatus: "",
+    houseOwnershipStatus: "",
     hasReceivedHousingAssistance: null,
     housingAssistanceYear: null,
     isRegisteredAsPoor: null,
-    poorRegistrationAttachment: ''
-  }
-  })
+    poorRegistrationAttachment: "",
+  },
+});
 
 const normalizeText = (value) => {
-  if (value === null || value === undefined) return undefined
-  const trimmed = String(value).trim()
-  return trimmed.length ? trimmed : undefined
-}
+  if (value === null || value === undefined) return undefined;
+  const trimmed = String(value).trim();
+  return trimmed.length ? trimmed : undefined;
+};
 
 const normalizeId = (value) => {
-  if (value === null || value === undefined || value === '') return undefined
-  const normalized = String(value).trim()
-  return normalized.length === 12 ? normalized : undefined
-}
+  if (value === null || value === undefined || value === "") return undefined;
+  const normalized = String(value).trim();
+  return normalized.length === 12 ? normalized : undefined;
+};
 
 const normalizeEmail = (value) => {
-  const normalized = normalizeText(value)
-  if (!normalized) return undefined
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailPattern.test(normalized) ? normalized : undefined
-}
+  const normalized = normalizeText(value);
+  if (!normalized) return undefined;
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailPattern.test(normalized) ? normalized : undefined;
+};
 
 const normalizeEnum = (value, allowedValues) => {
-  if (!allowedValues || !allowedValues.length) return undefined
-  return allowedValues.includes(value) ? value : undefined
-}
+  if (!allowedValues || !allowedValues.length) return undefined;
+  return allowedValues.includes(value) ? value : undefined;
+};
 
 const normalizeNumber = (value) => {
-  if (value === null || value === undefined || value === '') return undefined
-  const numeric = Number(value)
-  return Number.isFinite(numeric) ? numeric : undefined
-}
+  if (value === null || value === undefined || value === "") return undefined;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : undefined;
+};
 
-const normalizeBoolean = (value) => (typeof value === 'boolean' ? value : undefined)
+const normalizeBoolean = (value) =>
+  typeof value === "boolean" ? value : undefined;
 
-const pickDefined = (payload) => Object.fromEntries(
-  Object.entries(payload).filter(([, value]) => value !== undefined)
-)
+const pickDefined = (payload) =>
+  Object.fromEntries(
+    Object.entries(payload).filter(([, value]) => value !== undefined)
+  );
 
-const editForm = ref(createEmptyEditForm())
-const statistics = ref(null)
-const statisticsLoading = ref(false)
-const statisticsCacheKey = ref('')
+const editForm = ref(createEmptyEditForm());
+const statistics = ref(null);
+const statisticsLoading = ref(false);
+const statisticsCacheKey = ref("");
 
 // Filter location state
 const filterLocation = ref({
   province: null,
   regency: null,
   district: null,
-  village: null
-})
+  village: null,
+});
 
-const filterProvinceOptions = ref([])
-const filterRegencyOptions = ref([])
-const filterDistrictOptions = ref([])
-const filterVillageOptions = ref([])
+const filterProvinceOptions = ref([]);
+const filterRegencyOptions = ref([]);
+const filterDistrictOptions = ref([]);
+const filterVillageOptions = ref([]);
 
 const filterLocationLoading = reactive({
   provinces: false,
   regencies: false,
   districts: false,
-  villages: false
-})
-const editLocationSyncing = ref(false)
+  villages: false,
+});
+const editLocationSyncing = ref(false);
 
 // Review form data
 const reviewData = ref({
-  status: '',
-  reviewNotes: ''
-})
+  status: "",
+  reviewNotes: "",
+});
 
 // Table headers
 const headers = [
-  { title: 'ID', key: 'id', sortable: false, width: '120px' },
-  { title: 'Status', key: 'status', sortable: false, width: '120px' },
-  { title: 'Status Layak Huni', key: 'isLivable', sortable: false, width: '140px' },
-  { title: 'Nama Pemilik', key: 'ownerName', sortable: false, width: '200px' },
-  { title: 'No KK', key: 'familyCardNumber', sortable: false, width: '160px' },
-  { title: 'Alamat', key: 'address', sortable: false, width: '150px' },
-  { title: 'Tanggal Diajukan', key: 'submittedAt', sortable: false, width: '150px' },
-  { title: 'Peninjau', key: 'reviewer', sortable: false, width: '150px' },
-  { title: 'Aksi', key: 'actions', sortable: false, width: '120px' }
-]
-const itemsPerPageOptions = [10, 20, 50, 100]
+  { title: "ID", key: "id", sortable: false, width: "120px" },
+  { title: "Status", key: "status", sortable: false, width: "120px" },
+  {
+    title: "Status Layak Huni",
+    key: "isLivable",
+    sortable: false,
+    width: "140px",
+  },
+  { title: "Nama Pemilik", key: "ownerName", sortable: false, width: "200px" },
+  { title: "No KK", key: "familyCardNumber", sortable: false, width: "160px" },
+  { title: "Alamat", key: "address", sortable: false, width: "150px" },
+  {
+    title: "Tanggal Diajukan",
+    key: "submittedAt",
+    sortable: false,
+    width: "150px",
+  },
+  { title: "Peninjau", key: "reviewer", sortable: false, width: "150px" },
+  { title: "Aksi", key: "actions", sortable: false, width: "120px" },
+];
+const itemsPerPageOptions = [10, 20, 50, 100];
 
 // Computed properties
-const submissions = computed(() => housingStore.submissions || [])
-const pagination = computed(() => housingStore.pagination || {
-  currentPage: 1,
-  totalPages: 0,
-  totalItems: 0,
-  itemsPerPage: 20,
-  hasNextPage: false,
-  hasPrevPage: false
-})
+const submissions = computed(() => housingStore.submissions || []);
+const pagination = computed(
+  () =>
+    housingStore.pagination || {
+      currentPage: 1,
+      totalPages: 0,
+      totalItems: 0,
+      itemsPerPage: 20,
+      hasNextPage: false,
+      hasPrevPage: false,
+    }
+);
 const resolveStatus = (status, verificationStatus = null) => {
-  const normalizedStatus = String(status || '').toLowerCase()
-  const normalizedVerification = String(verificationStatus || '').toLowerCase()
+  const normalizedStatus = String(status || "").toLowerCase();
+  const normalizedVerification = String(verificationStatus || "").toLowerCase();
 
-  if (normalizedStatus === 'history') return 'history'
-  if (normalizedVerification === 'rejected') return 'rejected'
-  if (normalizedVerification === 'verified' || normalizedStatus === 'approved') return 'approved'
-  if (['reviewed', 'under_review', 'verified'].includes(normalizedStatus)) return 'under_review'
-  return normalizedStatus || 'draft'
-}
+  if (normalizedStatus === "history") return "history";
+  if (normalizedVerification === "rejected") return "rejected";
+  if (normalizedVerification === "verified" || normalizedStatus === "approved")
+    return "approved";
+  if (["reviewed", "under_review", "verified"].includes(normalizedStatus))
+    return "under_review";
+  return normalizedStatus || "draft";
+};
 
 const resolveItemStatus = (item) =>
-  resolveStatus(item?.status, item?.verificationStatus)
+  resolveStatus(item?.status, item?.verificationStatus);
 
 const getPhotoUrl = (photo) => {
-  if (!photo) return ''
-  const raw = typeof photo === 'string'
-    ? photo
-    : photo.url || photo.fileUrl || photo.filePath || photo.file_path || ''
-  if (!raw) return ''
-  if (/^https?:\/\//i.test(raw) || raw.startsWith('blob:')) return raw
-  const baseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
-  const apiRoot = baseUrl.replace(/\/api$/i, '')
-  const normalized = String(raw).replace(/\\/g, '/')
-  if (normalized.startsWith('/api/files/') || normalized.startsWith('api/files/')) {
-    const path = normalized.startsWith('/') ? normalized : `/${normalized}`
-    return `${apiRoot}${path}`
+  if (!photo) return "";
+  const raw =
+    typeof photo === "string"
+      ? photo
+      : photo.url || photo.fileUrl || photo.filePath || photo.file_path || "";
+  if (!raw) return "";
+  if (/^https?:\/\//i.test(raw) || raw.startsWith("blob:")) return raw;
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+  const apiRoot = baseUrl.replace(/\/api$/i, "");
+  const normalized = String(raw).replace(/\\/g, "/");
+  if (
+    normalized.startsWith("/api/files/") ||
+    normalized.startsWith("api/files/")
+  ) {
+    const path = normalized.startsWith("/") ? normalized : `/${normalized}`;
+    return `${apiRoot}${path}`;
   }
-  if (normalized.startsWith('/files/') || normalized.startsWith('files/')) {
-    const path = normalized.startsWith('/') ? normalized : `/${normalized}`
-    return `${apiRoot}/api${path}`
+  if (normalized.startsWith("/files/") || normalized.startsWith("files/")) {
+    const path = normalized.startsWith("/") ? normalized : `/${normalized}`;
+    return `${apiRoot}/api${path}`;
   }
-  const prefix = baseUrl ? `${baseUrl}/files/` : '/api/files/'
-  return `${prefix}${normalized.replace(/^\/+/, '')}`
-}
+  const prefix = baseUrl ? `${baseUrl}/files/` : "/api/files/";
+  return `${prefix}${normalized.replace(/^\/+/, "")}`;
+};
 
 const getPhotoLabel = (photo, fallback) => {
-  if (photo?.caption) return photo.caption
-  return fallback
-}
+  if (photo?.caption) return photo.caption;
+  return fallback;
+};
 
 const detailPhotos = computed(() => {
-  const submission = selectedSubmission.value
-  if (!submission) return []
+  const submission = selectedSubmission.value;
+  if (!submission) return [];
   const sources = [
-    { label: 'Rumah', photos: submission.houseData?.photos },
-    { label: 'Air Bersih', photos: submission.waterAccess?.photos },
-    { label: 'Sanitasi', photos: submission.sanitationAccess?.photos },
-    { label: 'Persampahan', photos: submission.wasteManagement?.photos },
-    { label: 'Akses Jalan', photos: submission.roadAccess?.photos },
-    { label: 'Akses Energi', photos: submission.energyAccess?.photos }
-  ]
+    { label: "Rumah", photos: submission.houseData?.photos },
+    { label: "Air Bersih", photos: submission.waterAccess?.photos },
+    { label: "Sanitasi", photos: submission.sanitationAccess?.photos },
+    { label: "Persampahan", photos: submission.wasteManagement?.photos },
+    { label: "Akses Jalan", photos: submission.roadAccess?.photos },
+    { label: "Akses Energi", photos: submission.energyAccess?.photos },
+  ];
 
-  const collected = []
+  const collected = [];
   sources.forEach(({ label, photos }) => {
-    if (!Array.isArray(photos)) return
+    if (!Array.isArray(photos)) return;
     photos.forEach((photo, index) => {
-      const url = getPhotoUrl(photo)
-      if (!url) return
+      const url = getPhotoUrl(photo);
+      if (!url) return;
       collected.push({
         id: `${label}-${photo?.id || index}`,
         url,
-        label: getPhotoLabel(photo, label)
-      })
-    })
-  })
+        label: getPhotoLabel(photo, label),
+      });
+    });
+  });
 
-  return collected
-})
+  return collected;
+});
 
 const submissionCounts = computed(() => {
-  const rawCounts = statistics.value?.statusBreakdown || housingStore.submissionCounts || {}
+  const rawCounts =
+    statistics.value?.statusBreakdown || housingStore.submissionCounts || {};
   const counts = {
     draft: 0,
     submitted: 0,
     under_review: 0,
     approved: 0,
-    rejected: 0
-  }
+    rejected: 0,
+  };
 
   Object.entries(rawCounts).forEach(([status, count]) => {
-    const normalized = resolveStatus(status)
-    counts[normalized] = (counts[normalized] || 0) + Number(count || 0)
-  })
+    const normalized = resolveStatus(status);
+    counts[normalized] = (counts[normalized] || 0) + Number(count || 0);
+  });
 
-  return counts
-})
+  return counts;
+});
 const canReview = computed(() =>
-  appStore.hasAnyRole(['verifikator', 'super_admin'])
-)
-const canEdit = computed(() =>
-  appStore.hasPermission('housing:update') || appStore.hasAnyRole(['verifikator', 'super_admin'])
-)
-const filters = computed(() => housingStore.filters || {})
+  appStore.hasAnyRole(["verifikator", "super_admin"])
+);
+const canEdit = computed(
+  () =>
+    appStore.hasPermission("housing:update") ||
+    appStore.hasAnyRole(["verifikator", "super_admin"])
+);
+const filters = computed(() => housingStore.filters || {});
 
 const isWithinScope = (item) => {
   if (appStore.isSuperAdmin || appStore.isVerifikator) {
-    return true
+    return true;
   }
-  const owner = item?.householdOwner || {}
+  const owner = item?.householdOwner || {};
   const location = {
     villageId: owner.village?.id || owner.villageId,
     districtId: owner.district?.id || owner.districtId,
     regencyId: owner.regency?.id || owner.regencyId,
-    provinceId: owner.province?.id || owner.provinceId
-  }
+    provinceId: owner.province?.id || owner.provinceId,
+  };
 
   if (appStore.user?.assignedVillageId) {
-    return location.villageId === appStore.user.assignedVillageId
+    return location.villageId === appStore.user.assignedVillageId;
   }
   if (appStore.user?.assignedDistrictId) {
-    return location.districtId === appStore.user.assignedDistrictId
+    return location.districtId === appStore.user.assignedDistrictId;
   }
   if (appStore.user?.assignedRegencyId) {
-    return location.regencyId === appStore.user.assignedRegencyId
+    return location.regencyId === appStore.user.assignedRegencyId;
   }
   if (appStore.user?.assignedProvinceId) {
-    return location.provinceId === appStore.user.assignedProvinceId
+    return location.provinceId === appStore.user.assignedProvinceId;
   }
-  return true
-}
+  return true;
+};
 
-const canReviewSubmission = (item) => canReview.value && isWithinScope(item)
-const canEditSubmission = (item) => (
-  canEdit.value
-  && isWithinScope(item)
-  && ['submitted', 'under_review'].includes(resolveItemStatus(item))
-)
-const canApproveStatus = (item) => ['submitted', 'under_review'].includes(resolveItemStatus(item))
-const canRejectStatus = (item) => ['submitted', 'under_review'].includes(resolveItemStatus(item))
+const canReviewSubmission = (item) => canReview.value && isWithinScope(item);
+const canEditSubmission = (item) =>
+  canEdit.value &&
+  isWithinScope(item) &&
+  ["submitted", "under_review"].includes(resolveItemStatus(item));
+const canApproveStatus = (item) =>
+  ["submitted", "under_review"].includes(resolveItemStatus(item));
+const canRejectStatus = (item) =>
+  ["submitted", "under_review"].includes(resolveItemStatus(item));
 
 // Computed property to check if there are active filters
 const hasActiveFilters = computed(() => {
@@ -2793,1018 +3095,1048 @@ const hasActiveFilters = computed(() => {
     filterLocation.value.district ||
     filterLocation.value.village ||
     searchQuery.value
-  )
-})
+  );
+});
 
 // Location filter names (fetched from API)
-const currentLocationFilters = ref([])
-const locationFiltersLoading = ref(false)
+const currentLocationFilters = ref([]);
+const locationFiltersLoading = ref(false);
 
 // Fetch location names from API
 const loadLocationFilters = async () => {
-  const userData = localStorage.getItem('user-data')
+  const userData = localStorage.getItem("user-data");
   if (!userData) {
-    currentLocationFilters.value = []
-    return
+    currentLocationFilters.value = [];
+    return;
   }
-  
+
   try {
-    const user = JSON.parse(userData)
-    const filterList = []
-    locationFiltersLoading.value = true
-    
+    const user = JSON.parse(userData);
+    const filterList = [];
+    locationFiltersLoading.value = true;
+
     // Fetch province name
     if (user.assignedProvinceId) {
       try {
-        const response = await locationAPI.getProvince(user.assignedProvinceId)
+        const response = await locationAPI.getProvince(user.assignedProvinceId);
         if (response.success && response.data?.province) {
-          filterList.push(`Provinsi: ${response.data.province.name}`)
+          filterList.push(`Provinsi: ${response.data.province.name}`);
         } else {
-          filterList.push(`Provinsi: ${user.assignedProvinceId}`)
+          filterList.push(`Provinsi: ${user.assignedProvinceId}`);
         }
       } catch (error) {
-        console.error('Error fetching province:', error)
-        filterList.push(`Provinsi: ${user.assignedProvinceId}`)
+        console.error("Error fetching province:", error);
+        filterList.push(`Provinsi: ${user.assignedProvinceId}`);
       }
     }
-    
+
     // Fetch regency name
     if (user.assignedRegencyId) {
       try {
-        const response = await locationAPI.getRegency(user.assignedRegencyId)
+        const response = await locationAPI.getRegency(user.assignedRegencyId);
         if (response.success && response.data?.regency) {
-          filterList.push(`Kabupaten/Kota: ${response.data.regency.name}`)
+          filterList.push(`Kabupaten/Kota: ${response.data.regency.name}`);
         } else {
-          filterList.push(`Kabupaten/Kota: ${user.assignedRegencyId}`)
+          filterList.push(`Kabupaten/Kota: ${user.assignedRegencyId}`);
         }
       } catch (error) {
-        console.error('Error fetching regency:', error)
-        filterList.push(`Kabupaten/Kota: ${user.assignedRegencyId}`)
+        console.error("Error fetching regency:", error);
+        filterList.push(`Kabupaten/Kota: ${user.assignedRegencyId}`);
       }
     }
-    
+
     // Fetch district name
     if (user.assignedDistrictId) {
       try {
-        const response = await locationAPI.getDistrict(user.assignedDistrictId)
+        const response = await locationAPI.getDistrict(user.assignedDistrictId);
         if (response.success && response.data?.district) {
-          filterList.push(`Kecamatan: ${response.data.district.name}`)
+          filterList.push(`Kecamatan: ${response.data.district.name}`);
         } else {
-          filterList.push(`Kecamatan: ${user.assignedDistrictId}`)
+          filterList.push(`Kecamatan: ${user.assignedDistrictId}`);
         }
       } catch (error) {
-        console.error('Error fetching district:', error)
-        filterList.push(`Kecamatan: ${user.assignedDistrictId}`)
+        console.error("Error fetching district:", error);
+        filterList.push(`Kecamatan: ${user.assignedDistrictId}`);
       }
     }
-    
+
     // Fetch village name
     if (user.assignedVillageId) {
       try {
-        const response = await locationAPI.getVillage(user.assignedVillageId)
+        const response = await locationAPI.getVillage(user.assignedVillageId);
         if (response.success && response.data?.village) {
-          filterList.push(`Kelurahan: ${response.data.village.name}`)
+          filterList.push(`Kelurahan: ${response.data.village.name}`);
         } else {
-          filterList.push(`Kelurahan: ${user.assignedVillageId}`)
+          filterList.push(`Kelurahan: ${user.assignedVillageId}`);
         }
       } catch (error) {
-        console.error('Error fetching village:', error)
-        filterList.push(`Kelurahan: ${user.assignedVillageId}`)
+        console.error("Error fetching village:", error);
+        filterList.push(`Kelurahan: ${user.assignedVillageId}`);
       }
     }
-    
-    currentLocationFilters.value = filterList
+
+    currentLocationFilters.value = filterList;
   } catch (error) {
-    console.error('Error parsing user data for location filters:', error)
-    currentLocationFilters.value = []
+    console.error("Error parsing user data for location filters:", error);
+    currentLocationFilters.value = [];
   } finally {
-    locationFiltersLoading.value = false
+    locationFiltersLoading.value = false;
   }
-}
+};
 
 // Options
 const statusOptions = [
-  { title: 'Draft', value: 'draft' },
-  { title: 'Diajukan', value: 'submitted' },
-  { title: 'Dalam Review', value: 'under_review' },
-  { title: 'Disetujui', value: 'approved' },
-  { title: 'Ditolak', value: 'rejected' }
-]
+  { title: "Draft", value: "draft" },
+  { title: "Diajukan", value: "submitted" },
+  { title: "Dalam Review", value: "under_review" },
+  { title: "Disetujui", value: "approved" },
+  { title: "Ditolak", value: "rejected" },
+];
 
 const yesNoOptions = [
-  { title: 'Ya', value: true },
-  { title: 'Tidak', value: false }
-]
+  { title: "Ya", value: true },
+  { title: "Tidak", value: false },
+];
 
 const positionOptions = [
-  { title: 'Perangkat Desa/Kelurahan', value: 'perangkat_desa' },
-  { title: 'Pemilik Rumah', value: 'pemilik_rumah' },
-  { title: 'Lainnya', value: 'lainnya' }
-]
+  { title: "Perangkat Desa/Kelurahan", value: "perangkat_desa" },
+  { title: "Pemilik Rumah", value: "pemilik_rumah" },
+  { title: "Lainnya", value: "lainnya" },
+];
 
 const educationLevelOptions = [
-  { title: 'Tidak Sekolah', value: 'tidak_sekolah' },
-  { title: 'SD/Sederajat', value: 'sd' },
-  { title: 'SMP/Sederajat', value: 'smp' },
-  { title: 'SMA/Sederajat', value: 'sma' },
-  { title: 'Diploma', value: 'diploma' },
-  { title: 'Sarjana', value: 'sarjana' },
-  { title: 'Pascasarjana', value: 'magister' },
-  { title: 'Doktor', value: 'doktor' },
-  { title: 'Lainnya', value: 'lainnya' }
-]
+  { title: "Tidak Sekolah", value: "tidak_sekolah" },
+  { title: "SD/Sederajat", value: "sd" },
+  { title: "SMP/Sederajat", value: "smp" },
+  { title: "SMA/Sederajat", value: "sma" },
+  { title: "Diploma", value: "diploma" },
+  { title: "Sarjana", value: "sarjana" },
+  { title: "Pascasarjana", value: "magister" },
+  { title: "Doktor", value: "doktor" },
+  { title: "Lainnya", value: "lainnya" },
+];
 
-const positionValues = positionOptions.map((option) => option.value)
-const educationLevelValues = educationLevelOptions.map((option) => option.value)
+const positionValues = positionOptions.map((option) => option.value);
+const educationLevelValues = educationLevelOptions.map(
+  (option) => option.value
+);
 
 const landOwnershipOptions = [
-  { title: 'Milik Sendiri', value: 'milik_sendiri' },
-  { title: 'Bukan Milik Sendiri', value: 'bukan_milik_sendiri' }
-]
+  { title: "Milik Sendiri", value: "milik_sendiri" },
+  { title: "Bukan Milik Sendiri", value: "bukan_milik_sendiri" },
+];
 
 const houseOwnershipOptions = [
-  { title: 'Milik Sendiri', value: 'milik_sendiri' },
-  { title: 'Sewa', value: 'sewa' },
-  { title: 'Menumpang', value: 'menumpang' }
-]
+  { title: "Milik Sendiri", value: "milik_sendiri" },
+  { title: "Sewa", value: "sewa" },
+  { title: "Menumpang", value: "menumpang" },
+];
 
-const landOwnershipValues = landOwnershipOptions.map((option) => option.value)
-const houseOwnershipValues = houseOwnershipOptions.map((option) => option.value)
+const landOwnershipValues = landOwnershipOptions.map((option) => option.value);
+const houseOwnershipValues = houseOwnershipOptions.map(
+  (option) => option.value
+);
 
 const reviewStatusOptions = [
-  { title: 'Disetujui', value: 'approved' },
-  { title: 'Ditolak', value: 'rejected' }
-]
+  { title: "Disetujui", value: "approved" },
+  { title: "Ditolak", value: "rejected" },
+];
 
 const housingStatusOptions = [
-  { title: 'Layak Huni', value: 'layak_huni' },
-  { title: 'Tidak Layak Huni', value: 'tidak_layak_huni' }
-]
+  { title: "Layak Huni", value: "layak_huni" },
+  { title: "Tidak Layak Huni", value: "tidak_layak_huni" },
+];
 
 // Validation rules
 const rules = {
-  required: (value) => !!value || 'Field is required'
-}
+  required: (value) => !!value || "Field is required",
+};
 
 const reviewDialogTitle = computed(() =>
-  reviewData.value.status === 'rejected'
-    ? 'Review Notes Penolakan'
-    : 'Tinjau Pengajuan'
-)
+  reviewData.value.status === "rejected"
+    ? "Review Notes Penolakan"
+    : "Tinjau Pengajuan"
+);
 
 const reviewNotesRules = computed(() => {
-  if (reviewData.value.status === 'rejected') {
-    return [rules.required]
+  if (reviewData.value.status === "rejected") {
+    return [rules.required];
   }
-  return []
-})
+  return [];
+});
 
-const buildStatisticsParams = (params = {}) => pickDefined({
-  provinceId: params.provinceId,
-  regencyId: params.regencyId,
-  districtId: params.districtId,
-  villageId: params.villageId
-})
+const buildStatisticsParams = (params = {}) =>
+  pickDefined({
+    provinceId: params.provinceId,
+    regencyId: params.regencyId,
+    districtId: params.districtId,
+    villageId: params.villageId,
+  });
 
 const loadStatistics = async (params = {}) => {
-  const statsParams = buildStatisticsParams(params)
-  const cacheKey = JSON.stringify(statsParams)
+  const statsParams = buildStatisticsParams(params);
+  const cacheKey = JSON.stringify(statsParams);
   if (cacheKey === statisticsCacheKey.value) {
-    return
+    return;
   }
-  statisticsCacheKey.value = cacheKey
-  statisticsLoading.value = true
+  statisticsCacheKey.value = cacheKey;
+  statisticsLoading.value = true;
   try {
-    const response = await housingAPI.getStatistics(statsParams)
+    const response = await housingAPI.getStatistics(statsParams);
     if (response?.success) {
-      statistics.value = response.data || null
+      statistics.value = response.data || null;
     } else {
-      statistics.value = null
+      statistics.value = null;
     }
   } catch (error) {
-    console.error('Error loading housing statistics:', error)
-    statistics.value = null
+    console.error("Error loading housing statistics:", error);
+    statistics.value = null;
   } finally {
-    statisticsLoading.value = false
+    statisticsLoading.value = false;
   }
-}
+};
 
 // Methods
 const loadData = async () => {
-  isLoading.value = true
+  isLoading.value = true;
   try {
-    console.log('Loading housing data...')
-    
+    console.log("Loading housing data...");
+
     // Get user's assigned location IDs from localStorage
-    const userData = localStorage.getItem('user-data')
-    let locationParams = {}
-    
+    const userData = localStorage.getItem("user-data");
+    let locationParams = {};
+
     if (userData) {
       try {
-        const user = JSON.parse(userData)
-        console.log('User data from localStorage:', user)
-        
+        const user = JSON.parse(userData);
+        console.log("User data from localStorage:", user);
+
         // Add location parameters based on assigned location IDs
         if (user.assignedProvinceId) {
-          locationParams.provinceId = user.assignedProvinceId
-          console.log('Added provinceId filter:', user.assignedProvinceId)
+          locationParams.provinceId = user.assignedProvinceId;
+          console.log("Added provinceId filter:", user.assignedProvinceId);
         }
         if (user.assignedRegencyId) {
-          locationParams.regencyId = user.assignedRegencyId
-          console.log('Added regencyId filter:', user.assignedRegencyId)
+          locationParams.regencyId = user.assignedRegencyId;
+          console.log("Added regencyId filter:", user.assignedRegencyId);
         }
         if (user.assignedDistrictId) {
-          locationParams.districtId = user.assignedDistrictId
-          console.log('Added districtId filter:', user.assignedDistrictId)
+          locationParams.districtId = user.assignedDistrictId;
+          console.log("Added districtId filter:", user.assignedDistrictId);
         }
         if (user.assignedVillageId) {
-          locationParams.villageId = user.assignedVillageId
-          console.log('Added villageId filter:', user.assignedVillageId)
+          locationParams.villageId = user.assignedVillageId;
+          console.log("Added villageId filter:", user.assignedVillageId);
         }
-        
-        console.log('Location parameters to send:', locationParams)
+
+        console.log("Location parameters to send:", locationParams);
       } catch (error) {
-        console.error('Error parsing user data from localStorage:', error)
+        console.error("Error parsing user data from localStorage:", error);
       }
     }
-    
+
     // Merge location params with existing filters
-    const currentFilters = filters.value || {}
+    const currentFilters = filters.value || {};
     const queryParams = {
       ...currentFilters,
-      ...locationParams
-    }
-    
+      ...locationParams,
+    };
+
     // Remove housingStatus from params if exists (already mapped to isLivable in applyFilters)
     if (queryParams.housingStatus !== undefined) {
-      delete queryParams.housingStatus
+      delete queryParams.housingStatus;
     }
-    
+
     // Ensure isLivable is only sent if it has a value (true or false)
     // Remove it if undefined/null to avoid sending ?isLivable=undefined
     if (queryParams.isLivable === undefined || queryParams.isLivable === null) {
-      delete queryParams.isLivable
+      delete queryParams.isLivable;
     }
-    
+
     // Add filter location if selected
     if (filterLocation.value.province?.id) {
-      queryParams.provinceId = filterLocation.value.province.id
+      queryParams.provinceId = filterLocation.value.province.id;
     }
     if (filterLocation.value.regency?.id) {
-      queryParams.regencyId = filterLocation.value.regency.id
+      queryParams.regencyId = filterLocation.value.regency.id;
     }
     if (filterLocation.value.district?.id) {
-      queryParams.districtId = filterLocation.value.district.id
+      queryParams.districtId = filterLocation.value.district.id;
     }
     if (filterLocation.value.village?.id) {
-      queryParams.villageId = filterLocation.value.village.id
+      queryParams.villageId = filterLocation.value.village.id;
     }
-    
-    console.log('Final query parameters:', queryParams)
-    
-    await loadStatistics(queryParams)
-    const result = await housingStore.getSubmissions(queryParams)
-    console.log('Load result:', result)
-    console.log('Submissions after load:', housingStore.submissions)
-    console.log('Submission counts:', housingStore.submissionCounts)
-    
+
+    console.log("Final query parameters:", queryParams);
+
+    await loadStatistics(queryParams);
+    const result = await housingStore.getSubmissions(queryParams);
+    console.log("Load result:", result);
+    console.log("Submissions after load:", housingStore.submissions);
+    console.log("Submission counts:", housingStore.submissionCounts);
+
     // If API call fails, ensure empty state is shown
     if (!result.success) {
-      console.error('Failed to load submissions:', result.error || result.message)
+      console.error(
+        "Failed to load submissions:",
+        result.error || result.message
+      );
       // Clear submissions to show empty state
-      housingStore.submissions = []
+      housingStore.submissions = [];
       housingStore.pagination = {
         currentPage: 1,
         totalPages: 0,
         totalItems: 0,
         itemsPerPage: 20,
         hasNextPage: false,
-        hasPrevPage: false
-      }
+        hasPrevPage: false,
+      };
     }
   } catch (error) {
-    console.error('Error loading data:', error)
-    console.log('Housing store state:', housingStore)
+    console.error("Error loading data:", error);
+    console.log("Housing store state:", housingStore);
     // Clear submissions to show empty state instead of mock data
-    housingStore.submissions = []
+    housingStore.submissions = [];
     housingStore.pagination = {
       currentPage: 1,
       totalPages: 0,
       totalItems: 0,
       itemsPerPage: 20,
       hasNextPage: false,
-      hasPrevPage: false
-    }
+      hasPrevPage: false,
+    };
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
-
+};
 
 const refreshData = () => {
-  loadData()
-}
+  loadData();
+};
 
 // Mock location data for filters (same as form.vue)
 const mockLocationData = {
   provinces: [
-    { id: 'prov-dki', name: 'DKI Jakarta' },
-    { id: 'prov-jabar', name: 'Jawa Barat' },
-    { id: 'prov-banten', name: 'Banten' }
+    { id: "prov-dki", name: "DKI Jakarta" },
+    { id: "prov-jabar", name: "Jawa Barat" },
+    { id: "prov-banten", name: "Banten" },
   ],
   regencies: {
-    'prov-dki': [
-      { id: 'reg-jaksel', name: 'Kota Jakarta Selatan' },
-      { id: 'reg-jakbar', name: 'Kota Jakarta Barat' },
-      { id: 'reg-jakpus', name: 'Kota Jakarta Pusat' }
+    "prov-dki": [
+      { id: "reg-jaksel", name: "Kota Jakarta Selatan" },
+      { id: "reg-jakbar", name: "Kota Jakarta Barat" },
+      { id: "reg-jakpus", name: "Kota Jakarta Pusat" },
     ],
-    'prov-jabar': [
-      { id: 'reg-bandung', name: 'Kabupaten Bandung' },
-      { id: 'reg-bekasi', name: 'Kabupaten Bekasi' },
-      { id: 'reg-bogor', name: 'Kabupaten Bogor' }
+    "prov-jabar": [
+      { id: "reg-bandung", name: "Kabupaten Bandung" },
+      { id: "reg-bekasi", name: "Kabupaten Bekasi" },
+      { id: "reg-bogor", name: "Kabupaten Bogor" },
     ],
-    'prov-banten': [
-      { id: 'reg-tangerang', name: 'Kabupaten Tangerang' },
-      { id: 'reg-serang', name: 'Kabupaten Serang' },
-      { id: 'reg-lebak', name: 'Kabupaten Lebak' }
-    ]
+    "prov-banten": [
+      { id: "reg-tangerang", name: "Kabupaten Tangerang" },
+      { id: "reg-serang", name: "Kabupaten Serang" },
+      { id: "reg-lebak", name: "Kabupaten Lebak" },
+    ],
   },
   districts: {
-    'reg-jaksel': [
-      { id: 'dist-kebayoran', name: 'Kebayoran Baru' },
-      { id: 'dist-pesanggrahan', name: 'Pesanggrahan' }
+    "reg-jaksel": [
+      { id: "dist-kebayoran", name: "Kebayoran Baru" },
+      { id: "dist-pesanggrahan", name: "Pesanggrahan" },
     ],
-    'reg-jakbar': [
-      { id: 'dist-cengkareng', name: 'Cengkareng' },
-      { id: 'dist-palmerah', name: 'Palmerah' }
+    "reg-jakbar": [
+      { id: "dist-cengkareng", name: "Cengkareng" },
+      { id: "dist-palmerah", name: "Palmerah" },
     ],
-    'reg-jakpus': [
-      { id: 'dist-gambir', name: 'Gambir' },
-      { id: 'dist-senen', name: 'Senen' }
+    "reg-jakpus": [
+      { id: "dist-gambir", name: "Gambir" },
+      { id: "dist-senen", name: "Senen" },
     ],
-    'reg-bandung': [
-      { id: 'dist-cileunyi', name: 'Kecamatan Cileunyi' },
-      { id: 'dist-dayeuhkolot', name: 'Kecamatan Dayeuhkolot' }
+    "reg-bandung": [
+      { id: "dist-cileunyi", name: "Kecamatan Cileunyi" },
+      { id: "dist-dayeuhkolot", name: "Kecamatan Dayeuhkolot" },
     ],
-    'reg-bekasi': [
-      { id: 'dist-tambun', name: 'Kecamatan Tambun' },
-      { id: 'dist-cikarang', name: 'Kecamatan Cikarang' }
+    "reg-bekasi": [
+      { id: "dist-tambun", name: "Kecamatan Tambun" },
+      { id: "dist-cikarang", name: "Kecamatan Cikarang" },
     ],
-    'reg-bogor': [
-      { id: 'dist-cibinong', name: 'Kecamatan Cibinong' },
-      { id: 'dist-dramaga', name: 'Kecamatan Dramaga' }
+    "reg-bogor": [
+      { id: "dist-cibinong", name: "Kecamatan Cibinong" },
+      { id: "dist-dramaga", name: "Kecamatan Dramaga" },
     ],
-    'reg-tangerang': [
-      { id: 'dist-balaraja', name: 'Kecamatan Balaraja' },
-      { id: 'dist-cikupa', name: 'Kecamatan Cikupa' }
+    "reg-tangerang": [
+      { id: "dist-balaraja", name: "Kecamatan Balaraja" },
+      { id: "dist-cikupa", name: "Kecamatan Cikupa" },
     ],
-    'reg-serang': [
-      { id: 'dist-anyar', name: 'Kecamatan Anyar' },
-      { id: 'dist-cinangka', name: 'Kecamatan Cinangka' }
+    "reg-serang": [
+      { id: "dist-anyar", name: "Kecamatan Anyar" },
+      { id: "dist-cinangka", name: "Kecamatan Cinangka" },
     ],
-    'reg-lebak': [
-      { id: 'dist-panggarangan', name: 'Kecamatan Panggarangan' },
-      { id: 'dist-sajira', name: 'Kecamatan Sajira' }
-    ]
+    "reg-lebak": [
+      { id: "dist-panggarangan", name: "Kecamatan Panggarangan" },
+      { id: "dist-sajira", name: "Kecamatan Sajira" },
+    ],
   },
   villages: {
-    'dist-kebayoran': [
-      { id: 'vill-senayan', name: 'Kelurahan Senayan' },
-      { id: 'vill-gandaria', name: 'Kelurahan Kramat Pela' }
+    "dist-kebayoran": [
+      { id: "vill-senayan", name: "Kelurahan Senayan" },
+      { id: "vill-gandaria", name: "Kelurahan Kramat Pela" },
     ],
-    'dist-pesanggrahan': [
-      { id: 'vill-bintaro', name: 'Kelurahan Bintaro' },
-      { id: 'vill-urt', name: 'Kelurahan Ulujami' }
+    "dist-pesanggrahan": [
+      { id: "vill-bintaro", name: "Kelurahan Bintaro" },
+      { id: "vill-urt", name: "Kelurahan Ulujami" },
     ],
-    'dist-cengkareng': [
-      { id: 'vill-cengkareng', name: 'Kelurahan Cengkareng' },
-      { id: 'vill-kapuk', name: 'Kelurahan Kapuk' }
+    "dist-cengkareng": [
+      { id: "vill-cengkareng", name: "Kelurahan Cengkareng" },
+      { id: "vill-kapuk", name: "Kelurahan Kapuk" },
     ],
-    'dist-palmerah': [
-      { id: 'vill-palmerah', name: 'Kelurahan Palmerah' },
-      { id: 'vill-kemanggisan', name: 'Kelurahan Kemanggisan' }
+    "dist-palmerah": [
+      { id: "vill-palmerah", name: "Kelurahan Palmerah" },
+      { id: "vill-kemanggisan", name: "Kelurahan Kemanggisan" },
     ],
-    'dist-gambir': [
-      { id: 'vill-gambir', name: 'Kelurahan Gambir' },
-      { id: 'vill-cideng', name: 'Kelurahan Cideng' }
+    "dist-gambir": [
+      { id: "vill-gambir", name: "Kelurahan Gambir" },
+      { id: "vill-cideng", name: "Kelurahan Cideng" },
     ],
-    'dist-senen': [
-      { id: 'vill-senen', name: 'Kelurahan Senen' },
-      { id: 'vill-kwitang', name: 'Kelurahan Kwitang' }
+    "dist-senen": [
+      { id: "vill-senen", name: "Kelurahan Senen" },
+      { id: "vill-kwitang", name: "Kelurahan Kwitang" },
     ],
-    'dist-cileunyi': [
-      { id: 'vill-cileunyi', name: 'Kelurahan Cileunyi' },
-      { id: 'vill-cikeruh', name: 'Kelurahan Cikeruh' }
+    "dist-cileunyi": [
+      { id: "vill-cileunyi", name: "Kelurahan Cileunyi" },
+      { id: "vill-cikeruh", name: "Kelurahan Cikeruh" },
     ],
-    'dist-dayeuhkolot': [
-      { id: 'vill-dayeuhkolot', name: 'Kelurahan Dayeuhkolot' },
-      { id: 'vill-cilampeni', name: 'Kelurahan Cilampeni' }
+    "dist-dayeuhkolot": [
+      { id: "vill-dayeuhkolot", name: "Kelurahan Dayeuhkolot" },
+      { id: "vill-cilampeni", name: "Kelurahan Cilampeni" },
     ],
-    'dist-tambun': [
-      { id: 'vill-tambun', name: 'Kelurahan Tambun' },
-      { id: 'vill-tambun-selatan', name: 'Kelurahan Tambun Selatan' }
+    "dist-tambun": [
+      { id: "vill-tambun", name: "Kelurahan Tambun" },
+      { id: "vill-tambun-selatan", name: "Kelurahan Tambun Selatan" },
     ],
-    'dist-cikarang': [
-      { id: 'vill-cikarang', name: 'Kelurahan Cikarang' },
-      { id: 'vill-cikarang-baru', name: 'Kelurahan Cikarang Baru' }
+    "dist-cikarang": [
+      { id: "vill-cikarang", name: "Kelurahan Cikarang" },
+      { id: "vill-cikarang-baru", name: "Kelurahan Cikarang Baru" },
     ],
-    'dist-cibinong': [
-      { id: 'vill-cibinong', name: 'Kelurahan Cibinong' },
-      { id: 'vill-cibinong-ngasem', name: 'Kelurahan Cibinong Ngasem' }
+    "dist-cibinong": [
+      { id: "vill-cibinong", name: "Kelurahan Cibinong" },
+      { id: "vill-cibinong-ngasem", name: "Kelurahan Cibinong Ngasem" },
     ],
-    'dist-dramaga': [
-      { id: 'vill-dramaga', name: 'Kelurahan Dramaga' },
-      { id: 'vill-citeureup', name: 'Kelurahan Citeureup' }
+    "dist-dramaga": [
+      { id: "vill-dramaga", name: "Kelurahan Dramaga" },
+      { id: "vill-citeureup", name: "Kelurahan Citeureup" },
     ],
-    'dist-balaraja': [
-      { id: 'vill-balaraja', name: 'Kelurahan Balaraja' },
-      { id: 'vill-talagasari', name: 'Kelurahan Talagasari' }
+    "dist-balaraja": [
+      { id: "vill-balaraja", name: "Kelurahan Balaraja" },
+      { id: "vill-talagasari", name: "Kelurahan Talagasari" },
     ],
-    'dist-cikupa': [
-      { id: 'vill-cikupa', name: 'Kelurahan Cikupa' },
-      { id: 'vill-budi', name: 'Kelurahan Budi Mulya' }
+    "dist-cikupa": [
+      { id: "vill-cikupa", name: "Kelurahan Cikupa" },
+      { id: "vill-budi", name: "Kelurahan Budi Mulya" },
     ],
-    'dist-anyar': [
-      { id: 'vill-anyar', name: 'Kelurahan Anyar' },
-      { id: 'vill-kadubeureum', name: 'Kelurahan Kadubeureum' }
+    "dist-anyar": [
+      { id: "vill-anyar", name: "Kelurahan Anyar" },
+      { id: "vill-kadubeureum", name: "Kelurahan Kadubeureum" },
     ],
-    'dist-cinangka': [
-      { id: 'vill-cinangka', name: 'Kelurahan Cinangka' },
-      { id: 'vill-bantarwangi', name: 'Kelurahan Bantarwangi' }
+    "dist-cinangka": [
+      { id: "vill-cinangka", name: "Kelurahan Cinangka" },
+      { id: "vill-bantarwangi", name: "Kelurahan Bantarwangi" },
     ],
-    'dist-panggarangan': [
-      { id: 'vill-panggarangan', name: 'Kelurahan Panggarangan' },
-      { id: 'vill-sogong', name: 'Kelurahan Sogong' }
+    "dist-panggarangan": [
+      { id: "vill-panggarangan", name: "Kelurahan Panggarangan" },
+      { id: "vill-sogong", name: "Kelurahan Sogong" },
     ],
-    'dist-sajira': [
-      { id: 'vill-sajira', name: 'Kelurahan Sajira' },
-      { id: 'vill-parungsari', name: 'Kelurahan Parungsari' }
-    ]
-  }
-}
+    "dist-sajira": [
+      { id: "vill-sajira", name: "Kelurahan Sajira" },
+      { id: "vill-parungsari", name: "Kelurahan Parungsari" },
+    ],
+  },
+};
 
 // Fetch functions for filter location
 const fetchFilterProvinces = async () => {
-  filterLocationLoading.provinces = true
+  filterLocationLoading.provinces = true;
   try {
-    const response = await locationAPI.getProvinces()
+    const response = await locationAPI.getProvinces();
     if (response.success && response.data?.provinces) {
-      filterProvinceOptions.value = response.data.provinces.map(province => ({
+      filterProvinceOptions.value = response.data.provinces.map((province) => ({
         id: province.id,
         name: province.name,
-        code: province.code
-      }))
+        code: province.code,
+      }));
     } else {
       // Fallback to mock data if API fails
-      console.warn('Failed to fetch provinces from API, using mock data')
-      filterProvinceOptions.value = mockLocationData.provinces
+      console.warn("Failed to fetch provinces from API, using mock data");
+      filterProvinceOptions.value = mockLocationData.provinces;
     }
   } catch (error) {
-    console.error('Error fetching provinces:', error)
+    console.error("Error fetching provinces:", error);
     // Fallback to mock data on error
-    filterProvinceOptions.value = mockLocationData.provinces
+    filterProvinceOptions.value = mockLocationData.provinces;
   } finally {
-    filterLocationLoading.provinces = false
+    filterLocationLoading.provinces = false;
   }
-}
+};
 
 const fetchFilterRegencies = async (provinceId) => {
-  if (!provinceId) return
-  filterLocationLoading.regencies = true
+  if (!provinceId) return;
+  filterLocationLoading.regencies = true;
   try {
-    const response = await locationAPI.getRegencies(provinceId)
+    const response = await locationAPI.getRegencies(provinceId);
     if (response.success && response.data?.regencies) {
-      filterRegencyOptions.value = response.data.regencies.map(regency => ({
+      filterRegencyOptions.value = response.data.regencies.map((regency) => ({
         id: regency.id,
         name: regency.name,
         code: regency.code,
-        type: regency.type
-      }))
+        type: regency.type,
+      }));
     } else {
       // Fallback to mock data if API fails
-      console.warn('Failed to fetch regencies from API, using mock data')
-      filterRegencyOptions.value = mockLocationData.regencies[provinceId] ?? []
+      console.warn("Failed to fetch regencies from API, using mock data");
+      filterRegencyOptions.value = mockLocationData.regencies[provinceId] ?? [];
     }
   } catch (error) {
-    console.error('Error fetching regencies:', error)
+    console.error("Error fetching regencies:", error);
     // Fallback to mock data on error
-    filterRegencyOptions.value = mockLocationData.regencies[provinceId] ?? []
+    filterRegencyOptions.value = mockLocationData.regencies[provinceId] ?? [];
   } finally {
-    filterLocationLoading.regencies = false
+    filterLocationLoading.regencies = false;
   }
-}
+};
 
 const fetchFilterDistricts = async (regencyId) => {
-  if (!regencyId) return
-  filterLocationLoading.districts = true
+  if (!regencyId) return;
+  filterLocationLoading.districts = true;
   try {
-    const response = await locationAPI.getDistricts(regencyId)
+    const response = await locationAPI.getDistricts(regencyId);
     if (response.success && response.data?.districts) {
-      filterDistrictOptions.value = response.data.districts.map(district => ({
+      filterDistrictOptions.value = response.data.districts.map((district) => ({
         id: district.id,
         name: district.name,
-        code: district.code
-      }))
+        code: district.code,
+      }));
     } else {
       // Fallback to mock data if API fails
-      console.warn('Failed to fetch districts from API, using mock data')
-      filterDistrictOptions.value = mockLocationData.districts[regencyId] ?? []
+      console.warn("Failed to fetch districts from API, using mock data");
+      filterDistrictOptions.value = mockLocationData.districts[regencyId] ?? [];
     }
   } catch (error) {
-    console.error('Error fetching districts:', error)
+    console.error("Error fetching districts:", error);
     // Fallback to mock data on error
-    filterDistrictOptions.value = mockLocationData.districts[regencyId] ?? []
+    filterDistrictOptions.value = mockLocationData.districts[regencyId] ?? [];
   } finally {
-    filterLocationLoading.districts = false
+    filterLocationLoading.districts = false;
   }
-}
+};
 
 const fetchFilterVillages = async (districtId) => {
-  if (!districtId) return
-  filterLocationLoading.villages = true
+  if (!districtId) return;
+  filterLocationLoading.villages = true;
   try {
-    const response = await locationAPI.getVillages(districtId)
+    const response = await locationAPI.getVillages(districtId);
     if (response.success && response.data?.villages) {
-      filterVillageOptions.value = response.data.villages.map(village => ({
+      filterVillageOptions.value = response.data.villages.map((village) => ({
         id: village.id,
         name: village.name,
-        code: village.code
-      }))
+        code: village.code,
+      }));
     } else {
       // Fallback to mock data if API fails
-      console.warn('Failed to fetch villages from API, using mock data')
-      filterVillageOptions.value = mockLocationData.villages[districtId] ?? []
+      console.warn("Failed to fetch villages from API, using mock data");
+      filterVillageOptions.value = mockLocationData.villages[districtId] ?? [];
     }
   } catch (error) {
-    console.error('Error fetching villages:', error)
+    console.error("Error fetching villages:", error);
     // Fallback to mock data on error
-    filterVillageOptions.value = mockLocationData.villages[districtId] ?? []
+    filterVillageOptions.value = mockLocationData.villages[districtId] ?? [];
   } finally {
-    filterLocationLoading.villages = false
+    filterLocationLoading.villages = false;
   }
-}
+};
 
 watch(
   () => editForm.value.householdOwner.provinceId,
   async (provinceId) => {
-    if (!showEditDialog.value || editLocationSyncing.value) return
-    editForm.value.householdOwner.regencyId = null
-    editForm.value.householdOwner.districtId = null
-    editForm.value.householdOwner.villageId = null
-    filterRegencyOptions.value = []
-    filterDistrictOptions.value = []
-    filterVillageOptions.value = []
+    if (!showEditDialog.value || editLocationSyncing.value) return;
+    editForm.value.householdOwner.regencyId = null;
+    editForm.value.householdOwner.districtId = null;
+    editForm.value.householdOwner.villageId = null;
+    filterRegencyOptions.value = [];
+    filterDistrictOptions.value = [];
+    filterVillageOptions.value = [];
     if (provinceId) {
-      await fetchFilterRegencies(provinceId)
+      await fetchFilterRegencies(provinceId);
     }
   }
-)
+);
 
 watch(
   () => editForm.value.householdOwner.regencyId,
   async (regencyId) => {
-    if (!showEditDialog.value || editLocationSyncing.value) return
-    editForm.value.householdOwner.districtId = null
-    editForm.value.householdOwner.villageId = null
-    filterDistrictOptions.value = []
-    filterVillageOptions.value = []
+    if (!showEditDialog.value || editLocationSyncing.value) return;
+    editForm.value.householdOwner.districtId = null;
+    editForm.value.householdOwner.villageId = null;
+    filterDistrictOptions.value = [];
+    filterVillageOptions.value = [];
     if (regencyId) {
-      await fetchFilterDistricts(regencyId)
+      await fetchFilterDistricts(regencyId);
     }
   }
-)
+);
 
 watch(
   () => editForm.value.householdOwner.districtId,
   async (districtId) => {
-    if (!showEditDialog.value || editLocationSyncing.value) return
-    editForm.value.householdOwner.villageId = null
-    filterVillageOptions.value = []
+    if (!showEditDialog.value || editLocationSyncing.value) return;
+    editForm.value.householdOwner.villageId = null;
+    filterVillageOptions.value = [];
     if (districtId) {
-      await fetchFilterVillages(districtId)
+      await fetchFilterVillages(districtId);
     }
   }
-)
+);
 
 watch(
   () => showEditDialog.value,
   (isOpen) => {
     if (!isOpen) {
-      resetEditForm()
+      resetEditForm();
     }
   }
-)
+);
 
 // Watchers for cascaded filter location dropdowns
 watch(
   () => filterLocation.value.province,
   async (province) => {
-    filterLocation.value.regency = null
-    filterLocation.value.district = null
-    filterLocation.value.village = null
-    filterRegencyOptions.value = []
-    filterDistrictOptions.value = []
-    filterVillageOptions.value = []
+    filterLocation.value.regency = null;
+    filterLocation.value.district = null;
+    filterLocation.value.village = null;
+    filterRegencyOptions.value = [];
+    filterDistrictOptions.value = [];
+    filterVillageOptions.value = [];
     if (province?.id) {
-      await fetchFilterRegencies(province.id)
+      await fetchFilterRegencies(province.id);
     }
-    applyFilters()
+    applyFilters();
   }
-)
+);
 
 watch(
   () => filterLocation.value.regency,
   async (regency) => {
-    filterLocation.value.district = null
-    filterLocation.value.village = null
-    filterDistrictOptions.value = []
-    filterVillageOptions.value = []
+    filterLocation.value.district = null;
+    filterLocation.value.village = null;
+    filterDistrictOptions.value = [];
+    filterVillageOptions.value = [];
     if (regency?.id) {
-      await fetchFilterDistricts(regency.id)
+      await fetchFilterDistricts(regency.id);
     }
-    applyFilters()
+    applyFilters();
   }
-)
+);
 
 watch(
   () => filterLocation.value.district,
   async (district) => {
-    filterLocation.value.village = null
-    filterVillageOptions.value = []
+    filterLocation.value.village = null;
+    filterVillageOptions.value = [];
     if (district?.id) {
-      await fetchFilterVillages(district.id)
+      await fetchFilterVillages(district.id);
     }
-    applyFilters()
+    applyFilters();
   }
-)
+);
 
 watch(
   () => filterLocation.value.village,
   () => {
-    applyFilters()
+    applyFilters();
   }
-)
+);
 
 // Handle filter location change manually
 const handleFilterLocationChange = () => {
-  applyFilters()
-}
+  applyFilters();
+};
 
 const applyFilters = () => {
   const filterData = {
-    status: filters.value.status
-  }
-  
+    status: filters.value.status,
+  };
+
   // Map housingStatus filter to isLivable boolean
   if (filters.value.housingStatus) {
-    if (filters.value.housingStatus === 'layak_huni') {
-      filterData.isLivable = true
-    } else if (filters.value.housingStatus === 'tidak_layak_huni') {
-      filterData.isLivable = false
+    if (filters.value.housingStatus === "layak_huni") {
+      filterData.isLivable = true;
+    } else if (filters.value.housingStatus === "tidak_layak_huni") {
+      filterData.isLivable = false;
     }
   }
-  
+
   // Add location filters if selected
   if (filterLocation.value.province?.id) {
-    filterData.provinceId = filterLocation.value.province.id
+    filterData.provinceId = filterLocation.value.province.id;
   }
   if (filterLocation.value.regency?.id) {
-    filterData.regencyId = filterLocation.value.regency.id
+    filterData.regencyId = filterLocation.value.regency.id;
   }
   if (filterLocation.value.district?.id) {
-    filterData.districtId = filterLocation.value.district.id
+    filterData.districtId = filterLocation.value.district.id;
   }
   if (filterLocation.value.village?.id) {
-    filterData.villageId = filterLocation.value.village.id
+    filterData.villageId = filterLocation.value.village.id;
   }
-  
-  housingStore.setFilters(filterData)
-  loadData()
-}
+
+  housingStore.setFilters(filterData);
+  loadData();
+};
 
 const clearFilters = () => {
-  housingStore.clearFilters()
-  searchQuery.value = ''
+  housingStore.clearFilters();
+  searchQuery.value = "";
   filterLocation.value = {
     province: null,
     regency: null,
     district: null,
-    village: null
-  }
-  filterRegencyOptions.value = []
-  filterDistrictOptions.value = []
-  filterVillageOptions.value = []
-  loadData()
-}
+    village: null,
+  };
+  filterRegencyOptions.value = [];
+  filterDistrictOptions.value = [];
+  filterVillageOptions.value = [];
+  loadData();
+};
 
 const openExportDialog = () => {
-  exportError.value = ''
-  exportDialogOpen.value = true
-}
+  exportError.value = "";
+  exportDialogOpen.value = true;
+};
 
 const buildExportParams = () => {
   const params = {
-    status: filters.value.status
-  }
+    status: filters.value.status,
+  };
 
   if (filters.value.housingStatus) {
-    if (filters.value.housingStatus === 'layak_huni') {
-      params.isLivable = true
-    } else if (filters.value.housingStatus === 'tidak_layak_huni') {
-      params.isLivable = false
+    if (filters.value.housingStatus === "layak_huni") {
+      params.isLivable = true;
+    } else if (filters.value.housingStatus === "tidak_layak_huni") {
+      params.isLivable = false;
     }
   }
 
   if (filterLocation.value.province?.id) {
-    params.provinceId = filterLocation.value.province.id
+    params.provinceId = filterLocation.value.province.id;
   }
   if (filterLocation.value.regency?.id) {
-    params.regencyId = filterLocation.value.regency.id
+    params.regencyId = filterLocation.value.regency.id;
   }
   if (filterLocation.value.district?.id) {
-    params.districtId = filterLocation.value.district.id
+    params.districtId = filterLocation.value.district.id;
   }
   if (filterLocation.value.village?.id) {
-    params.villageId = filterLocation.value.village.id
+    params.villageId = filterLocation.value.village.id;
   }
 
   Object.keys(params).forEach((key) => {
-    if (params[key] === undefined || params[key] === null || params[key] === '') {
-      delete params[key]
+    if (
+      params[key] === undefined ||
+      params[key] === null ||
+      params[key] === ""
+    ) {
+      delete params[key];
     }
-  })
+  });
 
-  return params
-}
+  return params;
+};
 
 const buildExportFilterSummary = () => {
-  if (exportScope.value === 'all') {
-    return 'Semua data'
+  if (exportScope.value === "all") {
+    return "Semua data";
   }
 
-  const parts = []
+  const parts = [];
   if (filters.value.status) {
-    parts.push(`Status: ${getStatusLabel(filters.value.status)}`)
+    parts.push(`Status: ${getStatusLabel(filters.value.status)}`);
   }
   if (filters.value.housingStatus) {
-    parts.push(`Status Rumah: ${filters.value.housingStatus === 'layak_huni' ? 'Layak Huni' : 'Tidak Layak Huni'}`)
+    parts.push(
+      `Status Rumah: ${
+        filters.value.housingStatus === "layak_huni"
+          ? "Layak Huni"
+          : "Tidak Layak Huni"
+      }`
+    );
   }
   if (filterLocation.value.village?.name) {
-    parts.push(`Kelurahan: ${filterLocation.value.village.name}`)
+    parts.push(`Kelurahan: ${filterLocation.value.village.name}`);
   }
   if (filterLocation.value.district?.name) {
-    parts.push(`Kecamatan: ${filterLocation.value.district.name}`)
+    parts.push(`Kecamatan: ${filterLocation.value.district.name}`);
   }
   if (filterLocation.value.regency?.name) {
-    parts.push(`Kabupaten: ${filterLocation.value.regency.name}`)
+    parts.push(`Kabupaten: ${filterLocation.value.regency.name}`);
   }
   if (filterLocation.value.province?.name) {
-    parts.push(`Provinsi: ${filterLocation.value.province.name}`)
+    parts.push(`Provinsi: ${filterLocation.value.province.name}`);
   }
 
-  return parts.length ? parts.join(' | ') : 'Tidak ada filter'
-}
+  return parts.length ? parts.join(" | ") : "Tidak ada filter";
+};
 
 const handleExport = async () => {
-  exportError.value = ''
+  exportError.value = "";
   if (!exportCategoryIds.value.length) {
-    exportError.value = 'Pilih minimal satu kategori kolom.'
-    return
+    exportError.value = "Pilih minimal satu kategori kolom.";
+    return;
   }
 
-  exportLoading.value = true
+  exportLoading.value = true;
   try {
-    const params = exportScope.value === 'filtered' ? buildExportParams() : {}
-    const response = await exportAPI.getData('housing', { ...params, format: 'json' })
+    const params = exportScope.value === "filtered" ? buildExportParams() : {};
+    const response = await exportAPI.getData("housing", {
+      ...params,
+      format: "json",
+    });
     if (response?.success === false) {
-      throw new Error(response.message || 'Gagal memuat data ekspor.')
+      throw new Error(response.message || "Gagal memuat data ekspor.");
     }
-    const rows = response?.data?.items || []
+    const rows = response?.data?.items || [];
 
     if (!rows.length) {
-      exportError.value = 'Data ekspor kosong.'
-      return
+      exportError.value = "Data ekspor kosong.";
+      return;
     }
 
-    const columns = getColumnsForCategories(housingExportCategories, exportCategoryIds.value)
+    const columns = getColumnsForCategories(
+      housingExportCategories,
+      exportCategoryIds.value
+    );
     const metaRows = buildMetaRows({
-      title: 'Ekspor Data Survei Rumah Masyarakat',
-      scopeLabel: exportScope.value === 'all'
-        ? 'Semua Data'
-        : exportScope.value === 'filtered'
-          ? 'Data yang Difilter'
-          : 'Semua Data',
-      filterSummary: buildExportFilterSummary()
-    })
+      title: "Ekspor Data Survei Rumah Masyarakat",
+      scopeLabel:
+        exportScope.value === "all"
+          ? "Semua Data"
+          : exportScope.value === "filtered"
+          ? "Data yang Difilter"
+          : "Semua Data",
+      filterSummary: buildExportFilterSummary(),
+    });
 
-    const dateStamp = new Date().toISOString().slice(0, 10)
+    const dateStamp = new Date().toISOString().slice(0, 10);
     await exportToExcel({
-      sheetName: 'Rumah Masyarakat',
+      sheetName: "Rumah Masyarakat",
       fileName: `export-rumah-${dateStamp}.xlsx`,
       columns,
       rows,
-      metaRows
-    })
-    exportDialogOpen.value = false
+      metaRows,
+    });
+    exportDialogOpen.value = false;
   } catch (error) {
-    console.error('Export error:', error)
-    exportError.value = error?.message || 'Terjadi kesalahan saat ekspor.'
+    console.error("Export error:", error);
+    exportError.value = error?.message || "Terjadi kesalahan saat ekspor.";
   } finally {
-    exportLoading.value = false
+    exportLoading.value = false;
   }
-}
+};
 
 const handlePageChange = (page) => {
-  housingStore.setPagination(page)
-  loadData()
-}
+  housingStore.setPagination(page);
+  loadData();
+};
 
 const handleItemsPerPageChange = (itemsPerPage) => {
-  housingStore.pagination.itemsPerPage = itemsPerPage
-  housingStore.pagination.currentPage = 1
-  loadData()
-}
+  housingStore.pagination.itemsPerPage = itemsPerPage;
+  housingStore.pagination.currentPage = 1;
+  loadData();
+};
 
 const markUnderReview = async (submission) => {
-  if (!submission?.id) return
-  if (!canReviewSubmission(submission)) return
-  if (resolveItemStatus(submission) !== 'submitted') return
+  if (!submission?.id) return;
+  if (!canReviewSubmission(submission)) return;
+  if (resolveItemStatus(submission) !== "submitted") return;
 
   try {
     await housingStore.reviewSubmission(submission.id, {
-      status: 'under_review',
-      reviewNotes: ''
-    })
-    await loadData()
+      status: "under_review",
+      reviewNotes: "",
+    });
+    await loadData();
   } catch (error) {
-    console.error('Error marking under review:', error)
+    console.error("Error marking under review:", error);
   }
-}
+};
 
 const loadSubmissionHistory = async (ownerId) => {
-  submissionHistory.value = []
-  submissionHistoryError.value = ''
+  submissionHistory.value = [];
+  submissionHistoryError.value = "";
 
-  if (!ownerId) return
+  if (!ownerId) return;
 
-  submissionHistoryLoading.value = true
+  submissionHistoryLoading.value = true;
   try {
-    const result = await housingStore.getSubmissionHistoryByOwner(ownerId)
+    const result = await housingStore.getSubmissionHistoryByOwner(ownerId);
     if (result.success) {
-      submissionHistory.value = Array.isArray(result.history) ? result.history : []
-      return
+      submissionHistory.value = Array.isArray(result.history)
+        ? result.history
+        : [];
+      return;
     }
-    submissionHistoryError.value = result.error || 'Gagal memuat riwayat survei.'
+    submissionHistoryError.value =
+      result.error || "Gagal memuat riwayat survei.";
   } catch (error) {
-    console.error('Error loading submission history:', error)
-    submissionHistoryError.value = error?.message || 'Gagal memuat riwayat survei.'
+    console.error("Error loading submission history:", error);
+    submissionHistoryError.value =
+      error?.message || "Gagal memuat riwayat survei.";
   } finally {
-    submissionHistoryLoading.value = false
+    submissionHistoryLoading.value = false;
   }
-}
+};
 
 const viewSubmission = async (submission) => {
   try {
-    isLoading.value = true
-    showDetailDialog.value = true
-    activeTab.value = 'pengisi'
+    isLoading.value = true;
+    showDetailDialog.value = true;
+    activeTab.value = "pengisi";
     // Clear previous submission while loading
-    selectedSubmission.value = null
-    
+    selectedSubmission.value = null;
+
     // Load full submission details from API
-    const result = await housingStore.getSubmission(submission.id)
-    
+    const result = await housingStore.getSubmission(submission.id);
+
     if (result.success && result.submission) {
       // Store already handles the response structure and returns the submission object
-      selectedSubmission.value = result.submission
+      selectedSubmission.value = result.submission;
     } else {
       // If API call fails, use the submission from list
-      console.error('Failed to load submission details:', result.error)
-      selectedSubmission.value = submission
+      console.error("Failed to load submission details:", result.error);
+      selectedSubmission.value = submission;
     }
-    await markUnderReview(submission)
+    await markUnderReview(submission);
     const ownerId =
-      selectedSubmission.value?.householdOwner?.id || selectedSubmission.value?.householdOwnerId
-    await loadSubmissionHistory(ownerId)
+      selectedSubmission.value?.householdOwner?.id ||
+      selectedSubmission.value?.householdOwnerId;
+    await loadSubmissionHistory(ownerId);
   } catch (error) {
-    console.error('Error loading submission details:', error)
+    console.error("Error loading submission details:", error);
     // Fallback to the submission from list
-    selectedSubmission.value = submission
+    selectedSubmission.value = submission;
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
 const closeDetailDialog = () => {
-  showDetailDialog.value = false
+  showDetailDialog.value = false;
   // Reset state after dialog closes
   setTimeout(() => {
-    selectedSubmission.value = null
-    activeTab.value = 'pengisi'
-    submissionHistory.value = []
-    submissionHistoryError.value = ''
-    submissionHistoryLoading.value = false
-  }, 300) // Wait for dialog close animation
-}
+    selectedSubmission.value = null;
+    activeTab.value = "pengisi";
+    submissionHistory.value = [];
+    submissionHistoryError.value = "";
+    submissionHistoryLoading.value = false;
+  }, 300); // Wait for dialog close animation
+};
 
 const resetEditForm = () => {
-  editForm.value = createEmptyEditForm()
-  editFormValid.value = false
-}
+  editForm.value = createEmptyEditForm();
+  editFormValid.value = false;
+};
 
 const hydrateEditForm = async (submission) => {
-  if (!submission) return
+  if (!submission) return;
 
-  const respondent = submission.formRespondent || {}
-  const owner = submission.householdOwner || {}
+  const respondent = submission.formRespondent || {};
+  const owner = submission.householdOwner || {};
 
-  editLocationSyncing.value = true
+  editLocationSyncing.value = true;
   editForm.value = {
     formRespondent: {
-      name: respondent.name || '',
-      email: respondent.email || '',
-      phone: respondent.phone || '',
-      position: respondent.position || '',
-      positionOther: respondent.positionOther || ''
+      name: respondent.name || "",
+      email: respondent.email || "",
+      phone: respondent.phone || "",
+      position: respondent.position || "",
+      positionOther: respondent.positionOther || "",
     },
     householdOwner: {
-      ownerName: owner.ownerName || '',
-      ownerPhone: owner.ownerPhone || '',
-      headOfFamilyName: owner.headOfFamilyName || '',
-      headOfFamilyPhone: owner.headOfFamilyPhone || '',
+      ownerName: owner.ownerName || "",
+      ownerPhone: owner.ownerPhone || "",
+      headOfFamilyName: owner.headOfFamilyName || "",
+      headOfFamilyPhone: owner.headOfFamilyPhone || "",
       headOfFamilyAge: owner.headOfFamilyAge ?? null,
-      familyCardNumber: owner.familyCardNumber || '',
+      familyCardNumber: owner.familyCardNumber || "",
       totalFamilyMembers: owner.totalFamilyMembers ?? null,
-      houseNumber: owner.houseNumber || '',
-      rt: owner.rt || '',
-      rw: owner.rw || '',
+      houseNumber: owner.houseNumber || "",
+      rt: owner.rt || "",
+      rw: owner.rw || "",
       provinceId: owner.province?.id || owner.provinceId || null,
       regencyId: owner.regency?.id || owner.regencyId || null,
       districtId: owner.district?.id || owner.districtId || null,
       villageId: owner.village?.id || owner.villageId || null,
       latitude: owner.latitude ?? null,
       longitude: owner.longitude ?? null,
-      educationLevel: owner.educationLevel || '',
-      educationLevelOther: owner.educationLevelOther || '',
-      occupation: owner.occupation || '',
+      educationLevel: owner.educationLevel || "",
+      educationLevelOther: owner.educationLevelOther || "",
+      occupation: owner.occupation || "",
       monthlyIncome: owner.monthlyIncome ?? null,
-      landOwnershipStatus: owner.landOwnershipStatus || '',
-      houseOwnershipStatus: owner.houseOwnershipStatus || '',
+      landOwnershipStatus: owner.landOwnershipStatus || "",
+      houseOwnershipStatus: owner.houseOwnershipStatus || "",
       hasReceivedHousingAssistance: owner.hasReceivedHousingAssistance ?? null,
       housingAssistanceYear: owner.housingAssistanceYear ?? null,
       isRegisteredAsPoor: owner.isRegisteredAsPoor ?? null,
-      poorRegistrationAttachment: owner.poorRegistrationAttachment || ''
-    }
-  }
+      poorRegistrationAttachment: owner.poorRegistrationAttachment || "",
+    },
+  };
 
   if (editForm.value.householdOwner.provinceId) {
-    await fetchFilterRegencies(editForm.value.householdOwner.provinceId)
+    await fetchFilterRegencies(editForm.value.householdOwner.provinceId);
   }
   if (editForm.value.householdOwner.regencyId) {
-    await fetchFilterDistricts(editForm.value.householdOwner.regencyId)
+    await fetchFilterDistricts(editForm.value.householdOwner.regencyId);
   }
   if (editForm.value.householdOwner.districtId) {
-    await fetchFilterVillages(editForm.value.householdOwner.districtId)
+    await fetchFilterVillages(editForm.value.householdOwner.districtId);
   }
-  editLocationSyncing.value = false
-}
+  editLocationSyncing.value = false;
+};
 
 const openEditDialog = async (submission) => {
-  if (!submission?.id) return
-  isLoading.value = true
-  showEditDialog.value = true
+  if (!submission?.id) return;
+  isLoading.value = true;
+  showEditDialog.value = true;
   try {
-    resetEditForm()
-    const result = await housingStore.getSubmission(submission.id)
-    const fullSubmission = result?.success ? result.submission : submission
-    selectedSubmission.value = fullSubmission
-    await hydrateEditForm(fullSubmission)
+    resetEditForm();
+    const result = await housingStore.getSubmission(submission.id);
+    const fullSubmission = result?.success ? result.submission : submission;
+    selectedSubmission.value = fullSubmission;
+    await hydrateEditForm(fullSubmission);
   } catch (error) {
-    console.error('Failed to load submission for edit:', error)
+    console.error("Failed to load submission for edit:", error);
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
 const closeEditDialog = () => {
-  showEditDialog.value = false
-  resetEditForm()
-}
+  showEditDialog.value = false;
+  resetEditForm();
+};
 
 const buildEditPayload = () => {
-  const respondentRaw = editForm.value.formRespondent || {}
-  const ownerRaw = editForm.value.householdOwner || {}
-  const originalOwner = selectedSubmission.value?.householdOwner || {}
+  const respondentRaw = editForm.value.formRespondent || {};
+  const ownerRaw = editForm.value.householdOwner || {};
+  const originalOwner = selectedSubmission.value?.householdOwner || {};
 
   const formRespondent = pickDefined({
     name: normalizeText(respondentRaw.name),
     email: normalizeEmail(respondentRaw.email),
     phone: normalizeText(respondentRaw.phone),
     position: normalizeEnum(respondentRaw.position, positionValues),
-    positionOther: respondentRaw.position === 'lainnya'
-      ? normalizeText(respondentRaw.positionOther)
-      : undefined
-  })
+    positionOther:
+      respondentRaw.position === "lainnya"
+        ? normalizeText(respondentRaw.positionOther)
+        : undefined,
+  });
 
   const locationPayload = pickDefined({
     provinceId: normalizeId(ownerRaw.provinceId),
@@ -3812,21 +4144,29 @@ const buildEditPayload = () => {
     districtId: normalizeId(ownerRaw.districtId),
     villageId: normalizeId(ownerRaw.villageId),
     latitude: normalizeNumber(ownerRaw.latitude),
-    longitude: normalizeNumber(ownerRaw.longitude)
-  })
+    longitude: normalizeNumber(ownerRaw.longitude),
+  });
 
   const originalLocation = {
-    provinceId: normalizeId(originalOwner.province?.id || originalOwner.provinceId),
-    regencyId: normalizeId(originalOwner.regency?.id || originalOwner.regencyId),
-    districtId: normalizeId(originalOwner.district?.id || originalOwner.districtId),
-    villageId: normalizeId(originalOwner.village?.id || originalOwner.villageId),
+    provinceId: normalizeId(
+      originalOwner.province?.id || originalOwner.provinceId
+    ),
+    regencyId: normalizeId(
+      originalOwner.regency?.id || originalOwner.regencyId
+    ),
+    districtId: normalizeId(
+      originalOwner.district?.id || originalOwner.districtId
+    ),
+    villageId: normalizeId(
+      originalOwner.village?.id || originalOwner.villageId
+    ),
     latitude: normalizeNumber(originalOwner.latitude),
-    longitude: normalizeNumber(originalOwner.longitude)
-  }
+    longitude: normalizeNumber(originalOwner.longitude),
+  };
 
-  const locationChanged = Object.keys(locationPayload).some((key) =>
-    locationPayload[key] !== originalLocation[key]
-  )
+  const locationChanged = Object.keys(locationPayload).some(
+    (key) => locationPayload[key] !== originalLocation[key]
+  );
 
   const householdOwner = pickDefined({
     ownerName: normalizeText(ownerRaw.ownerName),
@@ -3840,184 +4180,202 @@ const buildEditPayload = () => {
     rt: normalizeText(ownerRaw.rt),
     rw: normalizeText(ownerRaw.rw),
     ...(locationChanged ? locationPayload : {}),
-    educationLevel: normalizeEnum(ownerRaw.educationLevel, educationLevelValues),
-    educationLevelOther: ownerRaw.educationLevel === 'lainnya'
-      ? normalizeText(ownerRaw.educationLevelOther)
-      : undefined,
+    educationLevel: normalizeEnum(
+      ownerRaw.educationLevel,
+      educationLevelValues
+    ),
+    educationLevelOther:
+      ownerRaw.educationLevel === "lainnya"
+        ? normalizeText(ownerRaw.educationLevelOther)
+        : undefined,
     occupation: normalizeText(ownerRaw.occupation),
     monthlyIncome: normalizeNumber(ownerRaw.monthlyIncome),
-    landOwnershipStatus: normalizeEnum(ownerRaw.landOwnershipStatus, landOwnershipValues),
-    houseOwnershipStatus: normalizeEnum(ownerRaw.houseOwnershipStatus, houseOwnershipValues),
-    hasReceivedHousingAssistance: normalizeBoolean(ownerRaw.hasReceivedHousingAssistance),
+    landOwnershipStatus: normalizeEnum(
+      ownerRaw.landOwnershipStatus,
+      landOwnershipValues
+    ),
+    houseOwnershipStatus: normalizeEnum(
+      ownerRaw.houseOwnershipStatus,
+      houseOwnershipValues
+    ),
+    hasReceivedHousingAssistance: normalizeBoolean(
+      ownerRaw.hasReceivedHousingAssistance
+    ),
     housingAssistanceYear: ownerRaw.hasReceivedHousingAssistance
       ? normalizeNumber(ownerRaw.housingAssistanceYear)
       : undefined,
     isRegisteredAsPoor: normalizeBoolean(ownerRaw.isRegisteredAsPoor),
     poorRegistrationAttachment: ownerRaw.isRegisteredAsPoor
       ? normalizeText(ownerRaw.poorRegistrationAttachment)
-      : undefined
-  })
+      : undefined,
+  });
 
   return pickDefined({
-    formRespondent: Object.keys(formRespondent).length ? formRespondent : undefined,
-    householdOwner: Object.keys(householdOwner).length ? householdOwner : undefined
-  })
-}
+    formRespondent: Object.keys(formRespondent).length
+      ? formRespondent
+      : undefined,
+    householdOwner: Object.keys(householdOwner).length
+      ? householdOwner
+      : undefined,
+  });
+};
 
 const submitEditForm = async () => {
-  if (!editFormRef.value || !selectedSubmission.value?.id) return
+  if (!editFormRef.value || !selectedSubmission.value?.id) return;
 
-  const { valid } = await editFormRef.value.validate()
-  if (!valid) return
+  const { valid } = await editFormRef.value.validate();
+  if (!valid) return;
 
-  isLoading.value = true
+  isLoading.value = true;
   try {
-    const payload = buildEditPayload()
-    const result = await housingStore.updateSubmission(selectedSubmission.value.id, payload)
+    const payload = buildEditPayload();
+    const result = await housingStore.updateSubmission(
+      selectedSubmission.value.id,
+      payload
+    );
     if (result.success) {
-      showEditDialog.value = false
-      await loadData()
+      showEditDialog.value = false;
+      await loadData();
     }
   } catch (error) {
-    console.error('Error updating submission:', error)
+    console.error("Error updating submission:", error);
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
 const reviewSubmission = (submission, status) => {
-  selectedSubmission.value = submission
-  if (status === 'rejected') {
+  selectedSubmission.value = submission;
+  if (status === "rejected") {
     reviewData.value = {
       status: status,
-      reviewNotes: ''
-    }
-    reviewFormValid.value = false
-    showReviewDialog.value = true
-    return
+      reviewNotes: "",
+    };
+    reviewFormValid.value = false;
+    showReviewDialog.value = true;
+    return;
   }
-  submitReviewDirect(submission, status)
-}
+  submitReviewDirect(submission, status);
+};
 
 const submitReviewDirect = async (submission, status) => {
-  if (!submission?.id) return
-  isLoading.value = true
+  if (!submission?.id) return;
+  isLoading.value = true;
   try {
     const result = await housingStore.reviewSubmission(submission.id, {
       status,
-      reviewNotes: ''
-    })
+      reviewNotes: "",
+    });
     if (result.success) {
-      selectedSubmission.value = null
-      reviewData.value = { status: '', reviewNotes: '' }
-      await loadData()
-      if (status === 'approved') {
-        await mapStore.fetchHousing()
+      selectedSubmission.value = null;
+      reviewData.value = { status: "", reviewNotes: "" };
+      await loadData();
+      if (status === "approved") {
+        await mapStore.fetchHousing();
       }
     }
   } catch (error) {
-    console.error('Error submitting review:', error)
+    console.error("Error submitting review:", error);
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
 const submitReview = async () => {
-  if (!reviewFormRef.value) return
-  
-  const { valid } = await reviewFormRef.value.validate()
-  if (!valid) return
+  if (!reviewFormRef.value) return;
 
-  isLoading.value = true
+  const { valid } = await reviewFormRef.value.validate();
+  if (!valid) return;
+
+  isLoading.value = true;
   try {
-    const status = reviewData.value.status
+    const status = reviewData.value.status;
     const result = await housingStore.reviewSubmission(
       selectedSubmission.value.id,
       reviewData.value
-    )
-    
+    );
+
     if (result.success) {
-      showReviewDialog.value = false
-      selectedSubmission.value = null
-      reviewData.value = { status: '', reviewNotes: '' }
-      await loadData() // Refresh the list
-      if (status === 'approved') {
-        await mapStore.fetchHousing()
+      showReviewDialog.value = false;
+      selectedSubmission.value = null;
+      reviewData.value = { status: "", reviewNotes: "" };
+      await loadData(); // Refresh the list
+      if (status === "approved") {
+        await mapStore.fetchHousing();
       }
     }
   } catch (error) {
-    console.error('Error submitting review:', error)
+    console.error("Error submitting review:", error);
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
 // Debounced search
 const debouncedSearch = debounce(() => {
   // Implement search functionality here
   // For now, just refresh data with location parameters
-  loadData()
-}, 500)
+  loadData();
+}, 500);
 
 // Utility functions
 const getStatusColor = (status) => {
-  if (!status) return 'grey'
+  if (!status) return "grey";
   const colors = {
-    draft: 'grey',
-    submitted: 'blue',
-    reviewed: 'amber',
-    under_review: 'amber',
-    approved: 'green',
-    rejected: 'red',
-    history: 'blue-grey'
-  }
-  return colors[status] || 'grey'
-}
+    draft: "grey",
+    submitted: "blue",
+    reviewed: "amber",
+    under_review: "amber",
+    approved: "green",
+    rejected: "red",
+    history: "blue-grey",
+  };
+  return colors[status] || "grey";
+};
 
 const getStatusIcon = (status) => {
-  if (!status) return 'mdi-file-document-outline'
+  if (!status) return "mdi-file-document-outline";
   const icons = {
-    draft: 'mdi-file-outline',
-    submitted: 'mdi-file-send-outline',
-    reviewed: 'mdi-file-eye-outline',
-    under_review: 'mdi-file-eye-outline',
-    approved: 'mdi-file-check-outline',
-    rejected: 'mdi-file-remove-outline',
-    history: 'mdi-history'
-  }
-  return icons[status] || 'mdi-file-document-outline'
-}
+    draft: "mdi-file-outline",
+    submitted: "mdi-file-send-outline",
+    reviewed: "mdi-file-eye-outline",
+    under_review: "mdi-file-eye-outline",
+    approved: "mdi-file-check-outline",
+    rejected: "mdi-file-remove-outline",
+    history: "mdi-history",
+  };
+  return icons[status] || "mdi-file-document-outline";
+};
 
 const getStatusLabel = (status) => {
-  if (!status) return 'Tidak Dikenal'
+  if (!status) return "Tidak Dikenal";
   const labels = {
-    draft: 'Draft',
-    submitted: 'Diajukan',
-    reviewed: 'Dalam Review',
-    under_review: 'Dalam Review',
-    approved: 'Disetujui',
-    rejected: 'Ditolak',
-    history: 'Riwayat'
-  }
-  return labels[status] || status
-}
+    draft: "Draft",
+    submitted: "Diajukan",
+    reviewed: "Dalam Review",
+    under_review: "Dalam Review",
+    approved: "Disetujui",
+    rejected: "Ditolak",
+    history: "Riwayat",
+  };
+  return labels[status] || status;
+};
 
-const canViewFullPii = computed(() =>
-  appStore.hasPermission('view_full_pii')
-)
+const canViewFullPii = computed(() => appStore.hasPermission("view_full_pii"));
 
-const canCreateHousing = computed(() =>
-  !appStore.isVerifikator &&
-  !appStore.isAdminKabupaten &&
-  appStore.hasPermission('housing:create')
-)
+const canCreateHousing = computed(
+  () =>
+    !appStore.isVerifikator &&
+    !appStore.isAdminKabupaten &&
+    appStore.hasPermission("housing:create")
+);
 
 const canExportHousing = computed(() =>
-  appStore.hasPermission('export_housing')
-)
+  appStore.hasPermission("export_housing")
+);
 
 const getNoKkValue = (item) => {
-  const owner = item?.householdOwner || {}
+  const owner = item?.householdOwner || {};
   return (
     owner.familyCardNumber ||
     owner.nik ||
@@ -4026,294 +4384,298 @@ const getNoKkValue = (item) => {
     owner.idNumber ||
     owner.ktpNumber ||
     owner.noKtp ||
-    ''
-  )
-}
+    ""
+  );
+};
 
 const formatNoKk = (value) => {
-  if (!value) return 'N/A'
-  if (canViewFullPii.value) return value
-  const digits = String(value).replace(/\D/g, '')
-  if (!digits) return 'N/A'
+  if (!value) return "N/A";
+  if (canViewFullPii.value) return value;
+  const digits = String(value).replace(/\D/g, "");
+  if (!digits) return "N/A";
   if (digits.length <= 6) {
-    return `${digits.slice(0, 2)}${'*'.repeat(Math.max(digits.length - 2, 1))}`
+    return `${digits.slice(0, 2)}${"*".repeat(Math.max(digits.length - 2, 1))}`;
   }
-  const head = digits.slice(0, 4)
-  const tail = digits.slice(-2)
-  return `${head}${'*'.repeat(digits.length - 6)}${tail}`
-}
+  const head = digits.slice(0, 4);
+  const tail = digits.slice(-2);
+  return `${head}${"*".repeat(digits.length - 6)}${tail}`;
+};
 
 const formatDate = (dateString) => {
-  if (!dateString) return 'N/A'
+  if (!dateString) return "N/A";
   try {
-    return new Date(dateString).toLocaleDateString('id-ID')
+    return new Date(dateString).toLocaleDateString("id-ID");
   } catch (error) {
-    console.error('Error formatting date:', error)
-    return 'N/A'
+    console.error("Error formatting date:", error);
+    return "N/A";
   }
-}
+};
 
 const formatTime = (dateString) => {
-  if (!dateString) return 'N/A'
+  if (!dateString) return "N/A";
   try {
-    return new Date(dateString).toLocaleTimeString('id-ID', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    return new Date(dateString).toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   } catch (error) {
-    console.error('Error formatting time:', error)
-    return 'N/A'
+    console.error("Error formatting time:", error);
+    return "N/A";
   }
-}
+};
 
 // Helper functions to format enum values to Indonesian labels
 const formatPosition = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    perangkat_desa: 'Perangkat Desa/Kelurahan',
-    pemilik_rumah: 'Pemilik Rumah',
-    lainnya: 'Lainnya'
-  }
-  return mapping[value] || value
-}
+    perangkat_desa: "Perangkat Desa/Kelurahan",
+    pemilik_rumah: "Pemilik Rumah",
+    lainnya: "Lainnya",
+  };
+  return mapping[value] || value;
+};
 
 const formatEducationLevel = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    tidak_sekolah: 'Tidak Sekolah',
-    sd: 'SD/Sederajat',
-    smp: 'SMP/Sederajat',
-    sma: 'SMA/Sederajat',
-    diploma: 'Diploma',
-    sarjana: 'Sarjana',
-    magister: 'Pascasarjana',
-    lainnya: 'Lainnya'
-  }
-  return mapping[value] || value
-}
+    tidak_sekolah: "Tidak Sekolah",
+    sd: "SD/Sederajat",
+    smp: "SMP/Sederajat",
+    sma: "SMA/Sederajat",
+    diploma: "Diploma",
+    sarjana: "Sarjana",
+    magister: "Pascasarjana",
+    lainnya: "Lainnya",
+  };
+  return mapping[value] || value;
+};
 
 const formatOccupation = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   // Occupation is usually a string, return as is
-  return value
-}
+  return value;
+};
 
 const formatLandOwnership = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    milik_sendiri: 'Milik Sendiri',
-    bukan_milik_sendiri: 'Bukan Milik Sendiri'
-  }
-  return mapping[value] || value
-}
+    milik_sendiri: "Milik Sendiri",
+    bukan_milik_sendiri: "Bukan Milik Sendiri",
+  };
+  return mapping[value] || value;
+};
 
 const formatHouseOwnership = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    milik_sendiri: 'Milik Sendiri',
-    sewa: 'Sewa',
-    menumpang: 'Menumpang'
-  }
-  return mapping[value] || value
-}
+    milik_sendiri: "Milik Sendiri",
+    sewa: "Sewa",
+    menumpang: "Menumpang",
+  };
+  return mapping[value] || value;
+};
 
 const formatHouseType = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    rumah_tapak: 'Rumah Tapak',
-    rumah_susun: 'Rumah Susun',
-    rumah_petak: 'Rumah Petak',
-    kos: 'Kos'
-  }
-  return mapping[value] || value
-}
+    rumah_tapak: "Rumah Tapak",
+    rumah_susun: "Rumah Susun",
+    rumah_petak: "Rumah Petak",
+    kos: "Kos",
+  };
+  return mapping[value] || value;
+};
 
 const formatFloorMaterial = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    tanah: 'Tanah',
-    keramik: 'Keramik',
-    rabat_semen: 'Rabat Semen',
-    papan: 'Papan',
-    kayu: 'Kayu',
-    bata: 'Bata'
-  }
-  return mapping[value] || value
-}
+    tanah: "Tanah",
+    keramik: "Keramik",
+    rabat_semen: "Rabat Semen",
+    papan: "Papan",
+    kayu: "Kayu",
+    bata: "Bata",
+  };
+  return mapping[value] || value;
+};
 
 const formatWallMaterial = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    tembok_tanpa_plester: 'Tembok/Bata/Batako Tanpa Plester',
-    tembok_dengan_plester: 'Tembok Bata/Batako dengan Plester',
-    papan: 'Papan',
-    anyaman_bambu: 'Anyaman Bambu',
-    lainnya: 'Lainnya'
-  }
-  return mapping[value] || value
-}
+    tembok_tanpa_plester: "Tembok/Bata/Batako Tanpa Plester",
+    tembok_dengan_plester: "Tembok Bata/Batako dengan Plester",
+    papan: "Papan",
+    anyaman_bambu: "Anyaman Bambu",
+    lainnya: "Lainnya",
+  };
+  return mapping[value] || value;
+};
 
 const formatRoofMaterial = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    genteng_beton: 'Genteng (Beton/Keramik)',
-    seng_multiroof: 'Seng/Multiroof',
-    kayu_sirap: 'Kayu/Sirap',
-    asbes: 'Asbes',
-    lainnya: 'Lainnya'
-  }
-  return mapping[value] || value
-}
+    genteng_beton: "Genteng (Beton/Keramik)",
+    seng_multiroof: "Seng/Multiroof",
+    kayu_sirap: "Kayu/Sirap",
+    asbes: "Asbes",
+    lainnya: "Lainnya",
+  };
+  return mapping[value] || value;
+};
 
 const formatWaterSource = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    sumur_gali: 'Sumur Gali',
-    sumur_bor: 'Sumur Bor',
-    ledeng: 'Ledeng',
-    lainnya: 'Sumber Air Lainnya'
-  }
-  return mapping[value] || value
-}
+    sumur_gali: "Sumur Gali",
+    sumur_bor: "Sumur Bor",
+    ledeng: "Ledeng",
+    lainnya: "Sumber Air Lainnya",
+  };
+  return mapping[value] || value;
+};
 
 const formatWaterLocation = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    di_tanah_sendiri: 'Di Dalam Tanah Sendiri',
-    menumpang_tempat_lain: 'Menumpang/Mengambil dari Tempat Lain'
-  }
-  return mapping[value] || value
-}
+    di_tanah_sendiri: "Di Dalam Tanah Sendiri",
+    menumpang_tempat_lain: "Menumpang/Mengambil dari Tempat Lain",
+  };
+  return mapping[value] || value;
+};
 
 const formatToiletOwnership = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    milik_sendiri: 'Milik Sendiri',
-    jamban_bersama: 'Jamban Bersama',
-    tidak_memiliki: 'Tidak Memiliki Jamban'
-  }
-  return mapping[value] || value
-}
+    milik_sendiri: "Milik Sendiri",
+    jamban_bersama: "Jamban Bersama",
+    tidak_memiliki: "Tidak Memiliki Jamban",
+  };
+  return mapping[value] || value;
+};
 
 const formatToiletType = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    cubluk: 'Cubluk',
-    leher_angsa_jongkok: 'Leher Angsa (Jongkok)',
-    leher_angsa_duduk: 'Leher Angsa (Duduk)'
-  }
-  return mapping[value] || value
-}
+    cubluk: "Cubluk",
+    leher_angsa_jongkok: "Leher Angsa (Jongkok)",
+    leher_angsa_duduk: "Leher Angsa (Duduk)",
+  };
+  return mapping[value] || value;
+};
 
 const formatSepticTankType = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    biotank: 'Biotank',
-    tanki_permanen: 'Tanki dengan Konstruksi Permanen',
-    lubang_tanah: 'Lubang Tanah',
-    tidak_memiliki: 'Tidak Memiliki Tanki'
-  }
-  return mapping[value] || value
-}
+    biotank: "Biotank",
+    tanki_permanen: "Tanki dengan Konstruksi Permanen",
+    lubang_tanah: "Lubang Tanah",
+    tidak_memiliki: "Tidak Memiliki Tanki",
+  };
+  return mapping[value] || value;
+};
 
 const formatSepticPumpingService = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    pemda: 'Pemda',
-    swasta_perorangan: 'Swasta (Perorangan/Badan Usaha)'
-  }
-  return mapping[value] || value
-}
+    pemda: "Pemda",
+    swasta_perorangan: "Swasta (Perorangan/Badan Usaha)",
+  };
+  return mapping[value] || value;
+};
 
 const formatWastewaterDisposal = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    jaringan_pipa: 'Tergabung dalam Jaringan Pipa Pengolahan Air Limbah',
-    tangki_septic: 'Tergabung dalam Tangki Septic',
-    drainase_sungai: 'Langsung Dialirkan ke Drainase/Saluran/Sungai',
-    resapan_tanah: 'Ditampung dalam Lubang/Resapan ke Tanah'
-  }
-  return mapping[value] || value
-}
+    jaringan_pipa: "Tergabung dalam Jaringan Pipa Pengolahan Air Limbah",
+    tangki_septic: "Tergabung dalam Tangki Septic",
+    drainase_sungai: "Langsung Dialirkan ke Drainase/Saluran/Sungai",
+    resapan_tanah: "Ditampung dalam Lubang/Resapan ke Tanah",
+  };
+  return mapping[value] || value;
+};
 
 const formatWasteCollectionManager = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    pemda: 'Pemda',
-    pemdes: 'Pemdes',
-    lsm_kelompok_masyarakat: 'LSM/Kelompok Masyarakat',
-    swasta: 'Lainnya'
-  }
-  return mapping[value] || value
-}
+    pemda: "Pemda",
+    pemdes: "Pemdes",
+    lsm_kelompok_masyarakat: "LSM/Kelompok Masyarakat",
+    swasta: "Lainnya",
+  };
+  return mapping[value] || value;
+};
 
 const formatWasteDisposalMethod = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    dibakar: 'Dibakar',
-    diolah_rumah: 'Diolah di Rumah (Kompos/Ditimbun)',
-    tempat_sampah_umum: 'Dibuang ke Tempat Sampah Umum',
-    dibuang_lainnya: 'Dibuang di Tempat Lainnya'
-  }
-  return mapping[value] || value
-}
+    dibakar: "Dibakar",
+    diolah_rumah: "Diolah di Rumah (Kompos/Ditimbun)",
+    tempat_sampah_umum: "Dibuang ke Tempat Sampah Umum",
+    dibuang_lainnya: "Dibuang di Tempat Lainnya",
+  };
+  return mapping[value] || value;
+};
 
 const formatRoadType = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    lebar_kurang_3_5m: 'Jalan Lebar < 3,5 m',
-    lebar_lebih_3_5m: 'Jalan Lebar > 3,5 m',
-    tidak_ada_akses: 'Tidak Terdapat Jalan Akses/Melalui Perkarangan Orang Lain'
-  }
-  return mapping[value] || value
-}
+    lebar_kurang_3_5m: "Jalan Lebar < 3,5 m",
+    lebar_lebih_3_5m: "Jalan Lebar > 3,5 m",
+    tidak_ada_akses:
+      "Tidak Terdapat Jalan Akses/Melalui Perkarangan Orang Lain",
+  };
+  return mapping[value] || value;
+};
 
 const formatRoadConstruction = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    beton: 'Jalan Beton',
-    aspal: 'Jalan Aspal',
-    konblok: 'Jalan Konblok',
-    tanah_sirtu: 'Jalan Tanah/Sirtu',
-    lainnya: 'Konstruksi Lainnya'
-  }
-  return mapping[value] || value
-}
+    beton: "Jalan Beton",
+    aspal: "Jalan Aspal",
+    konblok: "Jalan Konblok",
+    tanah_sirtu: "Jalan Tanah/Sirtu",
+    lainnya: "Konstruksi Lainnya",
+  };
+  return mapping[value] || value;
+};
 
 const formatElectricitySource = (value) => {
-  if (!value) return 'N/A'
+  if (!value) return "N/A";
   const mapping = {
-    pln_sendiri: 'PLN Sendiri',
-    pln_menumpang: 'PLN Menumpang',
-    tidak_ada: 'Tidak Ada',
-    lainnya: 'Lainnya'
-  }
-  return mapping[value] || value
-}
+    pln_sendiri: "PLN Sendiri",
+    pln_menumpang: "PLN Menumpang",
+    tidak_ada: "Tidak Ada",
+    lainnya: "Lainnya",
+  };
+  return mapping[value] || value;
+};
 
 // Lifecycle
 onMounted(async () => {
   try {
-    console.log('Housing Data page mounted')
-    console.log('Housing store:', housingStore)
-    console.log('Current submissions:', housingStore.submissions)
-    await fetchFilterProvinces()
-    await loadLocationFilters()
-    loadData()
+    console.log("Housing Data page mounted");
+    console.log("Housing store:", housingStore);
+    console.log("Current submissions:", housingStore.submissions);
+    await fetchFilterProvinces();
+    await loadLocationFilters();
+    loadData();
   } catch (error) {
-    console.error('Error in onMounted:', error)
+    console.error("Error in onMounted:", error);
   }
-})
+});
 
 // Watch for filter changes
-watch(() => filters.value, async () => {
-  try {
-    await loadData()
-  } catch (error) {
-    console.error('Error in filter watch:', error)
-  }
-}, { deep: true })
-
+watch(
+  () => filters.value,
+  async () => {
+    try {
+      await loadData();
+    } catch (error) {
+      console.error("Error in filter watch:", error);
+    }
+  },
+  { deep: true }
+);
 </script>
 
 <style scoped>
@@ -4345,6 +4707,26 @@ watch(() => filters.value, async () => {
 
   .data-table {
     min-width: 640px;
+  }
+}
+@media (max-width: 600px) {
+  /* Judul (h2) dibuat lebih ringkas */
+  h2.text-h6 {
+    font-size: 0.875rem !important; /* Setara 14px */
+    line-height: 1.1rem !important;
+  }
+
+  /* Deskripsi (p) dibuat sangat kecil */
+  .text-tiny-mobile {
+    font-size: 0.6rem !important; /* Setara 9.5px - 10px */
+    line-height: 0.85rem !important; /* Jarak antar baris dirapatkan */
+    letter-spacing: 0.01em !important;
+    opacity: 0.8; /* Sedikit lebih tipis agar tidak terlalu 'berat' di mata */
+  }
+
+  /* Mengurangi padding card-title di mobile agar lebih hemat ruang */
+  .v-card-title {
+    padding: 12px !important;
   }
 }
 </style>
