@@ -561,15 +561,9 @@
                 <v-list density="compact">
                   <v-list-item
                     :disabled="exportLoading"
-                    @click="handleExport('default')"
+                    @click="handleExport()"
                   >
                     <v-list-item-title>Ekspor Data (Excel)</v-list-item-title>
-                  </v-list-item>
-                  <v-list-item
-                    :disabled="exportLoading"
-                    @click="handleExport('active-layer')"
-                  >
-                    <v-list-item-title>Ekspor berdasarkan Layer Aktif</v-list-item-title>
                   </v-list-item>
                 </v-list>
               </v-menu>
@@ -1239,12 +1233,8 @@ import {
   userAPI,
 } from "@/services";
 import { useMapLayersStore } from "@/stores/mapLayers";
-import { useMapDataStore } from "@/stores/mapData";
 import { useMapUiStore } from "@/stores/mapUi";
 import * as L from "leaflet";
-import "leaflet.markercluster";
-import "leaflet.markercluster/dist/MarkerCluster.css";
-import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -1347,11 +1337,13 @@ const villageStatusCounts = ref({
 const mapRef = ref(null);
 const mapInstance = ref(null);
 const mapLayersStore = useMapLayersStore();
-const mapDataStore = useMapDataStore();
 const mapUiStore = useMapUiStore();
 const searchHighlightLayer = L.layerGroup();
 const geoJsonLayerCache = new Map();
-const dynamicGeoJsonCache = new Map();
+const markerLayers = {
+  housing: L.layerGroup(),
+  "housing-development": L.layerGroup(),
+};
 const isMasyarakat = computed(() => appStore.isMasyarakat);
 const isAdminDesa = computed(() => appStore.isAdminDesa);
 const isAdminKabupaten = computed(() => appStore.isAdminKabupaten);
@@ -1423,15 +1415,28 @@ let buildingChart = null;
 let scaleControl = null;
 let searchDebounceTimer = null;
 let searchPopup = null;
-let filterDebounceTimer = null;
+
+const mapFilters = ref([
+  {
+    type: "housing",
+    label: "Rumah Masyarakat",
+    enabled: true,
+  },
+  {
+    type: "housing-development",
+    label: "Perumahan oleh Pengembang",
+    enabled: true,
+  },
+]);
 
 const locationFilterOptions = [
   { label: "Rumah Masyarakat", value: "housing" },
   { label: "Perumahan oleh Pengembang", value: "housing-development" },
-  { label: "Infrastruktur Desa", value: "infrastruktur" },
 ];
 
-const selectedLocationFilters = ref(mapDataStore.activeFilters);
+const selectedLocationFilters = ref(
+  locationFilterOptions.map((option) => option.value)
+);
 
 const dashboardFilters = ref({
   provinceId: null,
@@ -1587,7 +1592,6 @@ const exportErrorMessage = ref("");
 const exportInfoMessage = ref("");
 const exportLoading = ref(false);
 const searchDebounceMs = 300;
-const filterDebounceMs = 300;
 const MAX_SEARCH_SUGGESTIONS = 50;
 
 const activeLayerCount = computed(() => {
@@ -2516,6 +2520,202 @@ const loadBuildingSummary = async () => {
   }
 };
 
+// Parse coordinates from string format "lat, lng"
+const parseCoordinates = (coordString) => {
+  if (!coordString) return null;
+
+  try {
+    const parts = coordString.split(",").map((part) => part.trim());
+    if (parts.length === 2) {
+      const lat = parseFloat(parts[0]);
+      const lng = parseFloat(parts[1]);
+      if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+        return { lat, lng };
+      }
+    }
+  } catch (error) {
+    console.error("Error parsing coordinates:", error);
+  }
+
+  return null;
+};
+
+const toLatLng = (coords) => {
+  if (!coords) {
+    return null;
+  }
+
+  const lat = parseFloat(coords.lat);
+  const lng = parseFloat(coords.lng);
+
+  if (Number.isNaN(lat) || Number.isNaN(lng)) {
+    return null;
+  }
+
+  return [lat, lng];
+};
+
+// Get coordinates for housing data (mock implementation)
+const getCoordinatesForHousing = (item) => {
+  if (item.householdOwner?.latitude && item.householdOwner?.longitude) {
+    return {
+      lat: item.householdOwner.latitude,
+      lng: item.householdOwner.longitude,
+    };
+  }
+
+  return null;
+};
+
+// Create markers on map
+const createMarkers = (housingData, housingDevelopmentData) => {
+  if (!mapInstance.value) {
+    return;
+  }
+
+  markerLayers.housing.clearLayers();
+  markerLayers["housing-development"].clearLayers();
+
+  const markerColors = {
+    housing: "#1976D2",
+    "housing-development": "#4CAF50",
+  };
+
+  const createMarkerIcon = (color, label) =>
+    L.divIcon({
+      html: `
+        <div style="width: 30px; height: 30px; border-radius: 50%; background: ${color}; border: 2px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 600; font-size: 12px;">
+          ${label}
+        </div>
+      `,
+      className: "",
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+    });
+
+  if (mapFilters.value.find((filter) => filter.type === "housing")?.enabled) {
+    housingData.forEach((item) => {
+      const coordinates = getCoordinatesForHousing(item);
+      const latLng = toLatLng(coordinates);
+
+      if (latLng) {
+        const marker = L.marker(latLng, {
+          icon: createMarkerIcon(markerColors.housing, "H"),
+        });
+
+        marker.bindPopup(`
+          <div style="padding: 8px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 14px; font-weight: bold;">Survey Perumahan</h3>
+            <p style="margin: 4px 0; font-size: 12px;"><strong>Pemilik:</strong> ${
+              item.householdOwner?.ownerName || "Tidak ada"
+            }</p>
+            <p style="margin: 4px 0; font-size: 12px;"><strong>Alamat:</strong> ${
+              item.householdOwner?.houseNumber || "Tidak ada"
+            }, RT ${item.householdOwner?.rt || "Tidak ada"}/RW ${
+          item.householdOwner?.rw || "Tidak ada"
+        }</p>
+            <p style="margin: 4px 0; font-size: 12px;"><strong>Kelurahan:</strong> ${
+              item.householdOwner?.village?.name || "Tidak ada"
+            }</p>
+            <p style="margin: 4px 0; font-size: 12px;"><strong>Status:</strong> ${
+              item.status || "Tidak ada"
+            }</p>
+          </div>
+        `);
+
+        markerLayers.housing.addLayer(marker);
+      }
+    });
+  }
+
+  if (
+    mapFilters.value.find((filter) => filter.type === "housing-development")
+      ?.enabled
+  ) {
+    housingDevelopmentData.forEach((item) => {
+      let coordinates = item.coordinates;
+
+      if (item.housingDevelopments && Array.isArray(item.housingDevelopments)) {
+        item.housingDevelopments.forEach((housing) => {
+          if (housing.koordinat) {
+            coordinates = parseCoordinates(housing.koordinat);
+            const latLng = toLatLng(coordinates);
+            if (latLng) {
+              const marker = L.marker(latLng, {
+                icon: createMarkerIcon(markerColors["housing-development"], "D"),
+              });
+
+              marker.bindPopup(`
+                <div style="padding: 8px;">
+                  <h3 style="margin: 0 0 8px 0; font-size: 14px; font-weight: bold;">Perumahan</h3>
+                  <p style="margin: 4px 0; font-size: 12px;"><strong>Nama:</strong> ${
+                    housing.namaPerumahan || item.developmentName || "Tidak ada"
+                  }</p>
+                  <p style="margin: 4px 0; font-size: 12px;"><strong>Pengembang:</strong> ${
+                    housing.namaPengembang || "Tidak ada"
+                  }</p>
+                  <p style="margin: 4px 0; font-size: 12px;"><strong>Jenis:</strong> ${
+                    housing.jenisPerumahan || "Tidak ada"
+                  }</p>
+                  <p style="margin: 4px 0; font-size: 12px;"><strong>Unit:</strong> ${
+                    housing.jumlahRumahRencana || "Tidak ada"
+                  }</p>
+                  <p style="margin: 4px 0; font-size: 12px;"><strong>ID:</strong> ${
+                    item.id || "Tidak ada"
+                  }</p>
+                </div>
+              `);
+
+              markerLayers["housing-development"].addLayer(marker);
+            }
+          }
+        });
+      } else if (coordinates) {
+        if (typeof coordinates === "string") {
+          coordinates = parseCoordinates(coordinates);
+        }
+
+        const latLng = toLatLng(coordinates);
+        if (latLng) {
+          const marker = L.marker(latLng, {
+            icon: createMarkerIcon(markerColors["housing-development"], "D"),
+          });
+
+          marker.bindPopup(`
+            <div style="padding: 8px;">
+              <h3 style="margin: 0 0 8px 0; font-size: 14px; font-weight: bold;">Perumahan</h3>
+              <p style="margin: 4px 0; font-size: 12px;"><strong>Nama:</strong> ${
+                item.developmentName || "Tidak ada"
+              }</p>
+              <p style="margin: 4px 0; font-size: 12px;"><strong>ID:</strong> ${
+                item.id || "Tidak ada"
+              }</p>
+            </div>
+          `);
+
+          markerLayers["housing-development"].addLayer(marker);
+        }
+      }
+    });
+  }
+
+  const bounds = L.latLngBounds([]);
+  let hasBounds = false;
+
+  Object.values(markerLayers).forEach((layerGroup) => {
+    layerGroup.eachLayer((layer) => {
+      if (layer.getLatLng) {
+        bounds.extend(layer.getLatLng());
+        hasBounds = true;
+      }
+    });
+  });
+
+  if (hasBounds) {
+    mapInstance.value.fitBounds(bounds, { padding: [20, 20] });
+  }
+};
+
 // Load map data for markers
 const loadMapData = async () => {
   if (isMasyarakat.value) {
@@ -2524,9 +2724,71 @@ const loadMapData = async () => {
 
   try {
     const locationParams = getDashboardFilterParams();
+
+    // Load housing data with coordinates
+    let housingData = [];
+    try {
+      const housingParams = {
+        page: 1,
+        limit: 100,
+        ...locationParams,
+      };
+      const housingResponse = await housingAPI.getSubmissions(housingParams);
+      if (housingResponse?.success && housingResponse.data?.submissions) {
+        housingData =
+          housingResponse.data.submissions.rows ||
+          housingResponse.data.submissions ||
+          [];
+      }
+    } catch (error) {
+      console.error("Error loading housing data for map:", error);
+    }
+
+    // Load housing development data from localStorage
+    let housingDevelopmentData = [];
+    try {
+      const storedData = localStorage.getItem("housing-development-submissions");
+      if (storedData) {
+        const submissions = JSON.parse(storedData);
+
+        submissions.forEach((submission) => {
+          if (
+            submission.housingDevelopments &&
+            Array.isArray(submission.housingDevelopments)
+          ) {
+            submission.housingDevelopments.forEach((housing) => {
+              if (housing.koordinat) {
+                const coordinates = parseCoordinates(housing.koordinat);
+                if (coordinates) {
+                  housingDevelopmentData.push({
+                    id: submission.id,
+                    developmentName:
+                      housing.namaPerumahan ||
+                      submission.developmentName ||
+                      "Perumahan",
+                    developerName: housing.namaPengembang || submission.developerName,
+                    housingType: housing.jenisPerumahan || submission.housingType,
+                    coordinates,
+                    housingDevelopments: [housing],
+                  });
+                }
+              }
+            });
+          }
+        });
+      }
+    } catch (error) {
+      console.error(
+        "Error loading housing development data from localStorage:",
+        error
+      );
+      housingDevelopmentData = [];
+    }
+
+    // Process and display markers
     await nextTick();
     initializeMap();
-    await mapDataStore.refreshActive(locationParams);
+    createMarkers(housingData, housingDevelopmentData);
   } catch (error) {
     console.error("Error loading map data:", error);
   }
@@ -2602,34 +2864,12 @@ watch(selectedLocationFilters, (newSelection) => {
       ? new Set(newSelection)
       : new Set(locationFilterOptions.map((option) => option.value));
 
-  mapDataStore.setFilters([...activeValues]);
-  if (filterDebounceTimer) {
-    clearTimeout(filterDebounceTimer);
-    filterDebounceTimer = null;
-  }
-  if (dashboardFilterDebounceTimer) {
-    clearTimeout(dashboardFilterDebounceTimer);
-    dashboardFilterDebounceTimer = null;
-  }
-  filterDebounceTimer = setTimeout(() => {
-    loadMapData();
-  }, filterDebounceMs);
+  mapFilters.value.forEach((filter) => {
+    filter.enabled = activeValues.has(filter.type);
+  });
+
+  loadMapData();
 });
-
-watch(
-  () => mapDataStore.activeFilters,
-  (filters) => {
-    selectedLocationFilters.value = filters;
-  },
-  { deep: true }
-);
-
-watch(
-  () => mapDataStore.refreshToken,
-  () => {
-    loadMapData();
-  }
-);
 
 watch(
   () => mapUiStore.mapResizeToken,
@@ -2696,10 +2936,11 @@ const initializeMap = () => {
     })
     .addTo(mapInstance.value);
 
+  markerLayers.housing.addTo(mapInstance.value);
+  markerLayers["housing-development"].addTo(mapInstance.value);
   searchHighlightLayer.addTo(mapInstance.value);
 
   syncGeoJsonLayers();
-  syncDynamicDataLayers();
 };
 
 const webMercatorToLatLng = (x, y) => {
@@ -2803,208 +3044,6 @@ const coordsToLatLng = (coords) => {
   }
 
   return L.latLng(y, x);
-};
-
-const markerIconMap = {
-  housing: "mdi-home",
-  "housing-development": "mdi-home-group",
-  infrastruktur: "mdi-domain",
-};
-
-const markerColorMap = {
-  housing: {
-    livable: "#43A047",
-    notLivable: "#E53935",
-    fallback: "#43A047",
-  },
-  "housing-development": {
-    fallback: "#1E88E5",
-  },
-  infrastruktur: {
-    fallback: "#FB8C00",
-  },
-};
-
-const resolveBoolean = (value) => {
-  if (value === true || value === false) {
-    return value;
-  }
-
-  if (typeof value === "number") {
-    if (value === 1) return true;
-    if (value === 0) return false;
-  }
-
-  if (typeof value === "string") {
-    const normalized = value.trim().toLowerCase();
-    if (!normalized) return null;
-
-    if (normalized === "true" || normalized === "ya") {
-      return true;
-    }
-    if (normalized === "false" || normalized === "tidak") {
-      return false;
-    }
-
-    const numeric = Number(normalized);
-    if (!Number.isNaN(numeric)) {
-      if (numeric === 1) return true;
-      if (numeric === 0) return false;
-    }
-
-    const normalizedPhrase = normalized.replace(/\s+/g, " ");
-    if (["layak", "layak huni"].includes(normalizedPhrase)) {
-      return true;
-    }
-    if (
-      [
-        "tidak layak",
-        "tidak layak huni",
-        "rtlh",
-        "non layak",
-      ].includes(normalizedPhrase)
-    ) {
-      return false;
-    }
-  }
-
-  return null;
-};
-
-const resolveMarkerColor = (type, properties = {}) => {
-  if (type === "housing") {
-    const livable = resolveBoolean(
-      properties.isLivable ?? properties.is_livable
-    );
-    if (livable === true) return markerColorMap.housing.livable;
-    if (livable === false) return markerColorMap.housing.notLivable;
-    return markerColorMap.housing.fallback;
-  }
-  return markerColorMap[type]?.fallback || "#546E7A";
-};
-
-const createMarkerIcon = (type, properties = {}) => {
-  const iconName = markerIconMap[type] || "mdi-map-marker";
-  const color = resolveMarkerColor(type, properties);
-  return L.divIcon({
-    className: "map-marker-wrapper",
-    html: `
-      <div class="map-marker" style="background:${color}">
-        <span class="mdi ${iconName}"></span>
-      </div>
-    `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -18],
-  });
-};
-
-const buildDynamicPopupContent = (type, properties = {}) => {
-  if (type === "housing") {
-    return `
-      <div style="padding: 6px 8px;">
-        <strong>Rumah Masyarakat</strong>
-        <div>Pemilik: ${properties.ownerName || "-"}</div>
-        <div>Alamat: ${properties.address || "-"} RT ${properties.rt || "-"} / RW ${properties.rw || "-"}</div>
-        <div>Desa: ${properties.village || "-"}</div>
-        <div>Status: ${properties.status || "-"}</div>
-      </div>
-    `;
-  }
-
-  if (type === "housing-development") {
-    return `
-      <div style="padding: 6px 8px;">
-        <strong>Perumahan</strong>
-        <div>Nama: ${properties.developmentName || "-"}</div>
-        <div>Pengembang: ${properties.developerName || "-"}</div>
-        <div>Jenis: ${properties.housingType || "-"}</div>
-        <div>Unit: ${properties.plannedUnitCount ?? "-"}</div>
-      </div>
-    `;
-  }
-
-  if (type === "infrastruktur") {
-    return `
-      <div style="padding: 6px 8px;">
-        <strong>Infrastruktur Desa</strong>
-        <div>Desa: ${properties.village || "-"}</div>
-        <div>Kecamatan: ${properties.district || "-"}</div>
-        <div>Kabupaten: ${properties.regency || "-"}</div>
-        <div>Tahun Survei: ${properties.surveyYear || "-"}</div>
-      </div>
-    `;
-  }
-
-  return null;
-};
-
-const createDynamicGeoLayer = (type, data) => {
-  if (!data) {
-    return null;
-  }
-
-  const clusterGroup = L.markerClusterGroup({
-    chunkedLoading: true,
-    showCoverageOnHover: false,
-    maxClusterRadius: 45,
-  });
-
-  const geoLayer = L.geoJSON(data, {
-    pane: MAP_PANES.points,
-    interactive: true,
-    coordsToLatLng,
-    pointToLayer: (feature, latlng) =>
-      L.marker(latlng, {
-        icon: createMarkerIcon(type, feature?.properties),
-        pane: MAP_PANES.points,
-        interactive: true,
-      }),
-    onEachFeature: (feature, layer) => {
-      ensureLayerInteractivity(layer);
-      const popup = buildDynamicPopupContent(type, feature?.properties);
-      if (popup) {
-        layer.bindPopup(popup);
-      }
-    },
-  });
-
-  clusterGroup.addLayer(geoLayer);
-  return clusterGroup;
-};
-
-const syncDynamicDataLayers = () => {
-  if (!mapInstance.value) {
-    return;
-  }
-
-  const datasets = [
-    "housing",
-    "housing-development",
-    "infrastruktur",
-  ];
-
-  datasets.forEach((type) => {
-    const active = mapDataStore.filters[type];
-    const data = mapDataStore.geojson[type];
-    const existingLayer = dynamicGeoJsonCache.get(type);
-
-    if (active && data) {
-      if (existingLayer) {
-        mapInstance.value.removeLayer(existingLayer);
-        dynamicGeoJsonCache.delete(type);
-      }
-
-      const layer = createDynamicGeoLayer(type, data);
-      if (layer) {
-        layer.addTo(mapInstance.value);
-        dynamicGeoJsonCache.set(type, layer);
-      }
-    } else if (existingLayer) {
-      mapInstance.value.removeLayer(existingLayer);
-      dynamicGeoJsonCache.delete(type);
-    }
-  });
 };
 
 const layerPopupFields = [
@@ -3606,13 +3645,11 @@ const buildExportFilename = (exportType, params) => {
   return `${parts.join("_") || label}.xlsx`;
 };
 
-const resolveActiveGisLayer = () => {
-  const activeLayers = mapLayersStore.activeLayers || [];
-  return activeLayers.filter((layer) => layer.source !== "facility");
-};
-
-const handleExport = async (mode = "default") => {
-  const activeFilters = mapDataStore.activeFilters;
+const handleExport = async () => {
+  const activeFilters =
+    selectedLocationFilters.value.length > 0
+      ? selectedLocationFilters.value
+      : locationFilterOptions.map((option) => option.value);
   if (!activeFilters.length) {
     exportErrorMessage.value = "Pilih minimal satu filter untuk ekspor.";
     exportErrorSnackbar.value = true;
@@ -3633,40 +3670,6 @@ const handleExport = async (mode = "default") => {
     return;
   }
 
-  const useActiveLayer = mode === "active-layer";
-  if (useActiveLayer && exportType !== "housing") {
-    exportErrorMessage.value =
-      "Ekspor berdasarkan layer aktif hanya tersedia untuk Data Rumah Masyarakat.";
-    exportErrorSnackbar.value = true;
-    return;
-  }
-
-  let gisLayerName = "";
-  if (useActiveLayer) {
-    const activeGisLayers = resolveActiveGisLayer();
-    if (!activeGisLayers.length) {
-      exportErrorMessage.value =
-        "Aktifkan satu layer GIS terlebih dahulu untuk ekspor berbasis layer.";
-      exportErrorSnackbar.value = true;
-      return;
-    }
-    if (activeGisLayers.length > 1) {
-      exportErrorMessage.value =
-        "Pilih satu layer GIS agar ekspor lebih tepat.";
-      exportErrorSnackbar.value = true;
-      return;
-    }
-    const activeLayer = activeGisLayers[0];
-    if (!activeLayer?.category) {
-      exportErrorMessage.value =
-        "Layer GIS tidak valid untuk ekspor.";
-      exportErrorSnackbar.value = true;
-      return;
-    }
-    const fileName = activeLayer.filename || activeLayer.id;
-    gisLayerName = `${activeLayer.category}/${fileName}`;
-  }
-
   exportLoading.value = true;
   exportErrorMessage.value = "";
   exportInfoMessage.value = "";
@@ -3674,9 +3677,6 @@ const handleExport = async (mode = "default") => {
 
   try {
     const exportParams = getDashboardFilterParams();
-    if (gisLayerName) {
-      exportParams.gisLayerName = gisLayerName;
-    }
     if (
       exportParams.regencyId &&
       !exportParams.districtId &&
@@ -3879,21 +3879,6 @@ watch(
   [activeLayerKeys, loadedLayerKeys],
   () => {
     syncGeoJsonLayers();
-  },
-  { flush: "post" }
-);
-
-watch(
-  () => [
-    mapDataStore.filters.housing,
-    mapDataStore.filters["housing-development"],
-    mapDataStore.filters.infrastruktur,
-    mapDataStore.geojson.housing,
-    mapDataStore.geojson["housing-development"],
-    mapDataStore.geojson.infrastruktur,
-  ],
-  () => {
-    syncDynamicDataLayers();
   },
   { flush: "post" }
 );
@@ -4408,12 +4393,7 @@ onBeforeUnmount(() => {
     clearTimeout(searchDebounceTimer);
     searchDebounceTimer = null;
   }
-  if (filterDebounceTimer) {
-    clearTimeout(filterDebounceTimer);
-    filterDebounceTimer = null;
-  }
   geoJsonLayerCache.clear();
-  dynamicGeoJsonCache.clear();
   if (mapInstance.value) {
     mapInstance.value.remove();
     mapInstance.value = null;
