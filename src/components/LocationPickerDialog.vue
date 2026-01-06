@@ -2,21 +2,28 @@
   <v-dialog v-model="dialogOpen" max-width="900" persistent>
     <v-card class="location-dialog-card">
       <v-card-title
-        class="text-subtitle-1 d-flex align-center justify-space-between"
+        class="text-subtitle-1 d-flex flex-column flex-sm-row align-start align-sm-center justify-space-between gap-3 pa-4"
       >
-        <span>{{ title }}</span>
-        <div class="location-gps-actions">
-          <span class="location-gps-label mr-10">
+        <span class="font-weight-bold">{{ title }}</span>
+
+        <div
+          class="location-gps-actions p-2 rounded-lg d-flex align-center justify-space-between justify-sm-end w-100 w-sm-auto"
+          style="background: rgba(var(--v-theme-primary), 0.05)"
+        >
+          <span
+            class="location-gps-label text-caption mr-2 text-medium-emphasis"
+          >
             Sesuaikan lokasi ke titik koordinat Anda saat ini
           </span>
           <v-btn
             icon
             size="small"
-            variant="text"
+            color="primary"
+            variant="tonal"
             :loading="isLocating"
             @click="getCurrentLocation"
           >
-            <v-icon>mdi-crosshairs-gps</v-icon>
+            <v-icon size="20">mdi-crosshairs-gps</v-icon>
             <v-tooltip activator="parent" location="top">
               Gunakan lokasi saat ini
             </v-tooltip>

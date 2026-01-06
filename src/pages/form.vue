@@ -210,13 +210,14 @@
                 <v-col cols="12" md="6">
                   <h4 class="text-subtitle-1 mb-0">Alamat Rumah</h4>
                 </v-col>
-                <v-col cols="12" md="6" class="d-flex justify-end">
+                <v-col cols="12" md="6" class="d-flex justify-end location-action-col">
                   <v-btn
                     size="small"
                     color="primary"
                     variant="tonal"
                     prepend-icon="mdi-crosshairs-gps"
                     :loading="locationLoading.isSyncing"
+                    class="location-action-btn"
                     @click="openLocationPicker"
                   >
                     Gunakan Lokasi Saat Ini
