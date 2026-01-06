@@ -67,7 +67,8 @@
                 Selamat datang, {{ userProfile.name }}
               </h1>
               <p class="text-body-2 text-md-body-1 text-medium-emphasis">
-                Pantau progres verifikasi dan riwayat survei yang sudah Anda kirim.
+                Pantau progres verifikasi dan riwayat survei yang sudah Anda
+                kirim.
               </p>
             </div>
           </div>
@@ -134,7 +135,9 @@
                   class="mt-3"
                 >
                   Disetujui.
-                  <span v-if="latestSubmissionNote && latestSubmissionNote !== '-'">
+                  <span
+                    v-if="latestSubmissionNote && latestSubmissionNote !== '-'"
+                  >
                     Catatan: {{ latestSubmissionNote }}
                   </span>
                 </v-alert>
@@ -165,7 +168,10 @@
                 width="3"
                 color="primary"
               />
-              <v-table v-else-if="masyarakatSubmissions.length" density="compact">
+              <v-table
+                v-else-if="masyarakatSubmissions.length"
+                density="compact"
+              >
                 <thead>
                   <tr>
                     <th class="text-left">Tanggal</th>
@@ -181,10 +187,17 @@
                     :key="submission.id"
                   >
                     <td>
-                      {{ formatSubmissionDate(submission.submittedAt || submission.createdAt) }}
+                      {{
+                        formatSubmissionDate(
+                          submission.submittedAt || submission.createdAt
+                        )
+                      }}
                     </td>
                     <td>
-                      {{ submission.householdOwner?.ownerName || 'Pengajuan Rumah' }}
+                      {{
+                        submission.householdOwner?.ownerName ||
+                        "Pengajuan Rumah"
+                      }}
                     </td>
                     <td>
                       <v-chip
@@ -219,18 +232,15 @@
                 rounded="lg"
                 color="grey-lighten-4"
               >
-                <v-icon
-                  size="56"
-                  color="primary"
-                  class="mb-3"
-                >
+                <v-icon size="56" color="primary" class="mb-3">
                   mdi-home-account
                 </v-icon>
                 <div class="text-body-1 font-weight-medium mb-2">
                   Belum ada survei yang dikirim.
                 </div>
                 <div class="text-body-2 text-medium-emphasis mb-4">
-                  Mulai isi survei rumah Anda agar proses verifikasi bisa berjalan.
+                  Mulai isi survei rumah Anda agar proses verifikasi bisa
+                  berjalan.
                 </div>
                 <v-btn
                   color="primary"
@@ -248,965 +258,984 @@
     </div>
 
     <div v-else>
-    <!-- Welcome Section -->
-    <v-card class="mb-6" elevation="2" rounded="xl">
-      <v-card-text class="pa-6 pa-md-8">
-        <div
-          class="d-flex flex-column flex-md-row align-start align-md-center justify-space-between"
-        >
-          <div class="mb-4 mb-md-0">
-            <h1 class="text-h5 text-md-h4 font-weight-bold mb-2">
-              Selamat datang kembali, {{ userProfile.name }}!
-            </h1>
-            <p class="text-body-2 text-md-body-1 text-medium-emphasis">
-              Berikut yang terjadi di dashboard SIPALING PKP hari ini.
-            </p>
-          </div>
-        </div>
-      </v-card-text>
-    </v-card>
-
-    <v-row v-if="isAdminDesa" class="mb-6">
-      <v-col cols="12" md="8">
-        <v-card elevation="2" rounded="xl">
-          <v-card-title class="d-flex align-center">
-            <v-icon color="primary" class="mr-2">mdi-clipboard-check</v-icon>
-            Progres Data Warga Desa
-          </v-card-title>
-          <v-card-text>
-            <v-row>
-              <v-col
-                v-for="item in villageStatusSummary"
-                :key="item.key"
-                cols="12"
-                sm="6"
-                md="3"
-              >
-                <v-card
-                  :color="item.color"
-                  variant="tonal"
-                  class="text-center"
-                >
-                  <v-card-text>
-                    <div class="text-h4 font-weight-bold">
-                      {{ item.count }}
-                    </div>
-                    <div class="text-subtitle-2">
-                      {{ item.label }}
-                    </div>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
-      </v-col>
-      <v-col cols="12" md="4">
-        <v-card elevation="2" rounded="xl" class="h-100">
-          <v-card-title class="d-flex align-center">
-            <v-icon color="primary" class="mr-2">
-              mdi-account-multiple-check
-            </v-icon>
-            Warga Belum Terdata
-          </v-card-title>
-          <v-card-text>
-            <v-progress-circular
-              v-if="isLoading"
-              indeterminate
-              size="28"
-              width="3"
-              color="primary"
-              class="mb-2"
-            />
-            <div
-              v-else-if="unregisteredHouseholds === null"
-              class="text-body-2 text-medium-emphasis"
-            >
-              Database kependudukan desa belum tersedia.
-            </div>
-            <div v-else>
-              <div class="text-h4 font-weight-bold">
-                {{ formatNumber(unregisteredHouseholds) }}
-              </div>
-              <div class="text-caption text-medium-emphasis mt-2">
-                Terdata: {{ formatNumber(housingCount) }} dari
-                {{ formatNumber(villageHouseholdCount) }} KK.
-              </div>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <!-- Stats Cards -->
-    <v-row class="mb-6">
-      <v-col v-for="stat in stats" :key="stat.title" cols="12" sm="6" lg="3">
-        <v-card
-          elevation="2"
-          rounded="xl"
-          class="h-100 cursor-pointer"
-          :class="{ 'hover-elevation': stat.route }"
-          @click="stat.route && $router.push(stat.route)"
-        >
-          <v-card-text class="pa-4 pa-md-6">
-            <div class="d-flex align-center justify-space-between">
-              <div class="flex-grow-1">
-                <p class="text-body-2 text-medium-emphasis mb-1">
-                  {{ stat.title }}
-                </p>
-                <h2 class="text-h4 text-md-h3 font-weight-bold">
-                  <v-progress-circular
-                    v-if="stat.loading"
-                    indeterminate
-                    size="24"
-                    width="2"
-                    class="mr-2"
-                  />
-                  <span v-else>{{ stat.value }}</span>
-                </h2>
-                <div v-if="stat.description" class="d-flex align-center mt-2">
-                  <v-icon size="small" class="mr-1" color="primary">
-                    mdi-information-outline
-                  </v-icon>
-                  <span class="text-caption text-medium-emphasis">
-                    {{ stat.description }}
-                  </span>
-                </div>
-                <div
-                  v-if="stat.breakdown"
-                  class="d-flex flex-wrap gap-2 mt-3"
-                >
-                  <v-chip size="x-small" color="success" variant="tonal">
-                    Disetujui {{ formatNumber(stat.breakdown.verified) }}
-                  </v-chip>
-                  <v-chip size="x-small" color="warning" variant="tonal">
-                    Pending {{ formatNumber(stat.breakdown.pending) }}
-                  </v-chip>
-                  <v-chip size="x-small" color="error" variant="tonal">
-                    Ditolak {{ formatNumber(stat.breakdown.rejected) }}
-                  </v-chip>
-                </div>
-              </div>
-              <v-avatar
-                :color="stat.color"
-                size="48"
-                size-md="56"
-                variant="tonal"
-                class="ml-3"
-              >
-                <v-icon :color="stat.color" size="24" size-md="28">
-                  {{ stat.icon }}
-                </v-icon>
-              </v-avatar>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <v-row v-if="!isMasyarakat" class="mb-4">
-      <v-col cols="12">
-        <v-card elevation="2" rounded="xl">
-          <v-card-title class="d-flex align-center">
-            <v-icon color="primary" class="mr-2">mdi-filter</v-icon>
-            Filter Wilayah & Tahun
-          </v-card-title>
-          <v-card-text>
-            <v-row dense>
-              <v-col v-if="showProvinceFilter" cols="12" sm="6" md="3">
-                <v-select
-                  v-model="dashboardFilters.provinceId"
-                  :items="provinceOptions"
-                  item-title="name"
-                  item-value="id"
-                  label="Provinsi"
-                  density="comfortable"
-                  variant="outlined"
-                  :loading="dashboardFilterLoading"
-                  clearable
-                />
-              </v-col>
-              <v-col cols="12" sm="6" md="3">
-                <v-select
-                  v-model="dashboardFilters.regencyId"
-                  :items="regencyOptions"
-                  item-title="name"
-                  item-value="id"
-                  label="Kabupaten / Kota"
-                  density="comfortable"
-                  variant="outlined"
-                  :loading="dashboardFilterLoading"
-                  :disabled="appStore.isAdminKabupaten || appStore.isAdminDesa"
-                  :clearable="showProvinceFilter"
-                />
-              </v-col>
-              <v-col cols="12" sm="6" md="3">
-                <v-select
-                  v-model="dashboardFilters.districtId"
-                  :items="districtOptions"
-                  item-title="name"
-                  item-value="id"
-                  label="Kecamatan"
-                  density="comfortable"
-                  variant="outlined"
-                  :loading="dashboardFilterLoading"
-                  :disabled="appStore.isAdminDesa || !dashboardFilters.regencyId"
-                  clearable
-                />
-              </v-col>
-              <v-col cols="12" sm="6" md="3">
-                <v-select
-                  v-model="dashboardFilters.villageId"
-                  :items="villageOptions"
-                  item-title="name"
-                  item-value="id"
-                  label="Desa / Kelurahan"
-                  density="comfortable"
-                  variant="outlined"
-                  :loading="dashboardFilterLoading"
-                  :disabled="appStore.isAdminDesa || !dashboardFilters.districtId"
-                  clearable
-                />
-              </v-col>
-              <v-col cols="12" sm="6" md="3">
-                <v-select
-                  v-model="dashboardFilters.surveyYear"
-                  :items="yearOptions"
-                  label="Tahun Survei"
-                  density="comfortable"
-                  variant="outlined"
-                />
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <!-- Location Filters Info -->
-    <v-row v-if="currentLocationFilters.length > 0" class="mb-4">
-      <v-col cols="12">
-        <v-alert type="info" variant="tonal" class="mb-0">
-          <template #prepend>
-            <v-icon>mdi-map-marker</v-icon>
-          </template>
-          <div class="d-flex align-center">
-            <span class="mr-2">Statistik difilter berdasarkan lokasi:</span>
-            <v-progress-circular
-              v-if="locationFiltersLoading"
-              indeterminate
-              size="16"
-              width="2"
-              class="mr-2"
-            />
-            <v-chip
-              v-for="filter in currentLocationFilters"
-              :key="filter"
-              size="small"
-              color="primary"
-              variant="outlined"
-              class="mr-1"
-            >
-              {{ filter }}
-            </v-chip>
-            <span
-              v-if="
-                !locationFiltersLoading && currentLocationFilters.length === 0
-              "
-              class="text-caption text-medium-emphasis"
-            >
-              Tidak ada filter lokasi
-            </span>
-          </div>
-        </v-alert>
-      </v-col>
-    </v-row>
-
-    <!-- Map Section -->
-    <v-row class="mt-6">
-      <v-col cols="12">
-        <v-card elevation="2" rounded="xl" class="map-section-card">
-          <!-- Header -->
-          <v-card-title class="pa-6 pb-0">
-            <div
-              class="d-flex align-center justify-space-between flex-wrap gap-3"
-            >
-              <div>
-                <div class="d-flex align-center gap-2 mb-1">
-                  <v-icon color="primary" size="28"
-                    >mdi-map-marker-radius</v-icon
-                  >
-                  <h3 class="text-h6 font-weight-bold mb-0">
-                    Peta Lokasi Data
-                  </h3>
-                </div>
-                <p class="text-caption text-medium-emphasis ml-9 mb-0">
-                  Visualisasi lokasi survei dengan filter interaktif
-                </p>
-              </div>
-
-              <v-menu>
-                <template #activator="{ props }">
-                  <v-btn
-                    v-bind="props"
-                    variant="tonal"
-                    color="primary"
-                    prepend-icon="mdi-file-excel"
-                    class="text-none"
-                    :loading="exportLoading"
-                  >
-                    Ekspor Data
-                  </v-btn>
-                </template>
-                <v-list density="compact">
-                  <v-list-item
-                    :disabled="exportLoading"
-                    @click="handleExport()"
-                  >
-                    <v-list-item-title>Ekspor Data (Excel)</v-list-item-title>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
-            </div>
-          </v-card-title>
-
-          <v-divider class="mt-4 mx-6" />
-
-          <!-- Filter Controls -->
-          <v-card-text class="pa-6">
-            <!-- Filter Grid -->
-            <v-row dense class="mb-4">
-              <!-- Filter Lokasi -->
-              <v-col cols="12" sm="6" md="4">
-                <v-card
-                  variant="outlined"
-                  class="filter-card pa-4"
-                  rounded="lg"
-                >
-                  <div class="filter-header mb-3">
-                    <v-icon size="20" color="primary" class="mr-2"
-                      >mdi-map-marker-multiple</v-icon
-                    >
-                    <span class="text-body-2 font-weight-medium"
-                      >Filter Lokasi</span
-                    >
-                  </div>
-                  <v-select
-                    v-model="selectedLocationFilters"
-                    :items="locationFilterOptions"
-                    item-title="label"
-                    item-value="value"
-                    multiple
-                    chips
-                    variant="outlined"
-                    density="comfortable"
-                    placeholder="Pilih jenis lokasi"
-                    hide-details
-                    closable-chips
-                  >
-                    <template #chip="{ props, item }">
-                      <v-chip v-bind="props" size="small" label>
-                        {{ item.title }}
-                      </v-chip>
-                    </template>
-                  </v-select>
-                </v-card>
-              </v-col>
-
-              <!-- Layer GIS -->
-              <v-col cols="12" sm="6" md="4">
-                <v-card
-                  variant="outlined"
-                  class="filter-card pa-4"
-                  rounded="lg"
-                >
-                  <div class="filter-header mb-3">
-                    <v-icon size="20" color="primary" class="mr-2"
-                      >mdi-layers-triple</v-icon
-                    >
-                    <span class="text-body-2 font-weight-medium"
-                      >Layer GIS</span
-                    >
-                    <v-spacer />
-                    <v-chip
-                      v-if="activeLayerCount > 0"
-                      size="x-small"
-                      color="primary"
-                      variant="flat"
-                      class="ml-2"
-                    >
-                      {{ activeLayerCount }}
-                    </v-chip>
-                  </div>
-
-                  <v-menu
-                    v-model="layerMenu"
-                    :close-on-content-click="false"
-                    location="bottom"
-                    max-width="420"
-                  >
-                    <template #activator="{ props }">
-                      <v-btn
-                        v-bind="props"
-                        variant="outlined"
-                        block
-                        class="justify-space-between text-none px-4"
-                        height="40"
-                      >
-                        <span class="text-body-2">
-                          {{
-                            activeLayerCount
-                              ? `${activeLayerCount} Layer Dipilih`
-                              : "Pilih Layer"
-                          }}
-                        </span>
-                        <v-icon size="20">
-                          {{
-                            layerMenu ? "mdi-chevron-up" : "mdi-chevron-down"
-                          }}
-                        </v-icon>
-                      </v-btn>
-                    </template>
-
-                    <v-card rounded="lg" elevation="8">
-                      <!-- Search Header -->
-                      <v-card-text class="pa-4 pb-3">
-                        <v-text-field
-                          v-model="layerSearch"
-                          density="comfortable"
-                          variant="outlined"
-                          prepend-inner-icon="mdi-magnify"
-                          placeholder="Cari layer..."
-                          hide-details
-                          clearable
-                        />
-
-                        <div
-                          class="d-flex align-center justify-space-between mt-3"
-                        >
-                          <span class="text-caption text-medium-emphasis">
-                            {{ activeLayerCount }} dari
-                            {{ getTotalLayerCount() }} layer aktif
-                          </span>
-                          <v-switch
-                            v-model="autoFitEnabled"
-                            density="compact"
-                            inset
-                            hide-details
-                            color="primary"
-                            class="ml-2"
-                          >
-                            <template #label>
-                              <span class="text-caption">Auto Zoom</span>
-                            </template>
-                          </v-switch>
-                        </div>
-                      </v-card-text>
-
-                      <v-divider />
-
-                      <!-- Layer List -->
-                      <div class="layer-scroll-container">
-                        <v-expansion-panels variant="accordion" multiple flat>
-                          <v-expansion-panel
-                            v-for="category in filteredLayerEntries"
-                            :key="category.key"
-                            elevation="0"
-                          >
-                            <v-expansion-panel-title class="px-4">
-                              <div class="d-flex align-center">
-                                <v-icon size="18" class="mr-2"
-                                  >mdi-folder-outline</v-icon
-                                >
-                                <span class="text-body-2 font-weight-medium">{{
-                                  category.label
-                                }}</span>
-                                <v-chip
-                                  size="x-small"
-                                  variant="tonal"
-                                  class="ml-2"
-                                >
-                                  {{ category.layers.length }}
-                                </v-chip>
-                              </div>
-                            </v-expansion-panel-title>
-
-                            <v-expansion-panel-text class="pa-0">
-                              <v-list density="compact" class="py-0">
-                                <v-list-item
-                                  v-for="layer in category.layers"
-                                  :key="layer.id"
-                                  class="px-4"
-                                >
-                                  <template #prepend>
-                                    <v-checkbox-btn
-                                      :model-value="layer.active"
-                                      :disabled="layer.loading"
-                                      color="primary"
-                                      @update:model-value="
-                                        toggleLayer(category.key, layer.id)
-                                      "
-                                    />
-                                  </template>
-
-                                  <v-list-item-title class="text-body-2">
-                                    {{ layer.label }}
-                                  </v-list-item-title>
-
-                                  <template #append>
-                                    <v-progress-circular
-                                      v-if="layer.loading"
-                                      indeterminate
-                                      size="16"
-                                      width="2"
-                                      color="primary"
-                                    />
-                                  </template>
-                                </v-list-item>
-                              </v-list>
-                            </v-expansion-panel-text>
-                          </v-expansion-panel>
-                        </v-expansion-panels>
-
-                        <!-- Empty State -->
-                        <div
-                          v-if="!filteredLayerEntries.length"
-                          class="text-center py-8"
-                        >
-                          <v-icon size="48" color="grey-lighten-1" class="mb-2">
-                            mdi-layers-off-outline
-                          </v-icon>
-                          <p class="text-body-2 text-medium-emphasis">
-                            Tidak ada layer yang ditemukan
-                          </p>
-                        </div>
-                      </div>
-                    </v-card>
-                  </v-menu>
-                </v-card>
-              </v-col>
-
-              <!-- Pencarian Cepat -->
-              <v-col cols="12" sm="12" md="4">
-                <v-card
-                  variant="outlined"
-                  class="filter-card pa-4"
-                  rounded="lg"
-                >
-                  <div class="filter-header mb-3">
-                    <v-icon size="20" color="primary" class="mr-2"
-                      >mdi-map-search</v-icon
-                    >
-                    <span class="text-body-2 font-weight-medium"
-                      >Pencarian Lokasi</span
-                    >
-                  </div>
-
-                  <v-autocomplete
-                    v-model="searchSelection"
-                    v-model:search="searchQuery"
-                    v-model:menu="searchMenu"
-                    :items="filteredSearchItems"
-                    item-title="name"
-                    item-value="id"
-                    return-object
-                    variant="outlined"
-                    density="comfortable"
-                    placeholder="Cari desa, kecamatan, kabupaten..."
-                    :loading="searchLoading"
-                    :error="Boolean(searchErrorMessage)"
-                    :no-data-text="
-                      searchLoading ? 'Memuat...' : 'Tidak ada hasil'
-                    "
-                    clearable
-                    hide-details
-                    @focus="ensureSearchIndex"
-                    @update:model-value="handleSearchSelect"
-                    @keydown.enter.prevent="handleSearchEnter"
-                  >
-                    <template #prepend-inner>
-                      <v-icon size="20" color="grey">mdi-magnify</v-icon>
-                    </template>
-
-                    <template #item="{ props, item }">
-                      <v-list-item v-bind="props" class="px-4">
-                        <template #prepend>
-                          <v-avatar size="32" color="primary" variant="tonal">
-                            <v-icon size="18">
-                              {{ getSearchIcon(item?.raw?.category) }}
-                            </v-icon>
-                          </v-avatar>
-                        </template>
-
-                        <v-list-item-title
-                          class="text-body-2 font-weight-medium"
-                          v-html="highlightSearchText(item?.raw?.name)"
-                        />
-
-                        <v-list-item-subtitle class="text-caption">
-                          {{ formatSearchSubtitle(item?.raw) }}
-                        </v-list-item-subtitle>
-                      </v-list-item>
-                    </template>
-
-                    <template #no-data>
-                      <div class="pa-4 text-center">
-                        <v-icon size="40" color="grey-lighten-1" class="mb-2">
-                          mdi-map-marker-question-outline
-                        </v-icon>
-                        <p class="text-body-2 text-medium-emphasis mb-0">
-                          {{
-                            searchLoading
-                              ? "Memuat indeks lokasi..."
-                              : searchQuery
-                              ? "Lokasi tidak ditemukan"
-                              : "Ketik nama lokasi"
-                          }}
-                        </p>
-                      </div>
-                    </template>
-                  </v-autocomplete>
-                </v-card>
-              </v-col>
-            </v-row>
-
-          </v-card-text>
-
-          <!-- Map Container -->
-          <v-card-text class="pa-6 pt-0">
-            <v-card
-              variant="outlined"
-              rounded="lg"
-              class="map-container-wrapper"
-            >
-              <div class="map-wrapper">
-                <div ref="mapRef" class="map-container" />
-
-                <!-- Legend -->
-                <div
-                  v-if="legendEntries.length"
-                  class="map-legend elevation-4"
-                  :class="{
-                    'map-legend-left': legendPinnedLeft,
-                    'map-legend-collapsed': legendCollapsed,
-                  }"
-                >
-                  <div class="legend-header">
-                    <div class="d-flex align-center">
-                      <v-icon size="16" class="mr-2"
-                        >mdi-format-list-bulleted</v-icon
-                      >
-                      <span class="text-caption font-weight-bold">LEGEND</span>
-                    </div>
-                    <div class="legend-actions">
-                      <v-btn
-                        icon
-                        size="x-small"
-                        variant="text"
-                        density="comfortable"
-                        :color="legendPinnedLeft ? 'primary' : 'default'"
-                        @click="legendPinnedLeft = !legendPinnedLeft"
-                      >
-                        <v-icon size="16">
-                          {{ legendPinnedLeft ? "mdi-pin" : "mdi-pin-outline" }}
-                        </v-icon>
-                      </v-btn>
-                      <v-btn
-                        icon
-                        size="x-small"
-                        variant="text"
-                        density="comfortable"
-                        @click="legendCollapsed = !legendCollapsed"
-                      >
-                        <v-icon size="16">
-                          {{
-                            legendCollapsed
-                              ? "mdi-chevron-up"
-                              : "mdi-chevron-down"
-                          }}
-                        </v-icon>
-                      </v-btn>
-                    </div>
-                  </div>
-
-                  <v-divider v-show="!legendCollapsed" class="my-2" />
-
-                  <div v-show="!legendCollapsed" class="legend-body">
-                    <div
-                      v-for="entry in legendEntries"
-                      :key="entry.key"
-                      class="legend-item"
-                    >
-                      <span
-                        class="legend-swatch"
-                        :style="legendSwatchStyle(entry.style)"
-                      />
-                      <span class="text-caption">
-                        {{ entry.label }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </v-card>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <!-- Statistics Charts -->
-    <v-row class="mt-6">
-      <!-- Chart: Rumah Layak Huni vs Tidak Layak Huni -->
-      <v-col cols="12" md="6">
-        <v-card elevation="2" rounded="xl">
-          <v-card-title class="pa-6 pb-0">
-            <h3 class="text-h6 font-weight-bold">
-              Persentase Rumah Layak Huni
-            </h3>
-            <p class="text-caption text-medium-emphasis mt-1 mb-0">
-              Distribusi status kelayakan rumah
-            </p>
-          </v-card-title>
-          <v-card-text class="pa-6">
-            <div class="chart-container">
-              <canvas ref="housingChartRef" />
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-
-      <v-col v-if="!isMasyarakat" cols="12" md="6">
-        <template v-if="showActivityWidget">
-          <v-card elevation="2" rounded="xl">
-            <v-card-title class="pa-6 pb-0">
-              <div class="d-flex align-center">
-                <v-icon color="primary" class="mr-2">mdi-history</v-icon>
-                <h3 class="text-h6 font-weight-bold mb-0">
-                  Log Aktivitas Terbaru
-                </h3>
-              </div>
-              <p class="text-caption text-medium-emphasis mt-1 mb-0">
-                5 aktivitas terakhir yang tercatat
+      <!-- Welcome Section -->
+      <v-card class="mb-6" elevation="2" rounded="xl">
+        <v-card-text class="pa-6 pa-md-8">
+          <div
+            class="d-flex flex-column flex-md-row align-start align-md-center justify-space-between"
+          >
+            <div class="mb-4 mb-md-0">
+              <h1 class="text-h5 text-md-h4 font-weight-bold mb-2">
+                Selamat datang kembali, {{ userProfile.name }}!
+              </h1>
+              <p class="text-body-2 text-md-body-1 text-medium-emphasis">
+                Berikut yang terjadi di dashboard SIPALING PKP hari ini.
               </p>
+            </div>
+          </div>
+        </v-card-text>
+      </v-card>
+
+      <v-row v-if="isAdminDesa" class="mb-6">
+        <v-col cols="12" md="8">
+          <v-card elevation="2" rounded="xl">
+            <v-card-title class="d-flex align-center">
+              <v-icon color="primary" class="mr-2">mdi-clipboard-check</v-icon>
+              Progres Data Warga Desa
             </v-card-title>
-            <v-card-text class="pa-6">
+            <v-card-text>
+              <v-row>
+                <v-col
+                  v-for="item in villageStatusSummary"
+                  :key="item.key"
+                  cols="12"
+                  sm="6"
+                  md="3"
+                >
+                  <v-card
+                    :color="item.color"
+                    variant="tonal"
+                    class="text-center"
+                  >
+                    <v-card-text>
+                      <div class="text-h4 font-weight-bold">
+                        {{ item.count }}
+                      </div>
+                      <div class="text-subtitle-2">
+                        {{ item.label }}
+                      </div>
+                    </v-card-text>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
+        </v-col>
+        <v-col cols="12" md="4">
+          <v-card elevation="2" rounded="xl" class="h-100">
+            <v-card-title class="d-flex align-center">
+              <v-icon color="primary" class="mr-2">
+                mdi-account-multiple-check
+              </v-icon>
+              Warga Belum Terdata
+            </v-card-title>
+            <v-card-text>
               <v-progress-circular
-                v-if="activityLogsLoading"
+                v-if="isLoading"
                 indeterminate
                 size="28"
                 width="3"
                 color="primary"
                 class="mb-2"
               />
-              <v-alert
-                v-else-if="activityLogsError"
-                type="error"
-                variant="tonal"
-                density="compact"
+              <div
+                v-else-if="unregisteredHouseholds === null"
+                class="text-body-2 text-medium-emphasis"
               >
-                {{ activityLogsError }}
-              </v-alert>
-              <v-table v-else-if="activityLogs.length" density="compact">
-                <thead>
-                  <tr>
-                    <th class="text-left">Aksi</th>
-                    <th class="text-left">Pengguna</th>
-                    <th class="text-left">Waktu</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="log in activityLogs" :key="log.id">
-                    <td class="text-body-2">
-                      {{ formatAuditAction(log.action) }}
-                    </td>
-                    <td class="text-body-2">{{ log.userName }}</td>
-                    <td class="text-caption text-medium-emphasis">
-                      {{ formatSubmissionDate(log.createdAt || log.created_at) }}
-                    </td>
-                  </tr>
-                </tbody>
-              </v-table>
+                Database kependudukan desa belum tersedia.
+              </div>
+              <div v-else>
+                <div class="text-h4 font-weight-bold">
+                  {{ formatNumber(unregisteredHouseholds) }}
+                </div>
+                <div class="text-caption text-medium-emphasis mt-2">
+                  Terdata: {{ formatNumber(housingCount) }} dari
+                  {{ formatNumber(villageHouseholdCount) }} KK.
+                </div>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- Stats Cards -->
+      <v-row class="mb-6">
+        <v-col v-for="stat in stats" :key="stat.title" cols="12" sm="6" lg="3">
+          <v-card
+            elevation="2"
+            rounded="xl"
+            class="h-100 cursor-pointer"
+            :class="{ 'hover-elevation': stat.route }"
+            @click="stat.route && $router.push(stat.route)"
+          >
+            <v-card-text class="pa-4 pa-md-6">
+              <div class="d-flex align-center justify-space-between">
+                <div class="flex-grow-1">
+                  <p class="text-body-2 text-medium-emphasis mb-1">
+                    {{ stat.title }}
+                  </p>
+                  <h2 class="text-h4 text-md-h3 font-weight-bold">
+                    <v-progress-circular
+                      v-if="stat.loading"
+                      indeterminate
+                      size="24"
+                      width="2"
+                      class="mr-2"
+                    />
+                    <span v-else>{{ stat.value }}</span>
+                  </h2>
+                  <div v-if="stat.description" class="d-flex align-center mt-2">
+                    <v-icon size="small" class="mr-1" color="primary">
+                      mdi-information-outline
+                    </v-icon>
+                    <span class="text-caption text-medium-emphasis">
+                      {{ stat.description }}
+                    </span>
+                  </div>
+                  <div
+                    v-if="stat.breakdown"
+                    class="d-flex flex-wrap gap-2 mt-3"
+                  >
+                    <v-chip size="x-small" color="success" variant="tonal">
+                      Disetujui {{ formatNumber(stat.breakdown.verified) }}
+                    </v-chip>
+                    <v-chip size="x-small" color="warning" variant="tonal">
+                      Pending {{ formatNumber(stat.breakdown.pending) }}
+                    </v-chip>
+                    <v-chip size="x-small" color="error" variant="tonal">
+                      Ditolak {{ formatNumber(stat.breakdown.rejected) }}
+                    </v-chip>
+                  </div>
+                </div>
+                <v-avatar
+                  :color="stat.color"
+                  size="48"
+                  size-md="56"
+                  variant="tonal"
+                  class="ml-3"
+                >
+                  <v-icon :color="stat.color" size="24" size-md="28">
+                    {{ stat.icon }}
+                  </v-icon>
+                </v-avatar>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <v-row v-if="!isMasyarakat" class="mb-4">
+        <v-col cols="12">
+          <v-card elevation="2" rounded="xl">
+            <v-card-title class="d-flex align-center">
+              <v-icon color="primary" class="mr-2">mdi-filter</v-icon>
+              Filter Wilayah & Tahun
+            </v-card-title>
+            <v-card-text>
+              <v-row dense>
+                <v-col v-if="showProvinceFilter" cols="12" sm="6" md="3">
+                  <v-select
+                    v-model="dashboardFilters.provinceId"
+                    :items="provinceOptions"
+                    item-title="name"
+                    item-value="id"
+                    label="Provinsi"
+                    density="comfortable"
+                    variant="outlined"
+                    :loading="dashboardFilterLoading"
+                    clearable
+                  />
+                </v-col>
+                <v-col cols="12" sm="6" md="3">
+                  <v-select
+                    v-model="dashboardFilters.regencyId"
+                    :items="regencyOptions"
+                    item-title="name"
+                    item-value="id"
+                    label="Kabupaten / Kota"
+                    density="comfortable"
+                    variant="outlined"
+                    :loading="dashboardFilterLoading"
+                    :disabled="
+                      appStore.isAdminKabupaten || appStore.isAdminDesa
+                    "
+                    :clearable="showProvinceFilter"
+                  />
+                </v-col>
+                <v-col cols="12" sm="6" md="3">
+                  <v-select
+                    v-model="dashboardFilters.districtId"
+                    :items="districtOptions"
+                    item-title="name"
+                    item-value="id"
+                    label="Kecamatan"
+                    density="comfortable"
+                    variant="outlined"
+                    :loading="dashboardFilterLoading"
+                    :disabled="
+                      appStore.isAdminDesa || !dashboardFilters.regencyId
+                    "
+                    clearable
+                  />
+                </v-col>
+                <v-col cols="12" sm="6" md="3">
+                  <v-select
+                    v-model="dashboardFilters.villageId"
+                    :items="villageOptions"
+                    item-title="name"
+                    item-value="id"
+                    label="Desa / Kelurahan"
+                    density="comfortable"
+                    variant="outlined"
+                    :loading="dashboardFilterLoading"
+                    :disabled="
+                      appStore.isAdminDesa || !dashboardFilters.districtId
+                    "
+                    clearable
+                  />
+                </v-col>
+                <v-col cols="12" sm="6" md="3">
+                  <v-select
+                    v-model="dashboardFilters.surveyYear"
+                    :items="yearOptions"
+                    label="Tahun Survei"
+                    density="comfortable"
+                    variant="outlined"
+                  />
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- Location Filters Info -->
+      <v-row v-if="currentLocationFilters.length > 0" class="mb-4">
+        <v-col cols="12">
+          <v-alert type="info" variant="tonal" class="mb-0">
+            <template #prepend>
+              <v-icon>mdi-map-marker</v-icon>
+            </template>
+            <div class="d-flex align-center">
+              <span class="mr-2">Statistik difilter berdasarkan lokasi:</span>
+              <v-progress-circular
+                v-if="locationFiltersLoading"
+                indeterminate
+                size="16"
+                width="2"
+                class="mr-2"
+              />
+              <v-chip
+                v-for="filter in currentLocationFilters"
+                :key="filter"
+                size="small"
+                color="primary"
+                variant="outlined"
+                class="mr-1"
+              >
+                {{ filter }}
+              </v-chip>
+              <span
+                v-if="
+                  !locationFiltersLoading && currentLocationFilters.length === 0
+                "
+                class="text-caption text-medium-emphasis"
+              >
+                Tidak ada filter lokasi
+              </span>
+            </div>
+          </v-alert>
+        </v-col>
+      </v-row>
+
+      <!-- Map Section -->
+      <v-row class="mt-6">
+        <v-col cols="12">
+          <v-card elevation="2" rounded="xl" class="map-section-card">
+            <!-- Header -->
+            <v-card-title class="pa-6 pb-0">
+              <div
+                class="d-flex align-center justify-space-between flex-wrap gap-3"
+              >
+                <div>
+                  <div class="d-flex align-center gap-2 mb-1">
+                    <v-icon color="primary" size="28"
+                      >mdi-map-marker-radius</v-icon
+                    >
+                    <h3 class="text-h6 font-weight-bold mb-0">
+                      Peta Lokasi Data
+                    </h3>
+                  </div>
+                  <p class="text-caption text-medium-emphasis ml-9 mb-0">
+                    Visualisasi lokasi survei dengan filter interaktif
+                  </p>
+                </div>
+
+                <v-menu>
+                  <template #activator="{ props }">
+                    <v-btn
+                      v-bind="props"
+                      variant="tonal"
+                      color="primary"
+                      prepend-icon="mdi-file-excel"
+                      class="text-none"
+                      :loading="exportLoading"
+                    >
+                      Ekspor Data
+                    </v-btn>
+                  </template>
+                  <v-list density="compact">
+                    <v-list-item
+                      :disabled="exportLoading"
+                      @click="handleExport()"
+                    >
+                      <v-list-item-title>Ekspor Data (Excel)</v-list-item-title>
+                    </v-list-item>
+                  </v-list>
+                </v-menu>
+              </div>
+            </v-card-title>
+
+            <v-divider class="mt-4 mx-6" />
+
+            <!-- Filter Controls -->
+            <v-card-text class="pa-6">
+              <!-- Filter Grid -->
+              <v-row dense class="mb-4">
+                <!-- Filter Lokasi -->
+                <v-col cols="12" sm="6" md="4">
+                  <v-card
+                    variant="outlined"
+                    class="filter-card pa-4"
+                    rounded="lg"
+                  >
+                    <div class="filter-header mb-3">
+                      <v-icon size="20" color="primary" class="mr-2"
+                        >mdi-map-marker-multiple</v-icon
+                      >
+                      <span class="text-body-2 font-weight-medium"
+                        >Filter Lokasi</span
+                      >
+                    </div>
+                    <v-select
+                      v-model="selectedLocationFilters"
+                      :items="locationFilterOptions"
+                      item-title="label"
+                      item-value="value"
+                      multiple
+                      chips
+                      variant="outlined"
+                      density="comfortable"
+                      placeholder="Pilih jenis lokasi"
+                      hide-details
+                      closable-chips
+                    >
+                      <template #chip="{ props, item }">
+                        <v-chip v-bind="props" size="small" label>
+                          {{ item.title }}
+                        </v-chip>
+                      </template>
+                    </v-select>
+                  </v-card>
+                </v-col>
+
+                <!-- Layer GIS -->
+                <v-col cols="12" sm="6" md="4">
+                  <v-card
+                    variant="outlined"
+                    class="filter-card pa-4"
+                    rounded="lg"
+                  >
+                    <div class="filter-header mb-3">
+                      <v-icon size="20" color="primary" class="mr-2"
+                        >mdi-layers-triple</v-icon
+                      >
+                      <span class="text-body-2 font-weight-medium"
+                        >Layer GIS</span
+                      >
+                      <v-spacer />
+                      <v-chip
+                        v-if="activeLayerCount > 0"
+                        size="x-small"
+                        color="primary"
+                        variant="flat"
+                        class="ml-2"
+                      >
+                        {{ activeLayerCount }}
+                      </v-chip>
+                    </div>
+
+                    <v-menu
+                      v-model="layerMenu"
+                      :close-on-content-click="false"
+                      location="bottom"
+                      max-width="420"
+                    >
+                      <template #activator="{ props }">
+                        <v-btn
+                          v-bind="props"
+                          variant="outlined"
+                          block
+                          class="justify-space-between text-none px-4"
+                          height="40"
+                        >
+                          <span class="text-body-2">
+                            {{
+                              activeLayerCount
+                                ? `${activeLayerCount} Layer Dipilih`
+                                : "Pilih Layer"
+                            }}
+                          </span>
+                          <v-icon size="20">
+                            {{
+                              layerMenu ? "mdi-chevron-up" : "mdi-chevron-down"
+                            }}
+                          </v-icon>
+                        </v-btn>
+                      </template>
+
+                      <v-card rounded="lg" elevation="8">
+                        <!-- Search Header -->
+                        <v-card-text class="pa-4 pb-3">
+                          <v-text-field
+                            v-model="layerSearch"
+                            density="comfortable"
+                            variant="outlined"
+                            prepend-inner-icon="mdi-magnify"
+                            placeholder="Cari layer..."
+                            hide-details
+                            clearable
+                          />
+
+                          <div
+                            class="d-flex align-center justify-space-between mt-3"
+                          >
+                            <span class="text-caption text-medium-emphasis">
+                              {{ activeLayerCount }} dari
+                              {{ getTotalLayerCount() }} layer aktif
+                            </span>
+                            <v-switch
+                              v-model="autoFitEnabled"
+                              density="compact"
+                              inset
+                              hide-details
+                              color="primary"
+                              class="ml-2"
+                            >
+                              <template #label>
+                                <span class="text-caption">Auto Zoom</span>
+                              </template>
+                            </v-switch>
+                          </div>
+                        </v-card-text>
+
+                        <v-divider />
+
+                        <!-- Layer List -->
+                        <div class="layer-scroll-container">
+                          <v-expansion-panels variant="accordion" multiple flat>
+                            <v-expansion-panel
+                              v-for="category in filteredLayerEntries"
+                              :key="category.key"
+                              elevation="0"
+                            >
+                              <v-expansion-panel-title class="px-4">
+                                <div class="d-flex align-center">
+                                  <v-icon size="18" class="mr-2"
+                                    >mdi-folder-outline</v-icon
+                                  >
+                                  <span
+                                    class="text-body-2 font-weight-medium"
+                                    >{{ category.label }}</span
+                                  >
+                                  <v-chip
+                                    size="x-small"
+                                    variant="tonal"
+                                    class="ml-2"
+                                  >
+                                    {{ category.layers.length }}
+                                  </v-chip>
+                                </div>
+                              </v-expansion-panel-title>
+
+                              <v-expansion-panel-text class="pa-0">
+                                <v-list density="compact" class="py-0">
+                                  <v-list-item
+                                    v-for="layer in category.layers"
+                                    :key="layer.id"
+                                    class="px-4"
+                                  >
+                                    <template #prepend>
+                                      <v-checkbox-btn
+                                        :model-value="layer.active"
+                                        :disabled="layer.loading"
+                                        color="primary"
+                                        @update:model-value="
+                                          toggleLayer(category.key, layer.id)
+                                        "
+                                      />
+                                    </template>
+
+                                    <v-list-item-title class="text-body-2">
+                                      {{ layer.label }}
+                                    </v-list-item-title>
+
+                                    <template #append>
+                                      <v-progress-circular
+                                        v-if="layer.loading"
+                                        indeterminate
+                                        size="16"
+                                        width="2"
+                                        color="primary"
+                                      />
+                                    </template>
+                                  </v-list-item>
+                                </v-list>
+                              </v-expansion-panel-text>
+                            </v-expansion-panel>
+                          </v-expansion-panels>
+
+                          <!-- Empty State -->
+                          <div
+                            v-if="!filteredLayerEntries.length"
+                            class="text-center py-8"
+                          >
+                            <v-icon
+                              size="48"
+                              color="grey-lighten-1"
+                              class="mb-2"
+                            >
+                              mdi-layers-off-outline
+                            </v-icon>
+                            <p class="text-body-2 text-medium-emphasis">
+                              Tidak ada layer yang ditemukan
+                            </p>
+                          </div>
+                        </div>
+                      </v-card>
+                    </v-menu>
+                  </v-card>
+                </v-col>
+
+                <!-- Pencarian Cepat -->
+                <v-col cols="12" sm="12" md="4">
+                  <v-card
+                    variant="outlined"
+                    class="filter-card pa-4"
+                    rounded="lg"
+                  >
+                    <div class="filter-header mb-3">
+                      <v-icon size="20" color="primary" class="mr-2"
+                        >mdi-map-search</v-icon
+                      >
+                      <span class="text-body-2 font-weight-medium"
+                        >Pencarian Lokasi</span
+                      >
+                    </div>
+
+                    <v-autocomplete
+                      v-model="searchSelection"
+                      v-model:search="searchQuery"
+                      v-model:menu="searchMenu"
+                      :items="filteredSearchItems"
+                      item-title="name"
+                      item-value="id"
+                      return-object
+                      variant="outlined"
+                      density="comfortable"
+                      placeholder="Cari desa, kecamatan, kabupaten..."
+                      :loading="searchLoading"
+                      :error="Boolean(searchErrorMessage)"
+                      :no-data-text="
+                        searchLoading ? 'Memuat...' : 'Tidak ada hasil'
+                      "
+                      clearable
+                      hide-details
+                      @focus="ensureSearchIndex"
+                      @update:model-value="handleSearchSelect"
+                      @keydown.enter.prevent="handleSearchEnter"
+                    >
+                      <template #prepend-inner>
+                        <v-icon size="20" color="grey">mdi-magnify</v-icon>
+                      </template>
+
+                      <template #item="{ props, item }">
+                        <v-list-item v-bind="props" class="px-4">
+                          <template #prepend>
+                            <v-avatar size="32" color="primary" variant="tonal">
+                              <v-icon size="18">
+                                {{ getSearchIcon(item?.raw?.category) }}
+                              </v-icon>
+                            </v-avatar>
+                          </template>
+
+                          <v-list-item-title
+                            class="text-body-2 font-weight-medium"
+                            v-html="highlightSearchText(item?.raw?.name)"
+                          />
+
+                          <v-list-item-subtitle class="text-caption">
+                            {{ formatSearchSubtitle(item?.raw) }}
+                          </v-list-item-subtitle>
+                        </v-list-item>
+                      </template>
+
+                      <template #no-data>
+                        <div class="pa-4 text-center">
+                          <v-icon size="40" color="grey-lighten-1" class="mb-2">
+                            mdi-map-marker-question-outline
+                          </v-icon>
+                          <p class="text-body-2 text-medium-emphasis mb-0">
+                            {{
+                              searchLoading
+                                ? "Memuat indeks lokasi..."
+                                : searchQuery
+                                ? "Lokasi tidak ditemukan"
+                                : "Ketik nama lokasi"
+                            }}
+                          </p>
+                        </div>
+                      </template>
+                    </v-autocomplete>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-card-text>
+
+            <!-- Map Container -->
+            <v-card-text class="pa-6 pt-0">
+              <v-card
+                variant="outlined"
+                rounded="lg"
+                class="map-container-wrapper"
+              >
+                <div class="map-wrapper">
+                  <div ref="mapRef" class="map-container" />
+
+                  <!-- Legend -->
+                  <div
+                    v-if="legendEntries.length"
+                    class="map-legend elevation-4"
+                    :class="{
+                      'map-legend-left': legendPinnedLeft,
+                      'map-legend-collapsed': legendCollapsed,
+                    }"
+                  >
+                    <div class="legend-header">
+                      <div class="d-flex align-center">
+                        <v-icon size="16" class="mr-2"
+                          >mdi-format-list-bulleted</v-icon
+                        >
+                        <span class="text-caption font-weight-bold"
+                          >LEGEND</span
+                        >
+                      </div>
+                      <div class="legend-actions">
+                        <v-btn
+                          icon
+                          size="x-small"
+                          variant="text"
+                          density="comfortable"
+                          :color="legendPinnedLeft ? 'primary' : 'default'"
+                          @click="legendPinnedLeft = !legendPinnedLeft"
+                        >
+                          <v-icon size="16">
+                            {{
+                              legendPinnedLeft ? "mdi-pin" : "mdi-pin-outline"
+                            }}
+                          </v-icon>
+                        </v-btn>
+                        <v-btn
+                          icon
+                          size="x-small"
+                          variant="text"
+                          density="comfortable"
+                          @click="legendCollapsed = !legendCollapsed"
+                        >
+                          <v-icon size="16">
+                            {{
+                              legendCollapsed
+                                ? "mdi-chevron-up"
+                                : "mdi-chevron-down"
+                            }}
+                          </v-icon>
+                        </v-btn>
+                      </div>
+                    </div>
+
+                    <v-divider v-show="!legendCollapsed" class="my-2" />
+
+                    <div v-show="!legendCollapsed" class="legend-body">
+                      <div
+                        v-for="entry in legendEntries"
+                        :key="entry.key"
+                        class="legend-item"
+                      >
+                        <span
+                          class="legend-swatch"
+                          :style="legendSwatchStyle(entry.style)"
+                        />
+                        <span class="text-caption">
+                          {{ entry.label }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </v-card>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- Statistics Charts -->
+      <v-row class="mt-6">
+        <!-- Chart: Rumah Layak Huni vs Tidak Layak Huni -->
+        <v-col cols="12" md="6">
+          <v-card elevation="2" rounded="xl">
+            <v-card-title class="pa-6 pb-0">
+              <h3 class="text-h6 font-weight-bold">
+                Persentase Rumah Layak Huni
+              </h3>
+              <p class="text-caption text-medium-emphasis mt-1 mb-0">
+                Distribusi status kelayakan rumah
+              </p>
+            </v-card-title>
+            <v-card-text class="pa-6">
+              <div class="chart-container">
+                <canvas ref="housingChartRef" />
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+
+        <v-col v-if="!isMasyarakat" cols="12" md="6">
+          <template v-if="showActivityWidget">
+            <v-card elevation="2" rounded="xl">
+              <v-card-title class="pa-6 pb-0">
+                <div class="d-flex align-center">
+                  <v-icon color="primary" class="mr-2">mdi-history</v-icon>
+                  <h3 class="text-h6 font-weight-bold mb-0">
+                    Log Aktivitas Terbaru
+                  </h3>
+                </div>
+                <p class="text-caption text-medium-emphasis mt-1 mb-0">
+                  5 aktivitas terakhir yang tercatat
+                </p>
+              </v-card-title>
+              <v-card-text class="pa-6">
+                <v-progress-circular
+                  v-if="activityLogsLoading"
+                  indeterminate
+                  size="28"
+                  width="3"
+                  color="primary"
+                  class="mb-2"
+                />
+                <v-alert
+                  v-else-if="activityLogsError"
+                  type="error"
+                  variant="tonal"
+                  density="compact"
+                >
+                  {{ activityLogsError }}
+                </v-alert>
+                <v-table v-else-if="activityLogs.length" density="compact">
+                  <thead>
+                    <tr>
+                      <th class="text-left">Aksi</th>
+                      <th class="text-left">Pengguna</th>
+                      <th class="text-left">Waktu</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="log in activityLogs" :key="log.id">
+                      <td class="text-body-2">
+                        {{ formatAuditAction(log.action) }}
+                      </td>
+                      <td class="text-body-2">{{ log.userName }}</td>
+                      <td class="text-caption text-medium-emphasis">
+                        {{
+                          formatSubmissionDate(log.createdAt || log.created_at)
+                        }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </v-table>
+                <v-alert v-else type="info" variant="tonal" density="compact">
+                  Belum ada aktivitas yang tercatat.
+                </v-alert>
+              </v-card-text>
+            </v-card>
+          </template>
+
+          <v-card v-else-if="isVerifikator" elevation="2" rounded="xl">
+            <v-card-title class="pa-6 pb-0">
+              <div class="d-flex align-center">
+                <v-icon color="warning" class="mr-2">mdi-timer-sand</v-icon>
+                <h3 class="text-h6 font-weight-bold mb-0">Antrean Prioritas</h3>
+              </div>
+              <p class="text-caption text-medium-emphasis mt-1 mb-0">
+                5 laporan paling lama menunggu verifikasi
+              </p>
+            </v-card-title>
+            <v-card-text class="pa-6">
+              <v-progress-circular
+                v-if="verificationQueueLoading"
+                indeterminate
+                size="28"
+                width="3"
+                color="warning"
+                class="mb-2"
+              />
+              <v-list v-else-if="priorityQueueItems.length" density="compact">
+                <v-list-item
+                  v-for="submission in priorityQueueItems"
+                  :key="submission.id"
+                >
+                  <template #prepend>
+                    <v-icon color="warning">mdi-alert-circle-outline</v-icon>
+                  </template>
+                  <v-list-item-title class="text-body-2 font-weight-medium">
+                    {{
+                      submission.householdOwner?.ownerName || "Pengajuan Rumah"
+                    }}
+                  </v-list-item-title>
+                  <v-list-item-subtitle
+                    class="text-caption text-medium-emphasis"
+                  >
+                    Masuk
+                    {{
+                      formatSubmissionDate(
+                        submission.submittedAt || submission.createdAt
+                      )
+                    }}
+                  </v-list-item-subtitle>
+                  <template #append>
+                    <v-btn
+                      size="small"
+                      variant="tonal"
+                      color="primary"
+                      class="text-none"
+                      @click="openVerificationQueue(submission)"
+                    >
+                      Tinjau
+                    </v-btn>
+                  </template>
+                </v-list-item>
+              </v-list>
               <v-alert v-else type="info" variant="tonal" density="compact">
-                Belum ada aktivitas yang tercatat.
+                Tidak ada antrean prioritas saat ini.
               </v-alert>
             </v-card-text>
           </v-card>
 
-        </template>
-
-        <v-card v-else-if="isVerifikator" elevation="2" rounded="xl">
-          <v-card-title class="pa-6 pb-0">
-            <div class="d-flex align-center">
-              <v-icon color="warning" class="mr-2">mdi-timer-sand</v-icon>
-              <h3 class="text-h6 font-weight-bold mb-0">Antrean Prioritas</h3>
-            </div>
-            <p class="text-caption text-medium-emphasis mt-1 mb-0">
-              5 laporan paling lama menunggu verifikasi
-            </p>
-          </v-card-title>
-          <v-card-text class="pa-6">
-            <v-progress-circular
-              v-if="verificationQueueLoading"
-              indeterminate
-              size="28"
-              width="3"
-              color="warning"
-              class="mb-2"
-            />
-            <v-list v-else-if="priorityQueueItems.length" density="compact">
-              <v-list-item
-                v-for="submission in priorityQueueItems"
-                :key="submission.id"
+          <v-card v-else-if="isAdminDesa" elevation="2" rounded="xl">
+            <v-card-title class="pa-6 pb-0">
+              <div class="d-flex align-center">
+                <v-icon color="primary" class="mr-2">mdi-home-analytics</v-icon>
+                <h3 class="text-h6 font-weight-bold mb-0">
+                  Ringkasan Kondisi Bangunan
+                </h3>
+              </div>
+              <p class="text-caption text-medium-emphasis mt-1 mb-0">
+                Komponen dominan berdasarkan data rumah desa Anda
+              </p>
+            </v-card-title>
+            <v-card-text class="pa-6">
+              <v-progress-circular
+                v-if="buildingSummaryLoading"
+                indeterminate
+                size="28"
+                width="3"
+                color="primary"
+                class="mb-2"
+              />
+              <div
+                v-else-if="!buildingSummaryTotal"
+                class="text-body-2 text-medium-emphasis"
               >
-                <template #prepend>
-                  <v-icon color="warning">mdi-alert-circle-outline</v-icon>
-                </template>
-                <v-list-item-title class="text-body-2 font-weight-medium">
-                  {{ submission.householdOwner?.ownerName || "Pengajuan Rumah" }}
-                </v-list-item-title>
-                <v-list-item-subtitle class="text-caption text-medium-emphasis">
-                  Masuk
-                  {{
-                    formatSubmissionDate(
-                      submission.submittedAt || submission.createdAt
-                    )
-                  }}
-                </v-list-item-subtitle>
-                <template #append>
-                  <v-btn
-                    size="small"
-                    variant="tonal"
-                    color="primary"
-                    class="text-none"
-                    @click="openVerificationQueue(submission)"
-                  >
-                    Tinjau
-                  </v-btn>
-                </template>
-              </v-list-item>
-            </v-list>
-            <v-alert v-else type="info" variant="tonal" density="compact">
-              Tidak ada antrean prioritas saat ini.
-            </v-alert>
-          </v-card-text>
-        </v-card>
+                Belum ada data bangunan untuk ditampilkan.
+              </div>
+              <div v-else class="chart-container">
+                <canvas ref="buildingChartRef" />
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
 
-        <v-card v-else-if="isAdminDesa" elevation="2" rounded="xl">
-          <v-card-title class="pa-6 pb-0">
-            <div class="d-flex align-center">
-              <v-icon color="primary" class="mr-2">mdi-home-analytics</v-icon>
-              <h3 class="text-h6 font-weight-bold mb-0">
-                Ringkasan Kondisi Bangunan
+        <v-col v-if="isAdminKabupaten" cols="12">
+          <v-card elevation="2" rounded="xl">
+            <v-card-title class="pa-6 pb-0">
+              <h3 class="text-h6 font-weight-bold">
+                Perbandingan Data per Kecamatan
               </h3>
-            </div>
-            <p class="text-caption text-medium-emphasis mt-1 mb-0">
-              Komponen dominan berdasarkan data rumah desa Anda
-            </p>
-          </v-card-title>
-          <v-card-text class="pa-6">
-            <v-progress-circular
-              v-if="buildingSummaryLoading"
-              indeterminate
-              size="28"
-              width="3"
-              color="primary"
-              class="mb-2"
-            />
-            <div
-              v-else-if="!buildingSummaryTotal"
-              class="text-body-2 text-medium-emphasis"
-            >
-              Belum ada data bangunan untuk ditampilkan.
-            </div>
-            <div v-else class="chart-container">
-              <canvas ref="buildingChartRef" />
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-
-      <v-col v-if="isAdminKabupaten" cols="12">
-        <v-card elevation="2" rounded="xl">
-          <v-card-title class="pa-6 pb-0">
-            <h3 class="text-h6 font-weight-bold">
-              Perbandingan Data per Kecamatan
-            </h3>
-            <p class="text-caption text-medium-emphasis mt-1 mb-0">
-              Ringkasan status pengajuan di setiap kecamatan
-            </p>
-          </v-card-title>
-          <v-card-text class="pa-6">
-            <div
-              v-if="!districtLabels.length"
-              class="text-body-2 text-medium-emphasis"
-            >
-              Belum ada data kecamatan untuk ditampilkan.
-            </div>
-            <div v-else class="chart-container">
-              <canvas ref="districtChartRef" />
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-
-      <!-- Chart: Data Masuk per Bulan -->
-      <v-col cols="12">
-        <v-card elevation="2" rounded="xl">
-          <v-card-title class="pa-6 pb-0">
-            <h3 class="text-h6 font-weight-bold">Data Masuk per Bulan</h3>
-            <p class="text-caption text-medium-emphasis mt-1 mb-0">
-              Tren pengajuan survei dari berbagai jenis form
-            </p>
-          </v-card-title>
-          <v-card-text class="pa-6">
-            <div class="chart-container">
-              <canvas ref="monthlyChartRef" />
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <!-- Quick Actions -->
-    <v-row class="mt-6">
-      <v-col cols="12">
-        <v-card elevation="2" rounded="xl">
-          <v-card-title class="pa-6 pb-0">
-            <h3 class="text-h6 font-weight-bold">Aksi Cepat</h3>
-          </v-card-title>
-
-          <v-card-text class="pa-6">
-            <v-row>
-              <v-col
-                v-for="action in quickActions"
-                :key="action.title"
-                cols="12"
-                sm="6"
-                md="4"
+              <p class="text-caption text-medium-emphasis mt-1 mb-0">
+                Ringkasan status pengajuan di setiap kecamatan
+              </p>
+            </v-card-title>
+            <v-card-text class="pa-6">
+              <div
+                v-if="!districtLabels.length"
+                class="text-body-2 text-medium-emphasis"
               >
-                <v-card
-                  variant="outlined"
-                  rounded="lg"
-                  class="pa-4 text-center cursor-pointer"
-                  hover
-                  @click="handleQuickAction(action)"
+                Belum ada data kecamatan untuk ditampilkan.
+              </div>
+              <div v-else class="chart-container">
+                <canvas ref="districtChartRef" />
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+
+        <!-- Chart: Data Masuk per Bulan -->
+        <v-col cols="12">
+          <v-card elevation="2" rounded="xl">
+            <v-card-title class="pa-6 pb-0">
+              <h3 class="text-h6 font-weight-bold">Data Masuk per Bulan</h3>
+              <p class="text-caption text-medium-emphasis mt-1 mb-0">
+                Tren pengajuan survei dari berbagai jenis form
+              </p>
+            </v-card-title>
+            <v-card-text class="pa-6">
+              <div class="chart-container">
+                <canvas ref="monthlyChartRef" />
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- Quick Actions -->
+      <v-row class="mt-6">
+        <v-col cols="12">
+          <v-card elevation="2" rounded="xl">
+            <v-card-title class="pa-6 pb-0">
+              <h3 class="text-h6 font-weight-bold">Aksi Cepat</h3>
+            </v-card-title>
+
+            <v-card-text class="pa-6">
+              <v-row>
+                <v-col
+                  v-for="action in quickActions"
+                  :key="action.title"
+                  cols="12"
+                  sm="6"
+                  md="4"
                 >
-                  <v-icon :color="action.color" size="32" class="mb-3">
-                    {{ action.icon }}
-                  </v-icon>
-                  <h4 class="text-body-1 font-weight-medium mb-1">
-                    {{ action.title }}
-                  </h4>
-                  <p class="text-caption text-medium-emphasis">
-                    {{ action.description }}
-                  </p>
-                </v-card>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
+                  <v-card
+                    variant="outlined"
+                    rounded="lg"
+                    class="pa-4 text-center cursor-pointer"
+                    hover
+                    @click="handleQuickAction(action)"
+                  >
+                    <v-icon :color="action.color" size="32" class="mb-3">
+                      {{ action.icon }}
+                    </v-icon>
+                    <h4 class="text-body-1 font-weight-medium mb-1">
+                      {{ action.title }}
+                    </h4>
+                    <p class="text-caption text-medium-emphasis">
+                      {{ action.description }}
+                    </p>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
     </div>
   </div>
 </template>
@@ -1287,7 +1316,9 @@ const donutCenterLabelPlugin = {
     const centerY = (chartArea.top + chartArea.bottom) / 2;
 
     ctx.save();
-    ctx.font = `600 ${options.fontSize || 16}px ${options.fontFamily || "sans-serif"}`;
+    ctx.font = `600 ${options.fontSize || 16}px ${
+      options.fontFamily || "sans-serif"
+    }`;
     ctx.fillStyle = options.color || "#2E7D32";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -1324,7 +1355,11 @@ const districtApprovedCounts = ref([]);
 const districtPendingCounts = ref([]);
 const districtRejectedCounts = ref([]);
 const housingStatusSummary = ref({ verified: 0, pending: 0, rejected: 0 });
-const infrastructureStatusSummary = ref({ verified: 0, pending: 0, rejected: 0 });
+const infrastructureStatusSummary = ref({
+  verified: 0,
+  pending: 0,
+  rejected: 0,
+});
 const developmentStatusSummary = ref({ verified: 0, pending: 0, rejected: 0 });
 const totalStatusSummary = ref({ verified: 0, pending: 0, rejected: 0 });
 const villageStatusCounts = ref({
@@ -1332,7 +1367,7 @@ const villageStatusCounts = ref({
   reviewed: 0,
   approved: 0,
   rejected: 0,
-  draft: 0
+  draft: 0,
 });
 const mapRef = ref(null);
 const mapInstance = ref(null);
@@ -1365,10 +1400,14 @@ const buildingSummaryCounts = ref({
 });
 const villageHouseholdCount = ref(null);
 const unregisteredHouseholds = computed(() => {
-  if (villageHouseholdCount.value === null || villageHouseholdCount.value === undefined) {
+  if (
+    villageHouseholdCount.value === null ||
+    villageHouseholdCount.value === undefined
+  ) {
     return null;
   }
-  const missing = Number(villageHouseholdCount.value) - Number(housingCount.value || 0);
+  const missing =
+    Number(villageHouseholdCount.value) - Number(housingCount.value || 0);
   return Math.max(missing, 0);
 });
 
@@ -1466,11 +1505,13 @@ const yearOptions = computed(() => {
   return Array.from({ length: 8 }, (_, index) => currentYear - index);
 });
 
-const showProvinceFilter = computed(() =>
-  appStore.isSuperAdmin || appStore.isVerifikator
+const showProvinceFilter = computed(
+  () => appStore.isSuperAdmin || appStore.isVerifikator
 );
 
-const showActivityWidget = computed(() => isSuperAdmin.value || isAdminKabupaten.value);
+const showActivityWidget = computed(
+  () => isSuperAdmin.value || isAdminKabupaten.value
+);
 
 const loadProvinceOptions = async () => {
   try {
@@ -1555,7 +1596,10 @@ const initializeDashboardFilters = async () => {
       regencyOptions.value = [
         {
           id: user.assignedRegencyId,
-          name: user.assignedRegency?.name || user.assignedRegencyName || "Kabupaten",
+          name:
+            user.assignedRegency?.name ||
+            user.assignedRegencyName ||
+            "Kabupaten",
         },
       ];
       dashboardFilters.value.regencyId = user.assignedRegencyId;
@@ -1726,7 +1770,9 @@ const highlightSearchText = (value) => {
   const before = text.slice(0, index);
   const match = text.slice(index, index + queryRaw.length);
   const after = text.slice(index + queryRaw.length);
-  return `${escapeHtml(before)}<strong>${escapeHtml(match)}</strong>${escapeHtml(after)}`;
+  return `${escapeHtml(before)}<strong>${escapeHtml(
+    match
+  )}</strong>${escapeHtml(after)}`;
 };
 
 const scoreSearchEntry = (entry, query) => {
@@ -1969,26 +2015,26 @@ const villageStatusSummary = computed(() => [
     key: "submitted",
     label: "Terkirim",
     color: "info",
-    count: villageStatusCounts.value.submitted || 0
+    count: villageStatusCounts.value.submitted || 0,
   },
   {
     key: "reviewed",
     label: "Pending",
     color: "warning",
-    count: villageStatusCounts.value.reviewed || 0
+    count: villageStatusCounts.value.reviewed || 0,
   },
   {
     key: "approved",
     label: "Disetujui",
     color: "success",
-    count: villageStatusCounts.value.approved || 0
+    count: villageStatusCounts.value.approved || 0,
   },
   {
     key: "rejected",
     label: "Ditolak",
     color: "error",
-    count: villageStatusCounts.value.rejected || 0
-  }
+    count: villageStatusCounts.value.rejected || 0,
+  },
 ]);
 
 // Stats data
@@ -2178,7 +2224,10 @@ const formatMonthLabels = (monthKeys) => {
   return monthKeys.map((key) => {
     const [year, month] = key.split("-").map(Number);
     const date = new Date(year, month - 1, 1);
-    return date.toLocaleDateString("id-ID", { month: "short", year: "numeric" });
+    return date.toLocaleDateString("id-ID", {
+      month: "short",
+      year: "numeric",
+    });
   });
 };
 
@@ -2252,14 +2301,13 @@ const loadStatistics = async () => {
         ? facilityResult.value.data
         : null;
     const developmentStats =
-      developmentResult.status === "fulfilled" && developmentResult.value?.success
+      developmentResult.status === "fulfilled" &&
+      developmentResult.value?.success
         ? developmentResult.value.data
         : null;
 
     housingCount.value =
-      housingStats?.total ??
-      housingStats?.totalSubmissions ??
-      0;
+      housingStats?.total ?? housingStats?.totalSubmissions ?? 0;
     infrastructureCount.value =
       facilityStats?.total ?? facilityStats?.totalSurveys ?? 0;
     housingDevelopmentCount.value =
@@ -2283,17 +2331,17 @@ const loadStatistics = async () => {
     );
     totalStatusSummary.value = {
       verified:
-        housingStatusSummary.value.verified
-        + infrastructureStatusSummary.value.verified
-        + developmentStatusSummary.value.verified,
+        housingStatusSummary.value.verified +
+        infrastructureStatusSummary.value.verified +
+        developmentStatusSummary.value.verified,
       pending:
-        housingStatusSummary.value.pending
-        + infrastructureStatusSummary.value.pending
-        + developmentStatusSummary.value.pending,
+        housingStatusSummary.value.pending +
+        infrastructureStatusSummary.value.pending +
+        developmentStatusSummary.value.pending,
       rejected:
-        housingStatusSummary.value.rejected
-        + infrastructureStatusSummary.value.rejected
-        + developmentStatusSummary.value.rejected,
+        housingStatusSummary.value.rejected +
+        infrastructureStatusSummary.value.rejected +
+        developmentStatusSummary.value.rejected,
     };
 
     const livableCount = housingStats?.livableCount || 0;
@@ -2338,7 +2386,9 @@ const loadStatistics = async () => {
       const breakdown = Array.isArray(housingStats?.districtBreakdown)
         ? housingStats.districtBreakdown
         : [];
-      districtLabels.value = breakdown.map((entry) => entry.districtName || "-");
+      districtLabels.value = breakdown.map(
+        (entry) => entry.districtName || "-"
+      );
       districtApprovedCounts.value = breakdown.map((entry) =>
         Number(entry.approved || 0)
       );
@@ -2364,7 +2414,6 @@ const loadStatistics = async () => {
     if (isAdminDesa.value) {
       await loadBuildingSummary();
     }
-
   } catch (error) {
     console.error("Error loading statistics:", error);
     housingCount.value = 0;
@@ -2390,7 +2439,11 @@ const loadStatistics = async () => {
     districtRejectedCounts.value = [];
     buildingSummaryCounts.value = { floor: 0, wall: 0, roof: 0 };
     housingStatusSummary.value = { verified: 0, pending: 0, rejected: 0 };
-    infrastructureStatusSummary.value = { verified: 0, pending: 0, rejected: 0 };
+    infrastructureStatusSummary.value = {
+      verified: 0,
+      pending: 0,
+      rejected: 0,
+    };
     developmentStatusSummary.value = { verified: 0, pending: 0, rejected: 0 };
     totalStatusSummary.value = { verified: 0, pending: 0, rejected: 0 };
     villageHouseholdCount.value = null;
@@ -2444,7 +2497,8 @@ const loadVerificationQueue = async () => {
       throw new Error(response?.message || "Gagal memuat antrean verifikasi.");
     }
 
-    const rows = response?.data?.submissions?.rows || response?.data?.rows || [];
+    const rows =
+      response?.data?.submissions?.rows || response?.data?.rows || [];
     const pendingItems = rows.filter((item) =>
       ["submitted", "under_review", "reviewed"].includes(
         String(item?.status || "")
@@ -2510,7 +2564,8 @@ const loadBuildingSummary = async () => {
       throw new Error(response?.message || "Gagal memuat data bangunan.");
     }
 
-    const rows = response?.data?.submissions?.rows || response?.data?.rows || [];
+    const rows =
+      response?.data?.submissions?.rows || response?.data?.rows || [];
     const summary = { floor: 0, wall: 0, roof: 0 };
     rows.forEach((submission) => {
       const houseData = submission.houseData || {};
@@ -2699,7 +2754,7 @@ const createMarkers = (
   markerLayers.infrastructure.clearLayers();
 
   const markerColors = {
-    housing: "#1976D2",     // Biru
+    housing: "#1976D2", // Biru
     "housing-development": "#4CAF50", // Hijau
     infrastructure: "#00ACC1", // Cyan
   };
@@ -2708,14 +2763,14 @@ const createMarkers = (
   // Fungsi ini membuat titik ringan menggunakan renderer Canvas
   const createOptimizedMarker = (latLng, color) => {
     return L.circleMarker(latLng, {
-      radius: 5,            // Ukuran titik (kecil agar tidak menumpuk)
-      fillColor: color,     // Warna titik
-      color: "#ffffff",     // Warna garis tepi (putih)
-      weight: 1,            // Tebal garis tepi
+      radius: 5, // Ukuran titik (kecil agar tidak menumpuk)
+      fillColor: color, // Warna titik
+      color: "#ffffff", // Warna garis tepi (putih)
+      weight: 1, // Tebal garis tepi
       opacity: 1,
-      fillOpacity: 0.8,     // Transparansi isi
+      fillOpacity: 0.8, // Transparansi isi
       // PENTING: Memaksa menggunakan Canvas renderer yang sudah diset di initializeMap
-      renderer: mapInstance.value.getRenderer(mapInstance.value) 
+      renderer: mapInstance.value.getRenderer(mapInstance.value),
     });
   };
 
@@ -2732,12 +2787,22 @@ const createMarkers = (
         // Bind Popup (isi info saat diklik)
         marker.bindPopup(`
           <div style="font-family: sans-serif; font-size: 12px; min-width: 150px;">
-            <h3 style="margin: 0 0 6px 0; font-size: 14px; color: ${markerColors.housing}; border-bottom: 1px solid #eee; padding-bottom: 4px;">
+            <h3 style="margin: 0 0 6px 0; font-size: 14px; color: ${
+              markerColors.housing
+            }; border-bottom: 1px solid #eee; padding-bottom: 4px;">
               🏠 Rumah Masyarakat
             </h3>
-            <div style="margin-bottom: 4px;"><strong>Pemilik:</strong> ${item.householdOwner?.ownerName || "Tidak ada"}</div>
-            <div style="margin-bottom: 4px;"><strong>Alamat:</strong> ${item.householdOwner?.houseNumber || "-"}, RT ${item.householdOwner?.rt || "-"} / RW ${item.householdOwner?.rw || "-"}</div>
-            <div style="margin-bottom: 4px;"><strong>Kelurahan:</strong> ${item.householdOwner?.village?.name || "-"}</div>
+            <div style="margin-bottom: 4px;"><strong>Pemilik:</strong> ${
+              item.householdOwner?.ownerName || "Tidak ada"
+            }</div>
+            <div style="margin-bottom: 4px;"><strong>Alamat:</strong> ${
+              item.householdOwner?.houseNumber || "-"
+            }, RT ${item.householdOwner?.rt || "-"} / RW ${
+          item.householdOwner?.rw || "-"
+        }</div>
+            <div style="margin-bottom: 4px;"><strong>Kelurahan:</strong> ${
+              item.householdOwner?.village?.name || "-"
+            }</div>
             <div><strong>Status:</strong> ${item.status || "-"}</div>
           </div>
         `);
@@ -2748,7 +2813,10 @@ const createMarkers = (
   }
 
   // 2. Render Perumahan Pengembang
-  if (mapFilters.value.find((filter) => filter.type === "housing-development")?.enabled) {
+  if (
+    mapFilters.value.find((filter) => filter.type === "housing-development")
+      ?.enabled
+  ) {
     housingDevelopmentData.forEach((item) => {
       let coordinates = item.coordinates;
 
@@ -2759,17 +2827,30 @@ const createMarkers = (
             coordinates = parseCoordinates(housing.koordinat);
             const latLng = toLatLng(coordinates);
             if (latLng) {
-              const marker = createOptimizedMarker(latLng, markerColors["housing-development"]);
+              const marker = createOptimizedMarker(
+                latLng,
+                markerColors["housing-development"]
+              );
 
               marker.bindPopup(`
                 <div style="font-family: sans-serif; font-size: 12px; min-width: 150px;">
-                  <h3 style="margin: 0 0 6px 0; font-size: 14px; color: ${markerColors["housing-development"]}; border-bottom: 1px solid #eee; padding-bottom: 4px;">
+                  <h3 style="margin: 0 0 6px 0; font-size: 14px; color: ${
+                    markerColors["housing-development"]
+                  }; border-bottom: 1px solid #eee; padding-bottom: 4px;">
                     🏢 Perumahan
                   </h3>
-                  <div style="margin-bottom: 4px;"><strong>Nama:</strong> ${housing.namaPerumahan || item.developmentName || "-"}</div>
-                  <div style="margin-bottom: 4px;"><strong>Pengembang:</strong> ${housing.namaPengembang || "-"}</div>
-                  <div style="margin-bottom: 4px;"><strong>Jenis:</strong> ${housing.jenisPerumahan || "-"}</div>
-                  <div><strong>Unit:</strong> ${housing.jumlahRumahRencana || "-"}</div>
+                  <div style="margin-bottom: 4px;"><strong>Nama:</strong> ${
+                    housing.namaPerumahan || item.developmentName || "-"
+                  }</div>
+                  <div style="margin-bottom: 4px;"><strong>Pengembang:</strong> ${
+                    housing.namaPengembang || "-"
+                  }</div>
+                  <div style="margin-bottom: 4px;"><strong>Jenis:</strong> ${
+                    housing.jenisPerumahan || "-"
+                  }</div>
+                  <div><strong>Unit:</strong> ${
+                    housing.jumlahRumahRencana || "-"
+                  }</div>
                 </div>
               `);
 
@@ -2784,11 +2865,16 @@ const createMarkers = (
         }
         const latLng = toLatLng(coordinates);
         if (latLng) {
-          const marker = createOptimizedMarker(latLng, markerColors["housing-development"]);
+          const marker = createOptimizedMarker(
+            latLng,
+            markerColors["housing-development"]
+          );
 
           marker.bindPopup(`
             <div style="font-family: sans-serif; font-size: 12px; min-width: 150px;">
-              <h3 style="margin: 0 0 6px 0; font-size: 14px; color: ${markerColors["housing-development"]}; border-bottom: 1px solid #eee; padding-bottom: 4px;">
+              <h3 style="margin: 0 0 6px 0; font-size: 14px; color: ${
+                markerColors["housing-development"]
+              }; border-bottom: 1px solid #eee; padding-bottom: 4px;">
                 🏢 Perumahan
               </h3>
               <div><strong>Nama:</strong> ${item.developmentName || "-"}</div>
@@ -2802,24 +2888,39 @@ const createMarkers = (
   }
 
   // 3. Render Infrastruktur
-  if (mapFilters.value.find((filter) => filter.type === "infrastructure")?.enabled) {
+  if (
+    mapFilters.value.find((filter) => filter.type === "infrastructure")?.enabled
+  ) {
     (infrastructureData || []).forEach((item) => {
       const coordinates = getInfrastructureCoordinates(item);
       const latLng = toLatLng(coordinates);
 
       if (latLng) {
-        const marker = createOptimizedMarker(latLng, markerColors.infrastructure);
+        const marker = createOptimizedMarker(
+          latLng,
+          markerColors.infrastructure
+        );
 
-        const villageName = item.profil?.namaDesa || item.villageName || item.location?.village?.name || "Tidak ada";
-        const submittedAt = item.submittedAt ? new Date(item.submittedAt).toLocaleDateString("id-ID") : "-";
+        const villageName =
+          item.profil?.namaDesa ||
+          item.villageName ||
+          item.location?.village?.name ||
+          "Tidak ada";
+        const submittedAt = item.submittedAt
+          ? new Date(item.submittedAt).toLocaleDateString("id-ID")
+          : "-";
 
         marker.bindPopup(`
           <div style="font-family: sans-serif; font-size: 12px; min-width: 150px;">
-            <h3 style="margin: 0 0 6px 0; font-size: 14px; color: ${markerColors.infrastructure}; border-bottom: 1px solid #eee; padding-bottom: 4px;">
+            <h3 style="margin: 0 0 6px 0; font-size: 14px; color: ${
+              markerColors.infrastructure
+            }; border-bottom: 1px solid #eee; padding-bottom: 4px;">
               🏗️ Infrastruktur
             </h3>
             <div style="margin-bottom: 4px;"><strong>Desa:</strong> ${villageName}</div>
-            <div style="margin-bottom: 4px;"><strong>Status:</strong> ${item.status || "-"}</div>
+            <div style="margin-bottom: 4px;"><strong>Status:</strong> ${
+              item.status || "-"
+            }</div>
             <div><strong>Tanggal:</strong> ${submittedAt}</div>
           </div>
         `);
@@ -2857,12 +2958,12 @@ const loadMapData = async () => {
   try {
     // 1. Ambil Parameter Filter
     const locationParams = getDashboardFilterParams();
-    
+
     const mapQueryParams = {
       page: 1,
-      limit: 1000, // OPTIMASI: Batasi 1000 per kategori agar tidak terlalu berat
-      status: 'approved',
-      ...locationParams
+      limit: 10000, // OPTIMASI: Batasi 1000 per kategori agar tidak terlalu berat
+      status: "approved",
+      ...locationParams,
     };
 
     console.time("LoadMapData"); // Debugging waktu load
@@ -2870,57 +2971,61 @@ const loadMapData = async () => {
     // 2. REQUEST PARALEL (OPTIMASI UTAMA)
     // Mengambil ke-3 data secara bersamaan, bukan satu per satu
     const [housingRes, devRes, infraRes] = await Promise.all([
-      housingAPI.getSubmissions(mapQueryParams).catch(err => {
+      housingAPI.getSubmissions(mapQueryParams).catch((err) => {
         console.error("Gagal load housing:", err);
         return { success: false };
       }),
-      housingDevelopmentAPI.getDevelopments(mapQueryParams).catch(err => {
+      housingDevelopmentAPI.getDevelopments(mapQueryParams).catch((err) => {
         console.error("Gagal load developments:", err);
         return { success: false };
       }),
-      facilityAPI.getSurveys(mapQueryParams).catch(err => {
+      facilityAPI.getSurveys(mapQueryParams).catch((err) => {
         console.error("Gagal load infrastruktur:", err);
         return { success: false };
-      })
+      }),
     ]);
 
     // 3. Proses Data Rumah Masyarakat
     let housingData = [];
     if (housingRes?.success) {
-      housingData = housingRes.data?.submissions?.rows || 
-                    housingRes.data?.submissions || [];
+      housingData =
+        housingRes.data?.submissions?.rows ||
+        housingRes.data?.submissions ||
+        [];
     }
 
     // 4. Proses Data Perumahan Pengembang
     let housingDevelopmentData = [];
     if (devRes?.success) {
-      const rows = devRes.data?.developments?.rows || devRes.data?.developments || [];
-      
+      const rows =
+        devRes.data?.developments?.rows || devRes.data?.developments || [];
+
       // Mapping data agar ringan
-      housingDevelopmentData = rows.map(item => ({
+      housingDevelopmentData = rows.map((item) => ({
         id: item.id,
         developmentName: item.developmentName,
         developerName: item.developerName,
         housingType: item.housingType,
-        coordinates: { 
-          lat: parseFloat(item.latitude), 
-          lng: parseFloat(item.longitude) 
+        coordinates: {
+          lat: parseFloat(item.latitude),
+          lng: parseFloat(item.longitude),
         },
         location: {
-            village: item.village?.name,
-            district: item.district?.name,
-            regency: item.regency?.name
+          village: item.village?.name,
+          district: item.district?.name,
+          regency: item.regency?.name,
         },
         // Ambil properti yang perlu saja untuk popup, jangan pakai spread (...item)
         // agar memori browser tidak penuh jika objeknya besar
-        jumlahRumahRencana: item.jumlahRumahRencana
+        jumlahRumahRencana: item.jumlahRumahRencana,
       }));
     }
 
     // 5. Proses Data Infrastruktur
     let infrastructureData = [];
     if (infraRes?.success) {
-      infrastructureData = infraRes.data?.surveys?.rows || infraRes.data?.surveys || [];
+      infrastructureData =
+        infraRes.data?.surveys?.rows || infraRes.data?.surveys || [];
     }
 
     console.timeEnd("LoadMapData"); // Lihat durasi di console browser
@@ -2929,7 +3034,6 @@ const loadMapData = async () => {
     await nextTick();
     initializeMap();
     createMarkers(housingData, housingDevelopmentData, infrastructureData);
-    
   } catch (error) {
     console.error("Error fatal saat memuat peta:", error);
   }
@@ -3088,7 +3192,8 @@ const initializeMap = () => {
 const webMercatorToLatLng = (x, y) => {
   const radius = 6378137;
   const lon = (x / radius) * (180 / Math.PI);
-  const lat = (2 * Math.atan(Math.exp(y / radius)) - Math.PI / 2) * (180 / Math.PI);
+  const lat =
+    (2 * Math.atan(Math.exp(y / radius)) - Math.PI / 2) * (180 / Math.PI);
   return [lat, lon];
 };
 
@@ -3507,10 +3612,7 @@ const getFeatureCenter = (feature) => {
       return;
     }
 
-    if (
-      typeof coords[0] === "number" &&
-      typeof coords[1] === "number"
-    ) {
+    if (typeof coords[0] === "number" && typeof coords[1] === "number") {
       bounds.extend(coordsToLatLng(coords));
       return;
     }
@@ -3618,10 +3720,7 @@ const findBoundaryFeature = (item, layerDataOverride = null) => {
   const lat = Number(item?.lat);
   const lng = Number(item?.lng);
   if (Number.isFinite(lat) && Number.isFinite(lng)) {
-    const closest = findClosestBoundaryFeature(
-      nameMatches,
-      L.latLng(lat, lng)
-    );
+    const closest = findClosestBoundaryFeature(nameMatches, L.latLng(lat, lng));
     if (closest) {
       return closest;
     }
@@ -3758,7 +3857,9 @@ const findOptionName = (options, id) =>
 
 const buildExportFilename = (exportType, params) => {
   const label = exportLabelMap[exportType] || "Laporan_Ekspor";
-  const year = params?.surveyYear ? sanitizeFilenamePart(params.surveyYear) : "";
+  const year = params?.surveyYear
+    ? sanitizeFilenamePart(params.surveyYear)
+    : "";
   const villageName = params?.villageId
     ? findOptionName(villageOptions.value, params.villageId)
     : null;
@@ -4414,9 +4515,9 @@ const initCharts = () => {
             tooltip: {
               callbacks: {
                 label: function (context) {
-                  return `${context.dataset.label}: ${context.parsed.y.toLocaleString(
-                    "id-ID"
-                  )}`;
+                  return `${
+                    context.dataset.label
+                  }: ${context.parsed.y.toLocaleString("id-ID")}`;
                 },
               },
             },
@@ -4908,7 +5009,7 @@ onBeforeUnmount(() => {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #1976D2;
+  background: #1976d2;
   border: 2px solid #ffffff;
   transform: translate(-50%, -50%);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
