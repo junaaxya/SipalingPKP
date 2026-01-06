@@ -94,7 +94,6 @@ export const useMapLayersStore = defineStore('mapLayers', {
           createLayer('rtrw_hutan_konservasi', 'Hutan Konservasi'),
           createLayer('rtrw_hutan_lindung', 'Hutan Lindung'),
           createLayer('rtrw_hutan_produksi', 'Hutan Produksi'),
-          createLayer('rtrw_kawasan_lindung_darat', 'Kawasan Lindung Darat'),
           createLayer('rtrw_kawasan_lindung_resapan_air', 'Resapan Air'),
           createLayer('rtrw_kawasan_rawan_erosi_dan_tanah_longsor', 'Rawan Erosi & Longsor'),
           createLayer('rtrw_sempadan_danau', 'Sempadan Danau'),

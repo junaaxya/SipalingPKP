@@ -1343,6 +1343,7 @@ const geoJsonLayerCache = new Map();
 const markerLayers = {
   housing: L.layerGroup(),
   "housing-development": L.layerGroup(),
+  infrastructure: L.layerGroup(),
 };
 const isMasyarakat = computed(() => appStore.isMasyarakat);
 const isAdminDesa = computed(() => appStore.isAdminDesa);
@@ -1427,11 +1428,17 @@ const mapFilters = ref([
     label: "Perumahan oleh Pengembang",
     enabled: true,
   },
+  {
+    type: "infrastructure",
+    label: "Infrastruktur Desa",
+    enabled: true,
+  },
 ]);
 
 const locationFilterOptions = [
   { label: "Rumah Masyarakat", value: "housing" },
   { label: "Perumahan oleh Pengembang", value: "housing-development" },
+  { label: "Infrastruktur Desa", value: "infrastructure" },
 ];
 
 const selectedLocationFilters = ref(
@@ -2567,18 +2574,131 @@ const getCoordinatesForHousing = (item) => {
   return null;
 };
 
+const normalizeLocationId = (value) => {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value);
+  }
+  return String(
+    value.id || value.value || value.kode || value.code || value._id || ""
+  );
+};
+
+const matchesLocationParams = (location, params) => {
+  if (!params) {
+    return true;
+  }
+
+  const locationData = location || {};
+
+  if (params.provinceId) {
+    const provinceId = normalizeLocationId(locationData.province);
+    if (!provinceId || provinceId !== String(params.provinceId)) {
+      return false;
+    }
+  }
+  if (params.regencyId) {
+    const regencyId = normalizeLocationId(locationData.regency);
+    if (!regencyId || regencyId !== String(params.regencyId)) {
+      return false;
+    }
+  }
+  if (params.districtId) {
+    const districtId = normalizeLocationId(locationData.district);
+    if (!districtId || districtId !== String(params.districtId)) {
+      return false;
+    }
+  }
+  if (params.villageId) {
+    const villageId = normalizeLocationId(locationData.village);
+    if (!villageId || villageId !== String(params.villageId)) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const getInfrastructureCoordinates = (item) => {
+  if (!item) {
+    return null;
+  }
+
+  const readPair = (latValue, lngValue) => {
+    const lat = parseFloat(latValue);
+    const lng = parseFloat(lngValue);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      return { lat, lng };
+    }
+    return null;
+  };
+
+  const location = item.location || {};
+
+  let coords =
+    readPair(location.latitude, location.longitude) ||
+    readPair(location.lat, location.lng) ||
+    readPair(item.latitude, item.longitude) ||
+    readPair(item.lat, item.lng);
+
+  if (coords) {
+    return coords;
+  }
+
+  if (typeof item.koordinat === "string") {
+    return parseCoordinates(item.koordinat);
+  }
+
+  if (typeof location.koordinat === "string") {
+    return parseCoordinates(location.koordinat);
+  }
+
+  const candidate = item.coordinates || location.coordinates;
+  if (typeof candidate === "string") {
+    return parseCoordinates(candidate);
+  }
+
+  if (Array.isArray(candidate) && candidate.length >= 2) {
+    const lat = parseFloat(candidate[0]);
+    const lng = parseFloat(candidate[1]);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      return { lat, lng };
+    }
+  }
+
+  if (candidate && typeof candidate === "object") {
+    coords = readPair(
+      candidate.lat ?? candidate.latitude,
+      candidate.lng ?? candidate.longitude
+    );
+    if (coords) {
+      return coords;
+    }
+  }
+
+  return null;
+};
+
 // Create markers on map
-const createMarkers = (housingData, housingDevelopmentData) => {
+const createMarkers = (
+  housingData,
+  housingDevelopmentData,
+  infrastructureData
+) => {
   if (!mapInstance.value) {
     return;
   }
 
   markerLayers.housing.clearLayers();
   markerLayers["housing-development"].clearLayers();
+  markerLayers.infrastructure.clearLayers();
 
   const markerColors = {
     housing: "#1976D2",
     "housing-development": "#4CAF50",
+    infrastructure: "#00ACC1",
   };
 
   const createMarkerIcon = (color, label) =>
@@ -2699,6 +2819,41 @@ const createMarkers = (housingData, housingDevelopmentData) => {
     });
   }
 
+  if (mapFilters.value.find((filter) => filter.type === "infrastructure")?.enabled) {
+    (infrastructureData || []).forEach((item) => {
+      const coordinates = getInfrastructureCoordinates(item);
+      const latLng = toLatLng(coordinates);
+
+      if (latLng) {
+        const marker = L.marker(latLng, {
+          icon: createMarkerIcon(markerColors.infrastructure, "I"),
+        });
+
+        const villageName =
+          item.profil?.namaDesa ||
+          item.villageName ||
+          item.location?.village?.name ||
+          "Tidak ada";
+        const status = item.status || "Tidak ada";
+        const submittedAt = item.submittedAt
+          ? new Date(item.submittedAt).toLocaleDateString("id-ID")
+          : "Tidak ada";
+
+        marker.bindPopup(`
+          <div style="padding: 8px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 14px; font-weight: bold;">Infrastruktur Desa</h3>
+            <p style="margin: 4px 0; font-size: 12px;"><strong>Desa:</strong> ${villageName}</p>
+            <p style="margin: 4px 0; font-size: 12px;"><strong>Status:</strong> ${status}</p>
+            <p style="margin: 4px 0; font-size: 12px;"><strong>Tanggal:</strong> ${submittedAt}</p>
+            <p style="margin: 4px 0; font-size: 12px;"><strong>ID:</strong> ${item.id || "Tidak ada"}</p>
+          </div>
+        `);
+
+        markerLayers.infrastructure.addLayer(marker);
+      }
+    });
+  }
+
   const bounds = L.latLngBounds([]);
   let hasBounds = false;
 
@@ -2766,7 +2921,8 @@ const loadMapData = async () => {
                       housing.namaPerumahan ||
                       submission.developmentName ||
                       "Perumahan",
-                    developerName: housing.namaPengembang || submission.developerName,
+                    developerName:
+                      housing.namaPengembang || submission.developerName,
                     housingType: housing.jenisPerumahan || submission.housingType,
                     coordinates,
                     housingDevelopments: [housing],
@@ -2785,10 +2941,24 @@ const loadMapData = async () => {
       housingDevelopmentData = [];
     }
 
+    let infrastructureData = [];
+    try {
+      const storedInfraData = localStorage.getItem("infrastructure-submissions");
+      if (storedInfraData) {
+        const submissions = JSON.parse(storedInfraData);
+        infrastructureData = submissions.filter((item) =>
+          matchesLocationParams(item.location, locationParams)
+        );
+      }
+    } catch (error) {
+      console.error("Error loading infrastructure data from localStorage:", error);
+      infrastructureData = [];
+    }
+
     // Process and display markers
     await nextTick();
     initializeMap();
-    createMarkers(housingData, housingDevelopmentData);
+    createMarkers(housingData, housingDevelopmentData, infrastructureData);
   } catch (error) {
     console.error("Error loading map data:", error);
   }
@@ -2938,6 +3108,7 @@ const initializeMap = () => {
 
   markerLayers.housing.addTo(mapInstance.value);
   markerLayers["housing-development"].addTo(mapInstance.value);
+  markerLayers.infrastructure.addTo(mapInstance.value);
   searchHighlightLayer.addTo(mapInstance.value);
 
   syncGeoJsonLayers();
