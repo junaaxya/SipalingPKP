@@ -1,13 +1,14 @@
 <template>
   <div>
     <v-container fluid class="px-2 px-sm-6 py-4">
-      <v-card
-        class="mx-auto w-100 form-card"
-        max-width="1200"
-      >
+      <v-card class="mx-auto w-100 form-card" max-width="1200">
         <!-- Header -->
         <v-card-title class="text-h5 text-center py-4">
-          {{ isEditMode ? 'Edit Survei Infrastruktur Desa/Kelurahan' : 'Formulir Survey Infrastruktur Desa/Kelurahan' }}
+          {{
+            isEditMode
+              ? "Edit Survei Infrastruktur Desa/Kelurahan"
+              : "Formulir Survey Infrastruktur Desa/Kelurahan"
+          }}
         </v-card-title>
 
         <!-- Progress Steps -->
@@ -18,10 +19,7 @@
             class="elevation-0 form-stepper"
           >
             <v-stepper-header>
-              <template
-                v-for="(step, index) in steps"
-                :key="index"
-              >
+              <template v-for="(step, index) in steps" :key="index">
                 <v-stepper-item
                   :complete="currentStep > index + 1"
                   :value="index + 1"
@@ -46,28 +44,20 @@
           >
             {{ errorMessage }}
           </v-alert>
-          
+
           <v-form ref="formRef">
             <!-- Step 1: Sarana -->
             <div v-if="currentStep === 1">
-              <h3 class="text-h6 mb-6">
-                1. Sarana
-              </h3>
+              <h3 class="text-h6 mb-6">1. Sarana</h3>
 
               <!-- Informasi Survey -->
-              <v-card
-                variant="outlined"
-                class="mb-4"
-              >
+              <v-card variant="outlined" class="mb-4">
                 <v-card-title class="text-subtitle-1">
                   Informasi Survey
                 </v-card-title>
                 <v-card-text>
                   <v-row>
-                    <v-col
-                      cols="12"
-                      md="6"
-                    >
+                    <v-col cols="12" md="6">
                       <v-text-field
                         :model-value="formData.surveyYear"
                         label="Tahun Survey"
@@ -78,13 +68,14 @@
                         :max="YEAR_MAX"
                         :hint="YEAR_HINT"
                         persistent-hint
-                        @update:modelValue="(val) => { formData.surveyYear = sanitizeDigits(val) }"
+                        @update:modelValue="
+                          (val) => {
+                            formData.surveyYear = sanitizeDigits(val);
+                          }
+                        "
                       />
                     </v-col>
-                    <v-col
-                      cols="12"
-                      md="6"
-                    >
+                    <v-col cols="12" md="6">
                       <v-select
                         v-model="formData.surveyPeriod"
                         label="Periode Survey"
@@ -98,94 +89,75 @@
               </v-card>
 
               <!-- Lokasi -->
-              <v-card
-                variant="outlined"
-                class="mb-4"
-              >
-              <v-card-title class="text-subtitle-1">
-                Lokasi Desa/Kelurahan
-              </v-card-title>
-              <v-card-text>
-                <v-row class="align-center mb-3">
-                  <v-col
-                    cols="12"
-                    md="6"
+              <v-card variant="outlined" class="mb-4">
+                <v-card-title class="text-subtitle-1">
+                  Lokasi Desa/Kelurahan
+                </v-card-title>
+                <v-card-text>
+                  <v-row class="align-center mb-3">
+                    <v-col cols="12" md="6">
+                      <div class="text-body-2 text-medium-emphasis">
+                        Gunakan peta untuk mengisi lokasi secara otomatis.
+                      </div>
+                    </v-col>
+                    <v-col cols="12" md="6" class="d-flex justify-end">
+                      <v-btn
+                        color="primary"
+                        variant="tonal"
+                        prepend-icon="mdi-crosshairs-gps"
+                        :loading="locationLoading.isSyncing"
+                        @click="openLocationPicker"
+                      >
+                        Gunakan Lokasi Saat Ini
+                      </v-btn>
+                    </v-col>
+                  </v-row>
+                  <v-alert
+                    v-if="locationSyncMessage"
+                    :type="locationSyncType"
+                    variant="tonal"
+                    density="compact"
+                    class="mb-3"
+                    closable
+                    @click:close="locationSyncMessage = ''"
                   >
-                    <div class="text-body-2 text-medium-emphasis">
-                      Gunakan peta untuk mengisi lokasi secara otomatis.
-                    </div>
-                  </v-col>
-                  <v-col
-                    cols="12"
-                    md="6"
-                    class="d-flex justify-end"
+                    {{ locationSyncMessage }}
+                  </v-alert>
+                  <v-alert
+                    v-if="locationSelectError"
+                    type="error"
+                    variant="tonal"
+                    density="compact"
+                    class="mb-3"
+                    closable
+                    @click:close="locationSelectError = ''"
                   >
-                    <v-btn
-                      color="primary"
-                      variant="tonal"
-                      prepend-icon="mdi-crosshairs-gps"
-                      :loading="locationLoading.isSyncing"
-                      @click="openLocationPicker"
-                    >
-                      Gunakan Lokasi Saat Ini
-                    </v-btn>
-                  </v-col>
-                </v-row>
-                <v-alert
-                  v-if="locationSyncMessage"
-                  :type="locationSyncType"
-                  variant="tonal"
-                  density="compact"
-                  class="mb-3"
-                  closable
-                  @click:close="locationSyncMessage = ''"
-                >
-                  {{ locationSyncMessage }}
-                </v-alert>
-                <v-alert
-                  v-if="locationSelectError"
-                  type="error"
-                  variant="tonal"
-                  density="compact"
-                  class="mb-3"
-                  closable
-                  @click:close="locationSelectError = ''"
-                >
-                  {{ locationSelectError }}
-                </v-alert>
-                <v-row>
-                  <v-col
-                    cols="12"
-                    md="6"
-                  >
-                    <v-text-field
-                      v-model="formData.location.latitude"
-                      label="Latitude"
-                      type="number"
-                      step="any"
-                      variant="outlined"
-                      readonly
-                      placeholder="Pilih dari peta"
-                    />
-                  </v-col>
-                  <v-col
-                    cols="12"
-                    md="6"
-                  >
-                    <v-text-field
-                      v-model="formData.location.longitude"
-                      label="Longitude"
-                      type="number"
-                      step="any"
-                      variant="outlined"
-                      readonly
-                      placeholder="Pilih dari peta"
-                    />
-                  </v-col>
-                  <v-col
-                    cols="12"
-                    md="6"
-                  >
+                    {{ locationSelectError }}
+                  </v-alert>
+                  <v-row>
+                    <v-col cols="12" md="6">
+                      <v-text-field
+                        v-model="formData.location.latitude"
+                        label="Latitude"
+                        type="number"
+                        step="any"
+                        variant="outlined"
+                        readonly
+                        placeholder="Pilih dari peta"
+                      />
+                    </v-col>
+                    <v-col cols="12" md="6">
+                      <v-text-field
+                        v-model="formData.location.longitude"
+                        label="Longitude"
+                        type="number"
+                        step="any"
+                        variant="outlined"
+                        readonly
+                        placeholder="Pilih dari peta"
+                      />
+                    </v-col>
+                    <v-col cols="12" md="6">
                       <v-autocomplete
                         v-model="formData.location.province"
                         label="Provinsi"
@@ -200,10 +172,7 @@
                         placeholder="Cari dan pilih provinsi"
                       />
                     </v-col>
-                    <v-col
-                      cols="12"
-                      md="6"
-                    >
+                    <v-col cols="12" md="6">
                       <v-autocomplete
                         v-model="formData.location.regency"
                         label="Kabupaten / Kota"
@@ -219,10 +188,7 @@
                         placeholder="Cari dan pilih kabupaten/kota"
                       />
                     </v-col>
-                    <v-col
-                      cols="12"
-                      md="6"
-                    >
+                    <v-col cols="12" md="6">
                       <v-autocomplete
                         v-model="formData.location.district"
                         label="Kecamatan"
@@ -238,10 +204,7 @@
                         placeholder="Cari dan pilih kecamatan"
                       />
                     </v-col>
-                    <v-col
-                      cols="12"
-                      md="6"
-                    >
+                    <v-col cols="12" md="6">
                       <v-autocomplete
                         v-model="formData.location.village"
                         label="Kelurahan"
@@ -262,10 +225,7 @@
               </v-card>
 
               <!-- Profil Desa/Kelurahan -->
-              <v-card
-                variant="outlined"
-                class="mb-4"
-              >
+              <v-card variant="outlined" class="mb-4">
                 <v-card-title class="text-subtitle-1">
                   Profil Desa/Kelurahan
                 </v-card-title>
@@ -278,10 +238,7 @@
                         variant="outlined"
                       />
                     </v-col>
-                    <v-col
-                      cols="12"
-                      md="6"
-                    >
+                    <v-col cols="12" md="6">
                       <v-text-field
                         :model-value="formData.profil.jumlahPenduduk"
                         label="Jumlah Penduduk"
@@ -292,13 +249,15 @@
                         persistent-hint
                         :rules="[rules.populationRange]"
                         variant="outlined"
-                        @update:modelValue="(val) => { formData.profil.jumlahPenduduk = sanitizeDigits(val) }"
+                        @update:modelValue="
+                          (val) => {
+                            formData.profil.jumlahPenduduk =
+                              sanitizeDigits(val);
+                          }
+                        "
                       />
                     </v-col>
-                    <v-col
-                      cols="12"
-                      md="6"
-                    >
+                    <v-col cols="12" md="6">
                       <v-text-field
                         :model-value="formData.profil.jumlahKK"
                         type="number"
@@ -308,7 +267,11 @@
                         persistent-hint
                         :rules="[rules.householdRequired, rules.householdRange]"
                         variant="outlined"
-                        @update:modelValue="(val) => { formData.profil.jumlahKK = sanitizeDigits(val) }"
+                        @update:modelValue="
+                          (val) => {
+                            formData.profil.jumlahKK = sanitizeDigits(val);
+                          }
+                        "
                       >
                         <template #label>
                           Jumlah KK (Kartu Keluarga)
@@ -316,10 +279,7 @@
                         </template>
                       </v-text-field>
                     </v-col>
-                    <v-col
-                      cols="12"
-                      md="6"
-                    >
+                    <v-col cols="12" md="6">
                       <v-text-field
                         :model-value="formData.profil.jumlahRumah"
                         label="Jumlah Rumah"
@@ -330,21 +290,19 @@
                         persistent-hint
                         :rules="[rules.houseRange]"
                         variant="outlined"
-                        @update:modelValue="(val) => { formData.profil.jumlahRumah = sanitizeDigits(val) }"
+                        @update:modelValue="
+                          (val) => {
+                            formData.profil.jumlahRumah = sanitizeDigits(val);
+                          }
+                        "
                       />
                     </v-col>
                   </v-row>
                 </v-card-text>
               </v-card>
 
-              <template
-                v-for="section in facilitySections"
-                :key="section.key"
-              >
-                <v-card
-                  variant="outlined"
-                  class="mb-4"
-                >
+              <template v-for="section in facilitySections" :key="section.key">
+                <v-card variant="outlined" class="mb-4">
                   <v-card-title class="text-subtitle-1">
                     {{ section.title }}
                   </v-card-title>
@@ -390,7 +348,9 @@
                           size="x-small"
                           variant="text"
                           color="error"
-                          @click="removeFacilityRow(formData[section.key], index)"
+                          @click="
+                            removeFacilityRow(formData[section.key], index)
+                          "
                         >
                           <v-icon>mdi-delete</v-icon>
                         </v-btn>
@@ -411,15 +371,10 @@
 
             <!-- Step 2: Utilitas Umum -->
             <div v-if="currentStep === 2">
-              <h3 class="text-h6 mb-6">
-                2. Utilitas Umum
-              </h3>
+              <h3 class="text-h6 mb-6">2. Utilitas Umum</h3>
 
               <!-- Jaringan Listrik -->
-              <v-card
-                variant="outlined"
-                class="mb-4"
-              >
+              <v-card variant="outlined" class="mb-4">
                 <v-card-title class="text-subtitle-1">
                   Jaringan Listrik
                 </v-card-title>
@@ -427,17 +382,18 @@
                   <v-row>
                     <v-col cols="12">
                       <v-switch
-                        v-model="formData.jaringanListrik.tercakupSeluruhWilayah"
+                        v-model="
+                          formData.jaringanListrik.tercakupSeluruhWilayah
+                        "
                         label="Tercakup Seluruh Desa/Kelurahan"
                         color="primary"
                       />
                     </v-col>
-                    <v-col
-                      cols="12"
-                      md="6"
-                    >
+                    <v-col cols="12" md="6">
                       <v-text-field
-                        :model-value="formData.jaringanListrik.wilayahBelumTerjangkau"
+                        :model-value="
+                          formData.jaringanListrik.wilayahBelumTerjangkau
+                        "
                         label="Jumlah Wilayah yang Belum Terjangkau (Dusun/RW)"
                         type="number"
                         :min="UTILITY_MIN"
@@ -446,8 +402,15 @@
                         persistent-hint
                         :rules="[rules.utilityRange]"
                         variant="outlined"
-                        :disabled="formData.jaringanListrik.tercakupSeluruhWilayah"
-                        @update:modelValue="(val) => { formData.jaringanListrik.wilayahBelumTerjangkau = sanitizeDigits(val) }"
+                        :disabled="
+                          formData.jaringanListrik.tercakupSeluruhWilayah
+                        "
+                        @update:modelValue="
+                          (val) => {
+                            formData.jaringanListrik.wilayahBelumTerjangkau =
+                              sanitizeDigits(val);
+                          }
+                        "
                       />
                     </v-col>
                   </v-row>
@@ -455,19 +418,13 @@
               </v-card>
 
               <!-- Jaringan Air Bersih -->
-              <v-card
-                variant="outlined"
-                class="mb-4"
-              >
+              <v-card variant="outlined" class="mb-4">
                 <v-card-title class="text-subtitle-1">
                   Jaringan Air Bersih
                 </v-card-title>
                 <v-card-text>
                   <v-row>
-                    <v-col
-                      cols="12"
-                      md="6"
-                    >
+                    <v-col cols="12" md="6">
                       <v-text-field
                         :model-value="formData.jaringanAirBersih.jumlahSPAM"
                         label="Jumlah SPAM yang Terdapat di Wilayah Desa/Kelurahan"
@@ -478,7 +435,12 @@
                         persistent-hint
                         :rules="[rules.facilityRange]"
                         variant="outlined"
-                        @update:modelValue="(val) => { formData.jaringanAirBersih.jumlahSPAM = sanitizeDigits(val) }"
+                        @update:modelValue="
+                          (val) => {
+                            formData.jaringanAirBersih.jumlahSPAM =
+                              sanitizeDigits(val);
+                          }
+                        "
                       />
                     </v-col>
                   </v-row>
@@ -486,19 +448,13 @@
               </v-card>
 
               <!-- Jaringan Telepon -->
-              <v-card
-                variant="outlined"
-                class="mb-4"
-              >
+              <v-card variant="outlined" class="mb-4">
                 <v-card-title class="text-subtitle-1">
                   Jaringan Telepon
                 </v-card-title>
                 <v-card-text>
                   <v-row>
-                    <v-col
-                      cols="12"
-                      md="6"
-                    >
+                    <v-col cols="12" md="6">
                       <v-text-field
                         :model-value="formData.jaringanTelepon.jumlahOperator"
                         label="Jumlah Operator Telepon yang Beroperasi"
@@ -509,15 +465,19 @@
                         persistent-hint
                         :rules="[rules.operatorRange]"
                         variant="outlined"
-                        @update:modelValue="(val) => { formData.jaringanTelepon.jumlahOperator = sanitizeDigits(val) }"
+                        @update:modelValue="
+                          (val) => {
+                            formData.jaringanTelepon.jumlahOperator =
+                              sanitizeDigits(val);
+                          }
+                        "
                       />
                     </v-col>
-                    <v-col
-                      cols="12"
-                      md="6"
-                    >
+                    <v-col cols="12" md="6">
                       <v-text-field
-                        :model-value="formData.jaringanTelepon.wilayahBelumTerjangkau"
+                        :model-value="
+                          formData.jaringanTelepon.wilayahBelumTerjangkau
+                        "
                         label="Jumlah Wilayah yang Belum Terjangkau (Dusun/RW)"
                         type="number"
                         :min="UTILITY_MIN"
@@ -526,7 +486,12 @@
                         persistent-hint
                         :rules="[rules.utilityRange]"
                         variant="outlined"
-                        @update:modelValue="(val) => { formData.jaringanTelepon.wilayahBelumTerjangkau = sanitizeDigits(val) }"
+                        @update:modelValue="
+                          (val) => {
+                            formData.jaringanTelepon.wilayahBelumTerjangkau =
+                              sanitizeDigits(val);
+                          }
+                        "
                       />
                     </v-col>
                   </v-row>
@@ -534,19 +499,13 @@
               </v-card>
 
               <!-- Jaringan Gas -->
-              <v-card
-                variant="outlined"
-                class="mb-4"
-              >
+              <v-card variant="outlined" class="mb-4">
                 <v-card-title class="text-subtitle-1">
                   Jaringan Gas
                 </v-card-title>
                 <v-card-text>
                   <v-row>
-                    <v-col
-                      cols="12"
-                      md="6"
-                    >
+                    <v-col cols="12" md="6">
                       <v-text-field
                         :model-value="formData.jaringanGas.jumlahAgenGas"
                         label="Jumlah Agen Gas di Desa/Kelurahan"
@@ -557,7 +516,12 @@
                         persistent-hint
                         :rules="[rules.facilityRange]"
                         variant="outlined"
-                        @update:modelValue="(val) => { formData.jaringanGas.jumlahAgenGas = sanitizeDigits(val) }"
+                        @update:modelValue="
+                          (val) => {
+                            formData.jaringanGas.jumlahAgenGas =
+                              sanitizeDigits(val);
+                          }
+                        "
                       />
                     </v-col>
                   </v-row>
@@ -565,10 +529,7 @@
               </v-card>
 
               <!-- Jaringan Transportasi -->
-              <v-card
-                variant="outlined"
-                class="mb-4"
-              >
+              <v-card variant="outlined" class="mb-4">
                 <v-card-title class="text-subtitle-1">
                   Jaringan Transportasi
                 </v-card-title>
@@ -576,14 +537,20 @@
                   <v-row>
                     <v-col cols="12">
                       <v-select
-                        v-model="formData.jaringanTransportasi.layananAngkutanUmum"
+                        v-model="
+                          formData.jaringanTransportasi.layananAngkutanUmum
+                        "
                         label="Layanan Angkutan Umum di Wilayah Desa/Kelurahan"
                         :items="angkutanUmumOptions"
                         multiple
                         variant="outlined"
                       />
                       <v-text-field
-                        v-if="formData.jaringanTransportasi.layananAngkutanUmum.includes('Lainnya')"
+                        v-if="
+                          formData.jaringanTransportasi.layananAngkutanUmum.includes(
+                            'Lainnya'
+                          )
+                        "
                         v-model="formData.jaringanTransportasi.layananLainnya"
                         label="Sebutkan Layanan Lainnya"
                         variant="outlined"
@@ -595,19 +562,13 @@
               </v-card>
 
               <!-- Pemadam Kebakaran -->
-              <v-card
-                variant="outlined"
-                class="mb-4"
-              >
+              <v-card variant="outlined" class="mb-4">
                 <v-card-title class="text-subtitle-1">
                   Pemadam Kebakaran
                 </v-card-title>
                 <v-card-text>
                   <v-row>
-                    <v-col
-                      cols="12"
-                      md="6"
-                    >
+                    <v-col cols="12" md="6">
                       <v-text-field
                         :model-value="formData.pemadamKebakaran.mobilDamkar"
                         label="Mobil Damkar (Unit)"
@@ -618,13 +579,15 @@
                         persistent-hint
                         :rules="[rules.facilityRange]"
                         variant="outlined"
-                        @update:modelValue="(val) => { formData.pemadamKebakaran.mobilDamkar = sanitizeDigits(val) }"
+                        @update:modelValue="
+                          (val) => {
+                            formData.pemadamKebakaran.mobilDamkar =
+                              sanitizeDigits(val);
+                          }
+                        "
                       />
                     </v-col>
-                    <v-col
-                      cols="12"
-                      md="6"
-                    >
+                    <v-col cols="12" md="6">
                       <v-select
                         v-model="formData.pemadamKebakaran.pengelola"
                         label="Pengelola"
@@ -632,10 +595,7 @@
                         variant="outlined"
                       />
                     </v-col>
-                    <v-col
-                      cols="12"
-                      md="6"
-                    >
+                    <v-col cols="12" md="6">
                       <v-text-field
                         :model-value="formData.pemadamKebakaran.APAR"
                         label="APAR (Unit)"
@@ -646,7 +606,12 @@
                         persistent-hint
                         :rules="[rules.facilityRange]"
                         variant="outlined"
-                        @update:modelValue="(val) => { formData.pemadamKebakaran.APAR = sanitizeDigits(val) }"
+                        @update:modelValue="
+                          (val) => {
+                            formData.pemadamKebakaran.APAR =
+                              sanitizeDigits(val);
+                          }
+                        "
                       />
                     </v-col>
                   </v-row>
@@ -654,19 +619,13 @@
               </v-card>
 
               <!-- Penerangan Jalan Umum -->
-              <v-card
-                variant="outlined"
-                class="mb-4"
-              >
+              <v-card variant="outlined" class="mb-4">
                 <v-card-title class="text-subtitle-1">
                   Sarana Penerangan Jalan Umum (PJU)
                 </v-card-title>
                 <v-card-text>
                   <v-row>
-                    <v-col
-                      cols="12"
-                      md="6"
-                    >
+                    <v-col cols="12" md="6">
                       <v-text-field
                         :model-value="formData.peneranganJalan.jumlahLampuJalan"
                         label="Jumlah Lampu Jalan yang Dikelola Pemerintah Desa/Kelurahan (Unit)"
@@ -677,7 +636,12 @@
                         persistent-hint
                         :rules="[rules.facilityRange]"
                         variant="outlined"
-                        @update:modelValue="(val) => { formData.peneranganJalan.jumlahLampuJalan = sanitizeDigits(val) }"
+                        @update:modelValue="
+                          (val) => {
+                            formData.peneranganJalan.jumlahLampuJalan =
+                              sanitizeDigits(val);
+                          }
+                        "
                       />
                     </v-col>
                   </v-row>
@@ -696,9 +660,7 @@
             class="mr-2"
             @click="previousStep"
           >
-            <v-icon start>
-              mdi-chevron-left
-            </v-icon>
+            <v-icon start> mdi-chevron-left </v-icon>
             Sebelumnya
           </v-btn>
           <v-btn
@@ -707,9 +669,7 @@
             @click="nextStep"
           >
             Selanjutnya
-            <v-icon end>
-              mdi-chevron-right
-            </v-icon>
+            <v-icon end> mdi-chevron-right </v-icon>
           </v-btn>
           <v-btn
             v-if="currentStep === steps.length"
@@ -718,10 +678,8 @@
             :disabled="!isHouseholdCountValid || isSubmitting"
             @click="submitForm"
           >
-            <v-icon start>
-              mdi-check
-            </v-icon>
-            {{ isEditMode ? 'Simpan Perubahan' : 'Kirim Formulir' }}
+            <v-icon start> mdi-check </v-icon>
+            {{ isEditMode ? "Simpan Perubahan" : "Kirim Formulir" }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -737,85 +695,88 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, computed, onMounted } from 'vue'
-import { definePage } from 'unplugin-vue-router/runtime'
-import { useRouter, useRoute } from 'vue-router'
-import { locationAPI, facilityAPI } from '@/services'
-import { useAppStore } from '@/stores/app'
-import { useMapDataStore } from '@/stores/mapData'
-import LocationPickerDialog from '@/components/LocationPickerDialog.vue'
-import { mapReverseGeocodeResponse, resolveLocationId } from '@/utils/locationUtils'
+import { ref, reactive, watch, computed, onMounted } from "vue";
+import { definePage } from "unplugin-vue-router/runtime";
+import { useRouter, useRoute } from "vue-router";
+import { locationAPI, facilityAPI } from "@/services";
+import { useAppStore } from "@/stores/app";
+import { useMapDataStore } from "@/stores/mapData";
+import LocationPickerDialog from "@/components/LocationPickerDialog.vue";
+import {
+  mapReverseGeocodeResponse,
+  resolveLocationId,
+} from "@/utils/locationUtils";
 
 definePage({
   meta: {
-    layout: 'dashboard'
-  }
-})
+    layout: "dashboard",
+  },
+});
 
-const router = useRouter()
-const route = useRoute()
-const mapDataStore = useMapDataStore()
+const router = useRouter();
+const route = useRoute();
+const mapDataStore = useMapDataStore();
 
 const editSurveyId = computed(() => {
-  return typeof route.query.edit === 'string' && route.query.edit.trim()
+  return typeof route.query.edit === "string" && route.query.edit.trim()
     ? route.query.edit
-    : null
-})
-const isEditMode = computed(() => Boolean(editSurveyId.value))
+    : null;
+});
+const isEditMode = computed(() => Boolean(editSurveyId.value));
 
 // Form steps
 const steps = [
-  { title: 'Sarana', subtitle: 'Data Sarana Desa/Kelurahan' },
-  { title: 'Utilitas Umum', subtitle: 'Data Utilitas Umum' }
-]
+  { title: "Sarana", subtitle: "Data Sarana Desa/Kelurahan" },
+  { title: "Utilitas Umum", subtitle: "Data Utilitas Umum" },
+];
 
 const createFacilityItem = (item = {}) => ({
   id: item.id || null,
-  type: item.type || '',
-  name: item.name || ''
-})
+  type: item.type || "",
+  name: item.name || "",
+});
 
 const ensureFacilityItems = (items) => {
   if (!Array.isArray(items) || items.length === 0) {
-    return [createFacilityItem()]
+    return [createFacilityItem()];
   }
-  return items
-}
+  return items;
+};
 
 const addFacilityRow = (list) => {
-  list.push(createFacilityItem())
-}
+  list.push(createFacilityItem());
+};
 
 const getFacilityCount = (key) => {
-  const list = formData[key]
-  if (!Array.isArray(list)) return 0
-  return list.filter((item) => item.type && item.name).length
-}
+  const list = formData[key];
+  if (!Array.isArray(list)) return 0;
+  return list.filter((item) => item.type && item.name).length;
+};
 
 const removeFacilityRow = (list, index) => {
-  list.splice(index, 1)
+  list.splice(index, 1);
   if (list.length === 0) {
-    list.push(createFacilityItem())
+    list.push(createFacilityItem());
   }
-}
+};
 
 // Form data structure
 const formData = reactive({
   surveyYear: new Date().getFullYear(),
-  surveyPeriod: 'q1',
+  surveyPeriod: "q1",
   location: {
     province: null,
     regency: null,
     district: null,
     village: null,
     latitude: null,
-    longitude: null
+    longitude: null,
   },
   profil: {
-    namaDesa: '',
-    jumlahPenduduk: '',
-    jumlahKK: '',
-    jumlahRumah: ''
+    namaDesa: "",
+    jumlahPenduduk: "",
+    jumlahKK: "",
+    jumlahRumah: "",
   },
   perniagaan: ensureFacilityItems(),
   pelayananUmum: ensureFacilityItems(),
@@ -828,810 +789,846 @@ const formData = reactive({
   parkir: ensureFacilityItems(),
   jaringanListrik: {
     tercakupSeluruhWilayah: false,
-    wilayahBelumTerjangkau: ''
+    wilayahBelumTerjangkau: "",
   },
   jaringanAirBersih: {
-    jumlahSPAM: ''
+    jumlahSPAM: "",
   },
   jaringanTelepon: {
-    jumlahOperator: '',
-    wilayahBelumTerjangkau: ''
+    jumlahOperator: "",
+    wilayahBelumTerjangkau: "",
   },
   jaringanGas: {
-    jumlahAgenGas: ''
+    jumlahAgenGas: "",
   },
   jaringanTransportasi: {
     layananAngkutanUmum: [],
-    layananLainnya: ''
+    layananLainnya: "",
   },
   pemadamKebakaran: {
-    mobilDamkar: '',
-    pengelola: '',
-    APAR: ''
+    mobilDamkar: "",
+    pengelola: "",
+    APAR: "",
   },
   peneranganJalan: {
-    jumlahLampuJalan: ''
-  }
-})
+    jumlahLampuJalan: "",
+  },
+});
 
 const facilityTypeOptions = {
   perniagaan: [
-    'Pasar',
-    'Toko/Warung',
-    'Minimarket',
-    'Koperasi',
-    'SPBU',
-    'Gudang',
-    'Lainnya'
+    "Pasar",
+    "Toko/Warung",
+    "Minimarket",
+    "Koperasi",
+    "SPBU",
+    "Gudang",
+    "Lainnya",
   ],
   pelayananUmum: [
-    'Kantor Desa',
-    'Kantor Kecamatan',
-    'Polsek',
-    'Koramil',
-    'Kantor Pos',
-    'Bank',
-    'Balai Pertemuan',
-    'Lainnya'
+    "Kantor Desa",
+    "Kantor Kecamatan",
+    "Polsek",
+    "Koramil",
+    "Kantor Pos",
+    "Bank",
+    "Balai Pertemuan",
+    "Lainnya",
   ],
   pendidikan: [
-    'PAUD/TK',
-    'SD',
-    'SMP',
-    'SMA/SMK',
-    'Perguruan Tinggi',
-    'Pesantren',
-    'Lainnya'
+    "PAUD/TK",
+    "SD",
+    "SMP",
+    "SMA/SMK",
+    "Perguruan Tinggi",
+    "Pesantren",
+    "Lainnya",
   ],
   kesehatan: [
-    'Puskesmas',
-    'Pustu',
-    'Posyandu',
-    'RS Pemerintah',
-    'RS Swasta',
-    'Klinik',
-    'Apotek',
-    'Lainnya'
+    "Puskesmas",
+    "Pustu",
+    "Posyandu",
+    "RS Pemerintah",
+    "RS Swasta",
+    "Klinik",
+    "Apotek",
+    "Lainnya",
   ],
   peribadatan: [
-    'Masjid',
-    'Mushola',
-    'Gereja Protestan',
-    'Gereja Katolik',
-    'Pura',
-    'Vihara',
-    'Kelenteng',
-    'Lainnya'
+    "Masjid",
+    "Mushola",
+    "Gereja Protestan",
+    "Gereja Katolik",
+    "Pura",
+    "Vihara",
+    "Kelenteng",
+    "Lainnya",
   ],
   rekreasi: [
-    'Lapangan Olahraga',
-    'Gelanggang Olahraga',
-    'Taman Bermain',
-    'Tempat Wisata',
-    'Lainnya'
+    "Lapangan Olahraga",
+    "Gelanggang Olahraga",
+    "Taman Bermain",
+    "Tempat Wisata",
+    "Lainnya",
   ],
-  pemakaman: [
-    'TPU Muslim',
-    'TPU Non Muslim',
-    'Lainnya'
-  ],
-  pertamanan: [
-    'Taman',
-    'RTH',
-    'Hutan Kota',
-    'Lainnya'
-  ],
-  parkir: [
-    'Kantong Parkir',
-    'Area Parkir',
-    'Lainnya'
-  ]
-}
+  pemakaman: ["TPU Muslim", "TPU Non Muslim", "Lainnya"],
+  pertamanan: ["Taman", "RTH", "Hutan Kota", "Lainnya"],
+  parkir: ["Kantong Parkir", "Area Parkir", "Lainnya"],
+};
 
 const facilitySections = [
   {
-    key: 'perniagaan',
-    title: 'Sarana Perniagaan/Perbelanjaan',
-    typeLabel: 'Tipe Sarana',
-    nameLabel: 'Nama Sarana',
-    typeItems: facilityTypeOptions.perniagaan
+    key: "perniagaan",
+    title: "Sarana Perniagaan/Perbelanjaan",
+    typeLabel: "Tipe Sarana",
+    nameLabel: "Nama Sarana",
+    typeItems: facilityTypeOptions.perniagaan,
   },
   {
-    key: 'pelayananUmum',
-    title: 'Sarana Pelayanan Umum dan Pemerintahan',
-    typeLabel: 'Tipe Sarana',
-    nameLabel: 'Nama Sarana',
-    typeItems: facilityTypeOptions.pelayananUmum
+    key: "pelayananUmum",
+    title: "Sarana Pelayanan Umum dan Pemerintahan",
+    typeLabel: "Tipe Sarana",
+    nameLabel: "Nama Sarana",
+    typeItems: facilityTypeOptions.pelayananUmum,
   },
   {
-    key: 'pendidikan',
-    title: 'Sarana Pendidikan',
-    typeLabel: 'Tipe Sarana Pendidikan',
-    nameLabel: 'Nama Sarana Pendidikan',
-    typeItems: facilityTypeOptions.pendidikan
+    key: "pendidikan",
+    title: "Sarana Pendidikan",
+    typeLabel: "Tipe Sarana Pendidikan",
+    nameLabel: "Nama Sarana Pendidikan",
+    typeItems: facilityTypeOptions.pendidikan,
   },
   {
-    key: 'kesehatan',
-    title: 'Sarana Kesehatan',
-    typeLabel: 'Tipe Sarana Kesehatan',
-    nameLabel: 'Nama Sarana Kesehatan',
-    typeItems: facilityTypeOptions.kesehatan
+    key: "kesehatan",
+    title: "Sarana Kesehatan",
+    typeLabel: "Tipe Sarana Kesehatan",
+    nameLabel: "Nama Sarana Kesehatan",
+    typeItems: facilityTypeOptions.kesehatan,
   },
   {
-    key: 'peribadatan',
-    title: 'Sarana Peribadatan',
-    typeLabel: 'Tipe Sarana Peribadatan',
-    nameLabel: 'Nama Tempat Ibadah',
-    typeItems: facilityTypeOptions.peribadatan
+    key: "peribadatan",
+    title: "Sarana Peribadatan",
+    typeLabel: "Tipe Sarana Peribadatan",
+    nameLabel: "Nama Tempat Ibadah",
+    typeItems: facilityTypeOptions.peribadatan,
   },
   {
-    key: 'rekreasi',
-    title: 'Sarana Rekreasi dan Olahraga',
-    typeLabel: 'Tipe Sarana Rekreasi',
-    nameLabel: 'Nama Sarana Rekreasi/Olahraga',
-    typeItems: facilityTypeOptions.rekreasi
+    key: "rekreasi",
+    title: "Sarana Rekreasi dan Olahraga",
+    typeLabel: "Tipe Sarana Rekreasi",
+    nameLabel: "Nama Sarana Rekreasi/Olahraga",
+    typeItems: facilityTypeOptions.rekreasi,
   },
   {
-    key: 'pemakaman',
-    title: 'Sarana Pemakaman',
-    typeLabel: 'Tipe Sarana Pemakaman',
-    nameLabel: 'Nama Area Pemakaman',
-    typeItems: facilityTypeOptions.pemakaman
+    key: "pemakaman",
+    title: "Sarana Pemakaman",
+    typeLabel: "Tipe Sarana Pemakaman",
+    nameLabel: "Nama Area Pemakaman",
+    typeItems: facilityTypeOptions.pemakaman,
   },
   {
-    key: 'pertamanan',
-    title: 'Sarana Pertamanan dan Ruang Terbuka Hijau (RTH)',
-    typeLabel: 'Tipe Sarana Pertamanan',
-    nameLabel: 'Nama Taman/RTH',
-    typeItems: facilityTypeOptions.pertamanan
+    key: "pertamanan",
+    title: "Sarana Pertamanan dan Ruang Terbuka Hijau (RTH)",
+    typeLabel: "Tipe Sarana Pertamanan",
+    nameLabel: "Nama Taman/RTH",
+    typeItems: facilityTypeOptions.pertamanan,
   },
   {
-    key: 'parkir',
-    title: 'Sarana Parkir',
-    typeLabel: 'Tipe Sarana Parkir',
-    nameLabel: 'Nama Sarana Parkir',
-    typeItems: facilityTypeOptions.parkir
-  }
-]
+    key: "parkir",
+    title: "Sarana Parkir",
+    typeLabel: "Tipe Sarana Parkir",
+    nameLabel: "Nama Sarana Parkir",
+    typeItems: facilityTypeOptions.parkir,
+  },
+];
 
 const angkutanUmumOptions = [
-  'Bus',
-  'Angkot',
-  'Lainnya (misalnya perahu, kapal laut)'
-]
+  "Bus",
+  "Angkot",
+  "Lainnya (misalnya perahu, kapal laut)",
+];
 
-const pengelolaOptions = [
-  'Pemkab/Kota',
-  'Kecamatan',
-  'Pemdes',
-  'Swasta'
-]
+const pengelolaOptions = ["Pemkab/Kota", "Kecamatan", "Pemdes", "Swasta"];
 
 const surveyPeriodOptions = [
-  { title: 'Q1 (Januari - Maret)', value: 'q1' },
-  { title: 'Q2 (April - Juni)', value: 'q2' },
-  { title: 'Q3 (Juli - September)', value: 'q3' },
-  { title: 'Q4 (Oktober - Desember)', value: 'q4' },
+  { title: "Q1 (Januari - Maret)", value: "q1" },
+  { title: "Q2 (April - Juni)", value: "q2" },
+  { title: "Q3 (Juli - September)", value: "q3" },
+  { title: "Q4 (Oktober - Desember)", value: "q4" },
   // { title: 'Tahunan', value: 'annual' },
   // { title: 'Ad Hoc', value: 'adhoc' }
-]
+];
 
 // Location options
-const provinceOptions = ref([])
-const regencyOptions = ref([])
-const districtOptions = ref([])
-const villageOptions = ref([])
+const provinceOptions = ref([]);
+const regencyOptions = ref([]);
+const districtOptions = ref([]);
+const villageOptions = ref([]);
 
-const YEAR_MIN = 1900
-const YEAR_MAX = new Date().getFullYear()
-const POPULATION_MIN = 0
-const POPULATION_MAX = 200000
-const HOUSEHOLD_MIN = 0
-const HOUSEHOLD_MAX = 50000
-const HOUSE_MIN = 0
-const HOUSE_MAX = 50000
-const OPERATOR_MIN = 0
-const OPERATOR_MAX = 50
-const FACILITY_MIN = 0
-const FACILITY_MAX = 200
-const UTILITY_MIN = 0
-const UTILITY_MAX = 5000
-const YEAR_HINT = `${YEAR_MIN}-${YEAR_MAX}`
-const POPULATION_HINT = `${POPULATION_MIN}-${POPULATION_MAX}`
-const HOUSEHOLD_HINT = `${HOUSEHOLD_MIN}-${HOUSEHOLD_MAX}`
-const HOUSE_HINT = `${HOUSE_MIN}-${HOUSE_MAX}`
-const OPERATOR_HINT = `${OPERATOR_MIN}-${OPERATOR_MAX}`
-const FACILITY_HINT = `${FACILITY_MIN}-${FACILITY_MAX}`
-const UTILITY_HINT = `${UTILITY_MIN}-${UTILITY_MAX}`
+const YEAR_MIN = 1900;
+const YEAR_MAX = new Date().getFullYear();
+const POPULATION_MIN = 0;
+const POPULATION_MAX = 200000;
+const HOUSEHOLD_MIN = 0;
+const HOUSEHOLD_MAX = 50000;
+const HOUSE_MIN = 0;
+const HOUSE_MAX = 50000;
+const OPERATOR_MIN = 0;
+const OPERATOR_MAX = 50;
+const FACILITY_MIN = 0;
+const FACILITY_MAX = 200;
+const UTILITY_MIN = 0;
+const UTILITY_MAX = 5000;
+const YEAR_HINT = `${YEAR_MIN}-${YEAR_MAX}`;
+const POPULATION_HINT = `${POPULATION_MIN}-${POPULATION_MAX}`;
+const HOUSEHOLD_HINT = `${HOUSEHOLD_MIN}-${HOUSEHOLD_MAX}`;
+const HOUSE_HINT = `${HOUSE_MIN}-${HOUSE_MAX}`;
+const OPERATOR_HINT = `${OPERATOR_MIN}-${OPERATOR_MAX}`;
+const FACILITY_HINT = `${FACILITY_MIN}-${FACILITY_MAX}`;
+const UTILITY_HINT = `${UTILITY_MIN}-${UTILITY_MAX}`;
 
 const locationLoading = reactive({
   provinces: false,
   regencies: false,
   districts: false,
   villages: false,
-  isSyncing: false
-})
+  isSyncing: false,
+});
 
-const appStore = useAppStore()
-const isAdminDesa = computed(() => appStore.isAdminDesa)
+const appStore = useAppStore();
+const isAdminDesa = computed(() => appStore.isAdminDesa);
 
 // Validation rules
 const rules = {
-  required: (value) => !!value || 'Field ini wajib diisi',
+  required: (value) => !!value || "Field ini wajib diisi",
   yearRange: (value) => {
-    if (value === null || value === '') return true
-    const year = Number(value)
-    if (Number.isNaN(year)) return 'Tahun tidak valid'
-    return (year >= YEAR_MIN && year <= YEAR_MAX) || `Tahun harus ${YEAR_MIN}-${YEAR_MAX}`
+    if (value === null || value === "") return true;
+    const year = Number(value);
+    if (Number.isNaN(year)) return "Tahun tidak valid";
+    return (
+      (year >= YEAR_MIN && year <= YEAR_MAX) ||
+      `Tahun harus ${YEAR_MIN}-${YEAR_MAX}`
+    );
   },
   populationRange: (value) => {
-    if (value === null || value === '') return true
-    const num = Number(value)
-    if (Number.isNaN(num)) return 'Nilai harus berupa angka'
-    return (num >= POPULATION_MIN && num <= POPULATION_MAX) || `Nilai harus ${POPULATION_MIN}-${POPULATION_MAX}`
+    if (value === null || value === "") return true;
+    const num = Number(value);
+    if (Number.isNaN(num)) return "Nilai harus berupa angka";
+    return (
+      (num >= POPULATION_MIN && num <= POPULATION_MAX) ||
+      `Nilai harus ${POPULATION_MIN}-${POPULATION_MAX}`
+    );
   },
   householdRange: (value) => {
-    if (value === null || value === '') return true
-    const num = Number(value)
-    if (Number.isNaN(num)) return 'Nilai harus berupa angka'
-    return (num >= HOUSEHOLD_MIN && num <= HOUSEHOLD_MAX) || `Nilai harus ${HOUSEHOLD_MIN}-${HOUSEHOLD_MAX}`
+    if (value === null || value === "") return true;
+    const num = Number(value);
+    if (Number.isNaN(num)) return "Nilai harus berupa angka";
+    return (
+      (num >= HOUSEHOLD_MIN && num <= HOUSEHOLD_MAX) ||
+      `Nilai harus ${HOUSEHOLD_MIN}-${HOUSEHOLD_MAX}`
+    );
   },
   householdRequired: (value) => {
-    if (!isAdminDesa.value) return true
-    const num = Number(value)
+    if (!isAdminDesa.value) return true;
+    const num = Number(value);
     if (!value || Number.isNaN(num) || num <= 0) {
-      return 'Jumlah KK desa wajib diisi untuk sinkronisasi data statistik.'
+      return "Jumlah KK desa wajib diisi untuk sinkronisasi data statistik.";
     }
-    return true
+    return true;
   },
   houseRange: (value) => {
-    if (value === null || value === '') return true
-    const num = Number(value)
-    if (Number.isNaN(num)) return 'Nilai harus berupa angka'
-    return (num >= HOUSE_MIN && num <= HOUSE_MAX) || `Nilai harus ${HOUSE_MIN}-${HOUSE_MAX}`
+    if (value === null || value === "") return true;
+    const num = Number(value);
+    if (Number.isNaN(num)) return "Nilai harus berupa angka";
+    return (
+      (num >= HOUSE_MIN && num <= HOUSE_MAX) ||
+      `Nilai harus ${HOUSE_MIN}-${HOUSE_MAX}`
+    );
   },
   operatorRange: (value) => {
-    if (value === null || value === '') return true
-    const num = Number(value)
-    if (Number.isNaN(num)) return 'Nilai harus berupa angka'
-    return (num >= OPERATOR_MIN && num <= OPERATOR_MAX) || `Nilai harus ${OPERATOR_MIN}-${OPERATOR_MAX}`
+    if (value === null || value === "") return true;
+    const num = Number(value);
+    if (Number.isNaN(num)) return "Nilai harus berupa angka";
+    return (
+      (num >= OPERATOR_MIN && num <= OPERATOR_MAX) ||
+      `Nilai harus ${OPERATOR_MIN}-${OPERATOR_MAX}`
+    );
   },
   facilityRange: (value) => {
-    if (value === null || value === '') return true
-    const num = Number(value)
-    if (Number.isNaN(num)) return 'Nilai harus berupa angka'
-    return (num >= FACILITY_MIN && num <= FACILITY_MAX) || `Nilai harus ${FACILITY_MIN}-${FACILITY_MAX}`
+    if (value === null || value === "") return true;
+    const num = Number(value);
+    if (Number.isNaN(num)) return "Nilai harus berupa angka";
+    return (
+      (num >= FACILITY_MIN && num <= FACILITY_MAX) ||
+      `Nilai harus ${FACILITY_MIN}-${FACILITY_MAX}`
+    );
   },
   utilityRange: (value) => {
-    if (value === null || value === '') return true
-    const num = Number(value)
-    if (Number.isNaN(num)) return 'Nilai harus berupa angka'
-    return (num >= UTILITY_MIN && num <= UTILITY_MAX) || `Nilai harus ${UTILITY_MIN}-${UTILITY_MAX}`
-  }
-}
+    if (value === null || value === "") return true;
+    const num = Number(value);
+    if (Number.isNaN(num)) return "Nilai harus berupa angka";
+    return (
+      (num >= UTILITY_MIN && num <= UTILITY_MAX) ||
+      `Nilai harus ${UTILITY_MIN}-${UTILITY_MAX}`
+    );
+  },
+};
 
-const sanitizeDigits = (value) => String(value ?? '').replace(/\D/g, '')
+const sanitizeDigits = (value) => String(value ?? "").replace(/\D/g, "");
 const isHouseholdCountValid = computed(() => {
-  if (!isAdminDesa.value) return true
-  const value = Number(formData.profil.jumlahKK)
-  return Number.isFinite(value) && value > 0
-})
+  if (!isAdminDesa.value) return true;
+  const value = Number(formData.profil.jumlahKK);
+  return Number.isFinite(value) && value > 0;
+});
 
 // Reactive state
-const currentStep = ref(1)
-const isSubmitting = ref(false)
-const formRef = ref(null)
-const errorMessage = ref('')
-const locationPickerOpen = ref(false)
-const locationPickerLat = ref(null)
-const locationPickerLng = ref(null)
-const locationSyncMessage = ref('')
-const locationSyncType = ref('info')
-const locationSelectError = ref('')
-const isProgrammaticLocationSync = ref(false)
+const currentStep = ref(1);
+const isSubmitting = ref(false);
+const formRef = ref(null);
+const errorMessage = ref("");
+const locationPickerOpen = ref(false);
+const locationPickerLat = ref(null);
+const locationPickerLng = ref(null);
+const locationSyncMessage = ref("");
+const locationSyncType = ref("info");
+const locationSelectError = ref("");
+const isProgrammaticLocationSync = ref(false);
 
 const validateFacilityRows = () => {
   const invalid = facilitySections.find((section) => {
-    const list = formData[section.key] || []
-    return list.some((item) => (item.name && !item.type) || (item.type && !item.name))
-  })
+    const list = formData[section.key] || [];
+    return list.some(
+      (item) => (item.name && !item.type) || (item.type && !item.name)
+    );
+  });
 
   if (invalid) {
-    errorMessage.value = 'Lengkapi tipe dan nama sarana pada semua baris.'
-    return false
+    errorMessage.value = "Lengkapi tipe dan nama sarana pada semua baris.";
+    return false;
   }
 
-  return true
-}
+  return true;
+};
 
 // Methods
 const nextStep = () => {
   if (currentStep.value < steps.length) {
     if (currentStep.value === 1 && !validateFacilityRows()) {
-      return
+      return;
     }
-    currentStep.value++
+    currentStep.value++;
   }
-}
+};
 
 const previousStep = () => {
   if (currentStep.value > 1) {
-    currentStep.value--
+    currentStep.value--;
   }
-}
+};
 
 // Location fetch functions
 const fetchProvinces = async () => {
-  locationLoading.provinces = true
-  locationSelectError.value = ''
+  locationLoading.provinces = true;
+  locationSelectError.value = "";
   try {
-    const response = await locationAPI.getProvinces()
+    const response = await locationAPI.getProvinces();
     if (response.success && response.data?.provinces) {
-      provinceOptions.value = response.data.provinces.map(province => ({
+      provinceOptions.value = response.data.provinces.map((province) => ({
         id: province.id,
         name: province.name,
-        code: province.code
-      }))
+        code: province.code,
+      }));
       if (!provinceOptions.value.length) {
-        locationSelectError.value = 'Data provinsi belum tersedia.'
+        locationSelectError.value = "Data provinsi belum tersedia.";
       }
     }
   } catch (error) {
-    console.error('Error fetching provinces:', error)
-    locationSelectError.value = error?.message || 'Gagal memuat data provinsi.'
+    console.error("Error fetching provinces:", error);
+    locationSelectError.value = error?.message || "Gagal memuat data provinsi.";
   } finally {
-    locationLoading.provinces = false
+    locationLoading.provinces = false;
   }
-}
+};
 
 const fetchRegencies = async (provinceId) => {
-  if (!provinceId) return
-  locationLoading.regencies = true
-  locationSelectError.value = ''
+  if (!provinceId) return;
+  locationLoading.regencies = true;
+  locationSelectError.value = "";
   try {
-    const response = await locationAPI.getRegencies(provinceId)
+    const response = await locationAPI.getRegencies(provinceId);
     if (response.success && response.data?.regencies) {
-      regencyOptions.value = response.data.regencies.map(regency => ({
+      regencyOptions.value = response.data.regencies.map((regency) => ({
         id: regency.id,
         name: regency.name,
-        code: regency.code
-      }))
+        code: regency.code,
+      }));
       if (!regencyOptions.value.length) {
-        locationSelectError.value = 'Data kabupaten/kota belum tersedia untuk provinsi ini.'
+        locationSelectError.value =
+          "Data kabupaten/kota belum tersedia untuk provinsi ini.";
       }
     }
   } catch (error) {
-    console.error('Error fetching regencies:', error)
-    locationSelectError.value = error?.message || 'Gagal memuat data kabupaten/kota.'
+    console.error("Error fetching regencies:", error);
+    locationSelectError.value =
+      error?.message || "Gagal memuat data kabupaten/kota.";
   } finally {
-    locationLoading.regencies = false
+    locationLoading.regencies = false;
   }
-}
+};
 
 const fetchDistricts = async (regencyId) => {
-  if (!regencyId) return
-  locationLoading.districts = true
-  locationSelectError.value = ''
+  if (!regencyId) return;
+  locationLoading.districts = true;
+  locationSelectError.value = "";
   try {
-    const response = await locationAPI.getDistricts(regencyId)
+    const response = await locationAPI.getDistricts(regencyId);
     if (response.success && response.data?.districts) {
-      districtOptions.value = response.data.districts.map(district => ({
+      districtOptions.value = response.data.districts.map((district) => ({
         id: district.id,
         name: district.name,
-        code: district.code
-      }))
+        code: district.code,
+      }));
       if (!districtOptions.value.length) {
-        locationSelectError.value = 'Data kecamatan belum tersedia untuk kabupaten/kota ini.'
+        locationSelectError.value =
+          "Data kecamatan belum tersedia untuk kabupaten/kota ini.";
       }
     }
   } catch (error) {
-    console.error('Error fetching districts:', error)
-    locationSelectError.value = error?.message || 'Gagal memuat data kecamatan.'
+    console.error("Error fetching districts:", error);
+    locationSelectError.value =
+      error?.message || "Gagal memuat data kecamatan.";
   } finally {
-    locationLoading.districts = false
+    locationLoading.districts = false;
   }
-}
+};
 
 const fetchVillages = async (districtId) => {
-  if (!districtId) return
-  locationLoading.villages = true
-  locationSelectError.value = ''
+  if (!districtId) return;
+  locationLoading.villages = true;
+  locationSelectError.value = "";
   try {
-    const response = await locationAPI.getVillages(districtId)
+    const response = await locationAPI.getVillages(districtId);
     if (response.success && response.data?.villages) {
-      villageOptions.value = response.data.villages.map(village => ({
+      villageOptions.value = response.data.villages.map((village) => ({
         id: village.id,
         name: village.name,
-        code: village.code
-      }))
+        code: village.code,
+      }));
       if (!villageOptions.value.length) {
-        locationSelectError.value = 'Data kelurahan belum tersedia untuk kecamatan ini.'
+        locationSelectError.value =
+          "Data kelurahan belum tersedia untuk kecamatan ini.";
       }
     }
   } catch (error) {
-    console.error('Error fetching villages:', error)
-    locationSelectError.value = error?.message || 'Gagal memuat data kelurahan.'
+    console.error("Error fetching villages:", error);
+    locationSelectError.value =
+      error?.message || "Gagal memuat data kelurahan.";
   } finally {
-    locationLoading.villages = false
+    locationLoading.villages = false;
   }
-}
+};
 
 const ensureOption = (listRef, option) => {
-  const optionId = resolveLocationId(option)
-  if (!optionId) return null
-  const existing = listRef.value.find((item) => item.id === optionId)
+  const optionId = resolveLocationId(option);
+  if (!optionId) return null;
+  const existing = listRef.value.find((item) => item.id === optionId);
   if (existing) {
-    return existing
+    return existing;
   }
   const normalized = {
     id: optionId,
-    name: option.name || option.label || option.title || option.text || option.nama || 'Tanpa Nama'
-  }
-  listRef.value = [...listRef.value, normalized]
-  return normalized
-}
+    name:
+      option.name ||
+      option.label ||
+      option.title ||
+      option.text ||
+      option.nama ||
+      "Tanpa Nama",
+  };
+  listRef.value = [...listRef.value, normalized];
+  return normalized;
+};
 
-const setLocationHierarchy = async ({ province, regency, district, village }) => {
+const setLocationHierarchy = async ({
+  province,
+  regency,
+  district,
+  village,
+}) => {
   if (!province && !regency && !district && !village) {
-    return
+    return;
   }
 
-  isProgrammaticLocationSync.value = true
+  isProgrammaticLocationSync.value = true;
   try {
-    const provinceId = resolveLocationId(province)
+    const provinceId = resolveLocationId(province);
     if (provinceId) {
-      const normalizedProvince = ensureOption(provinceOptions, province)
-      formData.location.province = normalizedProvince
-      await fetchRegencies(provinceId)
+      const normalizedProvince = ensureOption(provinceOptions, province);
+      formData.location.province = normalizedProvince;
+      await fetchRegencies(provinceId);
     }
 
-    const regencyId = resolveLocationId(regency)
+    const regencyId = resolveLocationId(regency);
     if (regencyId) {
-      const parentProvinceId = regency?.parentId || provinceId || formData.location.province?.id
+      const parentProvinceId =
+        regency?.parentId || provinceId || formData.location.province?.id;
       if (parentProvinceId && !regencyOptions.value.length) {
-        await fetchRegencies(parentProvinceId)
+        await fetchRegencies(parentProvinceId);
       }
-      const normalizedRegency = ensureOption(regencyOptions, regency)
-      formData.location.regency = normalizedRegency
-      await fetchDistricts(regencyId)
+      const normalizedRegency = ensureOption(regencyOptions, regency);
+      formData.location.regency = normalizedRegency;
+      await fetchDistricts(regencyId);
     }
 
-    const districtId = resolveLocationId(district)
+    const districtId = resolveLocationId(district);
     if (districtId) {
-      const parentRegencyId = district?.parentId || regencyId || formData.location.regency?.id
+      const parentRegencyId =
+        district?.parentId || regencyId || formData.location.regency?.id;
       if (parentRegencyId && !districtOptions.value.length) {
-        await fetchDistricts(parentRegencyId)
+        await fetchDistricts(parentRegencyId);
       }
-      const normalizedDistrict = ensureOption(districtOptions, district)
-      formData.location.district = normalizedDistrict
-      await fetchVillages(districtId)
+      const normalizedDistrict = ensureOption(districtOptions, district);
+      formData.location.district = normalizedDistrict;
+      await fetchVillages(districtId);
     }
 
-    const villageId = resolveLocationId(village)
+    const villageId = resolveLocationId(village);
     if (villageId) {
-      const parentDistrictId = village?.parentId || districtId || formData.location.district?.id
+      const parentDistrictId =
+        village?.parentId || districtId || formData.location.district?.id;
       if (parentDistrictId && !villageOptions.value.length) {
-        await fetchVillages(parentDistrictId)
+        await fetchVillages(parentDistrictId);
       }
-      const normalizedVillage = ensureOption(villageOptions, village)
-      formData.location.village = normalizedVillage
+      const normalizedVillage = ensureOption(villageOptions, village);
+      formData.location.village = normalizedVillage;
     }
   } finally {
-    isProgrammaticLocationSync.value = false
+    isProgrammaticLocationSync.value = false;
   }
-}
+};
 
 const applyLocationResult = async (result) => {
   if (!result) {
-    throw new Error('Data lokasi tidak tersedia.')
+    throw new Error("Data lokasi tidak tersedia.");
   }
 
   await setLocationHierarchy({
     province: result.province,
     regency: result.regency,
     district: result.district,
-    village: result.village
-  })
+    village: result.village,
+  });
 
   if (result.village?.name) {
-    formData.profil.namaDesa = result.village.name
+    formData.profil.namaDesa = result.village.name;
   }
-}
+};
 
 const reverseGeocode = async (latitude, longitude) => {
   try {
-    const response = await locationAPI.reverseGeocode(latitude, longitude)
+    const response = await locationAPI.reverseGeocode(latitude, longitude);
     if (response.success && response.data) {
-      const mapped = mapReverseGeocodeResponse(response.data)
+      const mapped = mapReverseGeocodeResponse(response.data);
       if (!mapped?.province?.id) {
-        locationSyncType.value = 'error'
-        locationSyncMessage.value = 'Data lokasi tidak lengkap. Silakan pilih lokasi secara manual.'
-        throw new Error('Data lokasi tidak lengkap.')
+        locationSyncType.value = "error";
+        locationSyncMessage.value =
+          "Data lokasi tidak lengkap. Silakan pilih lokasi secara manual.";
+        throw new Error("Data lokasi tidak lengkap.");
       }
-      return mapped
+      return mapped;
     }
 
-    if (response?.code === 'OUTSIDE_BOUNDARY') {
-      locationSyncType.value = 'error'
-      locationSyncMessage.value = 'Lokasi di luar wilayah kerja.'
-      throw new Error('Lokasi di luar wilayah kerja.')
+    if (response?.code === "OUTSIDE_BOUNDARY") {
+      locationSyncType.value = "error";
+      locationSyncMessage.value = "Lokasi di luar wilayah kerja.";
+      throw new Error("Lokasi di luar wilayah kerja.");
     }
 
-    locationSyncType.value = 'error'
+    locationSyncType.value = "error";
     locationSyncMessage.value =
-      response?.message || 'Lokasi tidak ditemukan. Silakan pilih lokasi secara manual.'
-    throw new Error(response?.message || 'Reverse geocode gagal.')
+      response?.message ||
+      "Lokasi tidak ditemukan. Silakan pilih lokasi secara manual.";
+    throw new Error(response?.message || "Reverse geocode gagal.");
   } catch (error) {
-    if (error?.code === 'OUTSIDE_BOUNDARY') {
-      locationSyncType.value = 'error'
-      locationSyncMessage.value = 'Lokasi di luar wilayah kerja.'
+    if (error?.code === "OUTSIDE_BOUNDARY") {
+      locationSyncType.value = "error";
+      locationSyncMessage.value = "Lokasi di luar wilayah kerja.";
     }
     if (!locationSyncMessage.value) {
-      locationSyncType.value = 'error'
+      locationSyncType.value = "error";
       locationSyncMessage.value =
-        error?.message || 'Lokasi tidak ditemukan. Silakan pilih lokasi secara manual.'
+        error?.message ||
+        "Lokasi tidak ditemukan. Silakan pilih lokasi secara manual.";
     }
-    throw error
+    throw error;
   }
-}
+};
 
 const openLocationPicker = () => {
-  locationSyncMessage.value = ''
-  locationSyncType.value = 'info'
+  locationSyncMessage.value = "";
+  locationSyncType.value = "info";
 
-  const manualLat = parseFloat(formData.location.latitude)
-  const manualLng = parseFloat(formData.location.longitude)
+  const manualLat = parseFloat(formData.location.latitude);
+  const manualLng = parseFloat(formData.location.longitude);
   if (Number.isFinite(manualLat) && Number.isFinite(manualLng)) {
-    locationPickerLat.value = manualLat
-    locationPickerLng.value = manualLng
-    locationPickerOpen.value = true
-    return
+    locationPickerLat.value = manualLat;
+    locationPickerLng.value = manualLng;
+    locationPickerOpen.value = true;
+    return;
   }
 
-  if (typeof navigator === 'undefined' || !navigator.geolocation) {
-    locationSyncType.value = 'error'
-    locationSyncMessage.value = 'Browser Anda tidak mendukung fitur geolokasi.'
-    locationPickerLat.value = null
-    locationPickerLng.value = null
-    locationPickerOpen.value = true
-    return
+  if (typeof navigator === "undefined" || !navigator.geolocation) {
+    locationSyncType.value = "error";
+    locationSyncMessage.value = "Browser Anda tidak mendukung fitur geolokasi.";
+    locationPickerLat.value = null;
+    locationPickerLng.value = null;
+    locationPickerOpen.value = true;
+    return;
   }
 
-  locationLoading.isSyncing = true
+  locationLoading.isSyncing = true;
   navigator.geolocation.getCurrentPosition(
     ({ coords }) => {
-      locationPickerLat.value = coords.latitude
-      locationPickerLng.value = coords.longitude
-      locationPickerOpen.value = true
-      locationLoading.isSyncing = false
+      locationPickerLat.value = coords.latitude;
+      locationPickerLng.value = coords.longitude;
+      locationPickerOpen.value = true;
+      locationLoading.isSyncing = false;
     },
     (error) => {
-      locationLoading.isSyncing = false
-      locationSyncType.value = 'error'
-      let errorMessage = 'Izin lokasi ditolak atau tidak tersedia.'
+      locationLoading.isSyncing = false;
+      locationSyncType.value = "error";
+      let errorMessage = "Izin lokasi ditolak atau tidak tersedia.";
       switch (error.code) {
         case error.PERMISSION_DENIED:
-          errorMessage = 'Izin lokasi ditolak. Silakan izinkan akses lokasi di pengaturan browser Anda.'
-          break
+          errorMessage =
+            "Izin lokasi ditolak. Silakan izinkan akses lokasi di pengaturan browser Anda.";
+          break;
         case error.POSITION_UNAVAILABLE:
-          errorMessage = 'Informasi lokasi tidak tersedia. Silakan geser pin secara manual.'
-          break
+          errorMessage =
+            "Informasi lokasi tidak tersedia. Silakan geser pin secara manual.";
+          break;
         case error.TIMEOUT:
-          errorMessage = 'Waktu permintaan lokasi habis. Silakan coba lagi.'
-          break
+          errorMessage = "Waktu permintaan lokasi habis. Silakan coba lagi.";
+          break;
         default:
-          errorMessage = 'Terjadi kesalahan saat mengambil lokasi.'
-          break
+          errorMessage = "Terjadi kesalahan saat mengambil lokasi.";
+          break;
       }
-      locationSyncMessage.value = errorMessage
-      locationPickerLat.value = null
-      locationPickerLng.value = null
-      locationPickerOpen.value = true
+      locationSyncMessage.value = errorMessage;
+      locationPickerLat.value = null;
+      locationPickerLng.value = null;
+      locationPickerOpen.value = true;
     },
     {
       enableHighAccuracy: true,
       timeout: 10000,
-      maximumAge: 0
+      maximumAge: 0,
     }
-  )
-}
+  );
+};
 
 const handleLocationPicked = async ({ latitude, longitude }) => {
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-    locationSyncType.value = 'error'
-    locationSyncMessage.value = 'Koordinat tidak valid. Silakan pilih ulang di peta.'
-    return
+    locationSyncType.value = "error";
+    locationSyncMessage.value =
+      "Koordinat tidak valid. Silakan pilih ulang di peta.";
+    return;
   }
 
-  formData.location.latitude = parseFloat(latitude.toFixed(6))
-  formData.location.longitude = parseFloat(longitude.toFixed(6))
-  locationLoading.isSyncing = true
+  formData.location.latitude = parseFloat(latitude.toFixed(6));
+  formData.location.longitude = parseFloat(longitude.toFixed(6));
+  locationLoading.isSyncing = true;
 
   try {
-    const result = await reverseGeocode(latitude, longitude)
-    await applyLocationResult(result)
-    locationSyncType.value = 'success'
-    locationSyncMessage.value = 'Lokasi berhasil disinkronkan dari peta.'
+    const result = await reverseGeocode(latitude, longitude);
+    await applyLocationResult(result);
+    locationSyncType.value = "success";
+    locationSyncMessage.value = "Lokasi berhasil disinkronkan dari peta.";
   } catch (error) {
-    console.error('Location sync error:', error)
-    locationSyncType.value = 'error'
+    console.error("Location sync error:", error);
+    locationSyncType.value = "error";
     locationSyncMessage.value =
-      error?.message || 'Gagal menyinkronkan lokasi berdasarkan titik peta.'
+      error?.message || "Gagal menyinkronkan lokasi berdasarkan titik peta.";
   } finally {
-    locationLoading.isSyncing = false
+    locationLoading.isSyncing = false;
   }
-}
+};
 
 // Watchers for cascaded location dropdowns
 watch(
   () => formData.location.province,
   async (province) => {
-    if (isProgrammaticLocationSync.value) return
-    locationSelectError.value = ''
-    locationSyncMessage.value = ''
-    formData.location.latitude = null
-    formData.location.longitude = null
-    formData.location.regency = null
-    formData.location.district = null
-    formData.location.village = null
-    regencyOptions.value = []
-    districtOptions.value = []
-    villageOptions.value = []
-    const provinceId = resolveLocationId(province)
+    if (isProgrammaticLocationSync.value) return;
+    locationSelectError.value = "";
+    locationSyncMessage.value = "";
+    formData.location.latitude = null;
+    formData.location.longitude = null;
+    formData.location.regency = null;
+    formData.location.district = null;
+    formData.location.village = null;
+    regencyOptions.value = [];
+    districtOptions.value = [];
+    villageOptions.value = [];
+    const provinceId = resolveLocationId(province);
     if (provinceId) {
-      await fetchRegencies(provinceId)
+      await fetchRegencies(provinceId);
     }
   }
-)
+);
 
 watch(
   () => formData.location.regency,
   async (regency) => {
-    if (isProgrammaticLocationSync.value) return
-    locationSelectError.value = ''
-    locationSyncMessage.value = ''
-    formData.location.latitude = null
-    formData.location.longitude = null
-    formData.location.district = null
-    formData.location.village = null
-    districtOptions.value = []
-    villageOptions.value = []
-    const regencyId = resolveLocationId(regency)
+    if (isProgrammaticLocationSync.value) return;
+    locationSelectError.value = "";
+    locationSyncMessage.value = "";
+    formData.location.latitude = null;
+    formData.location.longitude = null;
+    formData.location.district = null;
+    formData.location.village = null;
+    districtOptions.value = [];
+    villageOptions.value = [];
+    const regencyId = resolveLocationId(regency);
     if (regencyId) {
-      await fetchDistricts(regencyId)
+      await fetchDistricts(regencyId);
     }
   }
-)
+);
 
 watch(
   () => formData.location.district,
   async (district) => {
-    if (isProgrammaticLocationSync.value) return
-    locationSelectError.value = ''
-    locationSyncMessage.value = ''
-    formData.location.latitude = null
-    formData.location.longitude = null
-    formData.location.village = null
-    villageOptions.value = []
-    const districtId = resolveLocationId(district)
+    if (isProgrammaticLocationSync.value) return;
+    locationSelectError.value = "";
+    locationSyncMessage.value = "";
+    formData.location.latitude = null;
+    formData.location.longitude = null;
+    formData.location.village = null;
+    villageOptions.value = [];
+    const districtId = resolveLocationId(district);
     if (districtId) {
-      await fetchVillages(districtId)
+      await fetchVillages(districtId);
     }
   }
-)
+);
 
 const sanitizeFacilityItems = (items) => {
-  if (!Array.isArray(items)) return []
+  if (!Array.isArray(items)) return [];
   return items
     .map((item) => {
-      const type = String(item.type || '').trim()
-      const name = String(item.name || '').trim()
-      const payload = { type, name }
+      const type = String(item.type || "").trim();
+      const name = String(item.name || "").trim();
+      const payload = { type, name };
       if (item.id) {
-        payload.id = item.id
+        payload.id = item.id;
       }
-      return payload
+      return payload;
     })
-    .filter((item) => item.name.length > 0 && item.type.length > 0)
-}
+    .filter((item) => item.name.length > 0 && item.type.length > 0);
+};
 
 const mapFacilityItemsFromSurvey = (items) => {
-  if (!Array.isArray(items)) return [createFacilityItem()]
+  if (!Array.isArray(items)) return [createFacilityItem()];
   const mapped = items
-    .map((item) => createFacilityItem({
-      id: item.id,
-      type: item.type,
-      name: item.name
-    }))
-    .filter((item) => item.name || item.type)
-  return mapped.length ? mapped : [createFacilityItem()]
-}
+    .map((item) =>
+      createFacilityItem({
+        id: item.id,
+        type: item.type,
+        name: item.name,
+      })
+    )
+    .filter((item) => item.name || item.type);
+  return mapped.length ? mapped : [createFacilityItem()];
+};
 
 // Helper function to map pengelola
 const mapPengelola = (pengelola) => {
   const mapping = {
-    'Pemkab/Kota': 'pemkab',
-    'Kecamatan': 'kecamatan',
-    'Pemdes': 'pemdes',
-    'Swasta': 'swasta'
-  }
-  return mapping[pengelola] || pengelola?.toLowerCase() || null
-}
+    "Pemkab/Kota": "pemkab",
+    Kecamatan: "kecamatan",
+    Pemdes: "pemdes",
+    Swasta: "swasta",
+  };
+  return mapping[pengelola] || pengelola?.toLowerCase() || null;
+};
 
 const asInputValue = (value) => {
-  if (value === null || value === undefined) return ''
-  return String(value)
-}
+  if (value === null || value === undefined) return "";
+  return String(value);
+};
 
 const mapPengelolaLabel = (pengelola) => {
-  const normalized = String(pengelola ?? '').toLowerCase()
+  const normalized = String(pengelola ?? "").toLowerCase();
   const mapping = {
-    pemkab: 'Pemkab/Kota',
-    kecamatan: 'Kecamatan',
-    pemdes: 'Pemdes',
-    swasta: 'Swasta'
-  }
-  return mapping[normalized] || (pengelola ? String(pengelola) : '')
-}
+    pemkab: "Pemkab/Kota",
+    kecamatan: "Kecamatan",
+    pemdes: "Pemdes",
+    swasta: "Swasta",
+  };
+  return mapping[normalized] || (pengelola ? String(pengelola) : "");
+};
 
 const buildTransportFromSurvey = (transportation) => {
-  if (!transportation) return []
-  const services = []
-  if (transportation.busRouteCount) services.push('Bus')
-  if (transportation.angkotRouteCount) services.push('Angkot')
+  if (!transportation) return [];
+  const services = [];
+  if (transportation.busRouteCount) services.push("Bus");
+  if (transportation.angkotRouteCount) services.push("Angkot");
   if (transportation.otherTransportCount) {
-    services.push('Lainnya (misalnya perahu, kapal laut)')
+    services.push("Lainnya (misalnya perahu, kapal laut)");
   }
-  return services
-}
+  return services;
+};
 
 const parseVillageName = (notes, fallback) => {
-  const parsed = parseVillageInfoValue(notes, 'Nama Desa/Kelurahan')
-  if (parsed) return parsed
-  if (fallback) return fallback
-  if (!notes) return ''
-  return String(notes)
-}
+  const parsed = parseVillageInfoValue(notes, "Nama Desa/Kelurahan");
+  if (parsed) return parsed;
+  if (fallback) return fallback;
+  if (!notes) return "";
+  return String(notes);
+};
 
 const parseVillageInfoValue = (notes, label) => {
-  if (!notes) return null
-  const pattern = new RegExp(`${label}\\s*:\\s*([^|]+)`, 'i')
-  const match = String(notes).match(pattern)
-  return match ? match[1].trim() : null
-}
+  if (!notes) return null;
+  const pattern = new RegExp(`${label}\\s*:\\s*([^|]+)`, "i");
+  const match = String(notes).match(pattern);
+  return match ? match[1].trim() : null;
+};
 
 const parseNumericNote = (notes, label) => {
-  const raw = parseVillageInfoValue(notes, label)
-  if (!raw) return null
-  const digits = raw.replace(/\D/g, '')
-  if (!digits) return null
-  return Number(digits)
-}
+  const raw = parseVillageInfoValue(notes, label);
+  if (!raw) return null;
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return null;
+  return Number(digits);
+};
 
 const buildVillageInfoNotes = () => {
-  const notes = []
+  const notes = [];
   if (formData.profil.namaDesa) {
-    notes.push(`Nama Desa/Kelurahan: ${formData.profil.namaDesa}`)
+    notes.push(`Nama Desa/Kelurahan: ${formData.profil.namaDesa}`);
   }
   if (formData.profil.jumlahKK) {
-    notes.push(`Jumlah KK: ${parseInt(formData.profil.jumlahKK, 10) || 0}`)
+    notes.push(`Jumlah KK: ${parseInt(formData.profil.jumlahKK, 10) || 0}`);
   }
   if (formData.profil.jumlahRumah) {
-    notes.push(`Jumlah Rumah: ${parseInt(formData.profil.jumlahRumah, 10) || 0}`)
+    notes.push(
+      `Jumlah Rumah: ${parseInt(formData.profil.jumlahRumah, 10) || 0}`
+    );
   }
-  return notes.length ? notes.join(' | ') : null
-}
+  return notes.length ? notes.join(" | ") : null;
+};
 
 const generateLocalId = () => {
-  return `infra_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-}
+  return `infra_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
 
 const buildLocalSubmission = (apiResponse) => {
-  const now = new Date().toISOString()
+  const now = new Date().toISOString();
   return {
     id: apiResponse?.data?.survey?.id || generateLocalId(),
-    status: 'submitted',
-    villageName: formData.profil.namaDesa || formData.location.village?.name || 'N/A',
+    status: "submitted",
+    villageName:
+      formData.profil.namaDesa || formData.location.village?.name || "N/A",
     population: parseInt(formData.profil.jumlahPenduduk) || 0,
     submittedAt: now,
     reviewedAt: null,
@@ -1640,40 +1637,48 @@ const buildLocalSubmission = (apiResponse) => {
       namaDesa: formData.profil.namaDesa,
       jumlahPenduduk: parseInt(formData.profil.jumlahPenduduk) || 0,
       jumlahKK: parseInt(formData.profil.jumlahKK) || 0,
-      jumlahRumah: parseInt(formData.profil.jumlahRumah) || 0
+      jumlahRumah: parseInt(formData.profil.jumlahRumah) || 0,
     },
     pendidikan: sanitizeFacilityItems(formData.pendidikan),
     kesehatan: sanitizeFacilityItems(formData.kesehatan),
     peribadatan: sanitizeFacilityItems(formData.peribadatan),
     listrik: {
-      tercakupSeluruhDesa: formData.jaringanListrik.tercakupSeluruhWilayah || false,
-      wilayahBelumTerjangkau: formData.jaringanListrik.wilayahBelumTerjangkau || '0 Dusun/RW'
+      tercakupSeluruhDesa:
+        formData.jaringanListrik.tercakupSeluruhWilayah || false,
+      wilayahBelumTerjangkau:
+        formData.jaringanListrik.wilayahBelumTerjangkau || "0 Dusun/RW",
     },
     jaringanListrik: {
-      tercakupSeluruhWilayah: formData.jaringanListrik.tercakupSeluruhWilayah || false,
-      wilayahBelumTerjangkau: formData.jaringanListrik.wilayahBelumTerjangkau || '0 Dusun/RW'
+      tercakupSeluruhWilayah:
+        formData.jaringanListrik.tercakupSeluruhWilayah || false,
+      wilayahBelumTerjangkau:
+        formData.jaringanListrik.wilayahBelumTerjangkau || "0 Dusun/RW",
     },
     airBersih: {
-      jumlahSpam: parseInt(formData.jaringanAirBersih.jumlahSPAM) || 0
+      jumlahSpam: parseInt(formData.jaringanAirBersih.jumlahSPAM) || 0,
     },
     jaringanAirBersih: {
-      jumlahSPAM: parseInt(formData.jaringanAirBersih.jumlahSPAM) || 0
+      jumlahSPAM: parseInt(formData.jaringanAirBersih.jumlahSPAM) || 0,
     },
     telepon: {
       jumlahOperator: parseInt(formData.jaringanTelepon.jumlahOperator) || 0,
-      wilayahBelumTerjangkau: formData.jaringanTelepon.wilayahBelumTerjangkau || '0 Dusun/RW'
+      wilayahBelumTerjangkau:
+        formData.jaringanTelepon.wilayahBelumTerjangkau || "0 Dusun/RW",
     },
     jaringanTelepon: {
       jumlahOperator: parseInt(formData.jaringanTelepon.jumlahOperator) || 0,
-      wilayahBelumTerjangkau: formData.jaringanTelepon.wilayahBelumTerjangkau || '0 Dusun/RW'
+      wilayahBelumTerjangkau:
+        formData.jaringanTelepon.wilayahBelumTerjangkau || "0 Dusun/RW",
     },
     transportasi: {
-      layananAngkutanUmum: formData.jaringanTransportasi.layananAngkutanUmum || [],
-      layananLainnya: formData.jaringanTransportasi.layananLainnya || ''
+      layananAngkutanUmum:
+        formData.jaringanTransportasi.layananAngkutanUmum || [],
+      layananLainnya: formData.jaringanTransportasi.layananLainnya || "",
     },
     jaringanTransportasi: {
-      layananAngkutanUmum: formData.jaringanTransportasi.layananAngkutanUmum || [],
-      layananLainnya: formData.jaringanTransportasi.layananLainnya || ''
+      layananAngkutanUmum:
+        formData.jaringanTransportasi.layananAngkutanUmum || [],
+      layananLainnya: formData.jaringanTransportasi.layananLainnya || "",
     },
     perniagaan: sanitizeFacilityItems(formData.perniagaan),
     pelayananUmum: sanitizeFacilityItems(formData.pelayananUmum),
@@ -1682,50 +1687,55 @@ const buildLocalSubmission = (apiResponse) => {
     pertamanan: sanitizeFacilityItems(formData.pertamanan),
     parkir: sanitizeFacilityItems(formData.parkir),
     jaringanGas: {
-      jumlahAgenGas: parseInt(formData.jaringanGas.jumlahAgenGas) || 0
+      jumlahAgenGas: parseInt(formData.jaringanGas.jumlahAgenGas) || 0,
     },
     pemadamKebakaran: {
       mobilDamkar: parseInt(formData.pemadamKebakaran.mobilDamkar) || 0,
-      pengelola: formData.pemadamKebakaran.pengelola || '',
-      APAR: parseInt(formData.pemadamKebakaran.APAR) || 0
+      pengelola: formData.pemadamKebakaran.pengelola || "",
+      APAR: parseInt(formData.pemadamKebakaran.APAR) || 0,
     },
     peneranganJalan: {
-      jumlahLampuJalan: parseInt(formData.peneranganJalan.jumlahLampuJalan) || 0
+      jumlahLampuJalan:
+        parseInt(formData.peneranganJalan.jumlahLampuJalan) || 0,
     },
     location: {
       province: formData.location.province,
       regency: formData.location.regency,
       district: formData.location.district,
-      village: formData.location.village
-    }
-  }
-}
+      village: formData.location.village,
+    },
+  };
+};
 
 const saveLocalSubmission = (submissionData) => {
   try {
-    const existingData = localStorage.getItem('infrastructure-submissions')
-    let submissions = []
+    const existingData = localStorage.getItem("infrastructure-submissions");
+    let submissions = [];
 
     if (existingData) {
       try {
-        submissions = JSON.parse(existingData)
+        submissions = JSON.parse(existingData);
       } catch (error) {
-        console.error('Error parsing existing submissions:', error)
-        submissions = []
+        console.error("Error parsing existing submissions:", error);
+        submissions = [];
       }
     }
 
-    submissions.push(submissionData)
-    localStorage.setItem('infrastructure-submissions', JSON.stringify(submissions))
+    submissions.push(submissionData);
+    localStorage.setItem(
+      "infrastructure-submissions",
+      JSON.stringify(submissions)
+    );
   } catch (error) {
-    console.error('Failed to cache infrastructure submission locally:', error)
+    console.error("Failed to cache infrastructure submission locally:", error);
   }
-}
+};
 
 // Transform form data to API format
 const transformFormDataToAPI = () => {
-  const layananAngkutan = formData.jaringanTransportasi.layananAngkutanUmum || []
-  const now = new Date().toISOString()
+  const layananAngkutan =
+    formData.jaringanTransportasi.layananAngkutanUmum || [];
+  const now = new Date().toISOString();
 
   return {
     surveyYear: parseInt(formData.surveyYear) || new Date().getFullYear(),
@@ -1734,16 +1744,16 @@ const transformFormDataToAPI = () => {
     districtId: resolveLocationId(formData.location.district),
     regencyId: resolveLocationId(formData.location.regency),
     provinceId: resolveLocationId(formData.location.province),
-    status: 'submitted',
+    status: "submitted",
     submittedAt: now,
-    
+
     villageInfo: {
       populationCount: parseInt(formData.profil.jumlahPenduduk) || 0,
       householdCount: parseInt(formData.profil.jumlahKK) || 0,
       villageArea: 0, // Not in form, set to 0
-      notes: buildVillageInfoNotes()
+      notes: buildVillageInfoNotes(),
     },
-    
+
     commercial: sanitizeFacilityItems(formData.perniagaan),
     publicServices: sanitizeFacilityItems(formData.pelayananUmum),
     education: sanitizeFacilityItems(formData.pendidikan),
@@ -1753,173 +1763,200 @@ const transformFormDataToAPI = () => {
     cemetery: sanitizeFacilityItems(formData.pemakaman),
     greenSpace: sanitizeFacilityItems(formData.pertamanan),
     parking: sanitizeFacilityItems(formData.parkir),
-    
+
     electricity: {
       isFullCoverage: formData.jaringanListrik.tercakupSeluruhWilayah || false,
-      uncoveredDusunCount: parseInt(formData.jaringanListrik.wilayahBelumTerjangkau) || 0,
-      notes: null
+      uncoveredDusunCount:
+        parseInt(formData.jaringanListrik.wilayahBelumTerjangkau) || 0,
+      notes: null,
     },
-    
+
     water: {
       spamCount: parseInt(formData.jaringanAirBersih.jumlahSPAM) || 0,
       pipedWaterCoverage: 0, // Not in form, set to 0
-      notes: null
+      notes: null,
     },
-    
+
     telecom: {
       operatorCount: parseInt(formData.jaringanTelepon.jumlahOperator) || 0,
-      uncoveredDusunCount: parseInt(formData.jaringanTelepon.wilayahBelumTerjangkau) || 0,
-      notes: null
+      uncoveredDusunCount:
+        parseInt(formData.jaringanTelepon.wilayahBelumTerjangkau) || 0,
+      notes: null,
     },
-    
+
     gas: {
       gasAgentCount: parseInt(formData.jaringanGas.jumlahAgenGas) || 0,
-      notes: null
+      notes: null,
     },
-    
+
     transportation: {
-      busRouteCount: layananAngkutan.includes('Bus') ? 1 : 0,
-      angkotRouteCount: layananAngkutan.includes('Angkot') ? 1 : 0,
-      otherTransportCount: layananAngkutan.includes('Lainnya (misalnya perahu, kapal laut)') ? 1 : 0,
+      busRouteCount: layananAngkutan.includes("Bus") ? 1 : 0,
+      angkotRouteCount: layananAngkutan.includes("Angkot") ? 1 : 0,
+      otherTransportCount: layananAngkutan.includes(
+        "Lainnya (misalnya perahu, kapal laut)"
+      )
+        ? 1
+        : 0,
       otherTransportType: formData.jaringanTransportasi.layananLainnya || null,
-      notes: null
+      notes: null,
     },
-    
+
     fireDepartment: {
       fireTruckCount: parseInt(formData.pemadamKebakaran.mobilDamkar) || 0,
       fireManager: mapPengelola(formData.pemadamKebakaran.pengelola),
       aparCount: parseInt(formData.pemadamKebakaran.APAR) || 0,
-      notes: null
+      notes: null,
     },
-    
+
     streetLighting: {
-      streetLightCount: parseInt(formData.peneranganJalan.jumlahLampuJalan) || 0,
+      streetLightCount:
+        parseInt(formData.peneranganJalan.jumlahLampuJalan) || 0,
       managedBy: null, // Not in form
-      notes: null
-    }
-  }
-}
+      notes: null,
+    },
+  };
+};
 
 const loadSurveyForEdit = async () => {
-  if (!editSurveyId.value) return
-  errorMessage.value = ''
+  if (!editSurveyId.value) return;
+  errorMessage.value = "";
 
   try {
-    const response = await facilityAPI.getSurvey(editSurveyId.value)
-    const survey = response?.data?.survey
+    const response = await facilityAPI.getSurvey(editSurveyId.value);
+    const survey = response?.data?.survey;
 
     if (!survey) {
-      throw new Error('Data survei tidak ditemukan.')
+      throw new Error("Data survei tidak ditemukan.");
     }
 
-    formData.surveyYear = survey.surveyYear || new Date().getFullYear()
-    formData.surveyPeriod = survey.surveyPeriod || 'q1'
-    formData.location.latitude = null
-    formData.location.longitude = null
+    formData.surveyYear = survey.surveyYear || new Date().getFullYear();
+    formData.surveyPeriod = survey.surveyPeriod || "q1";
+    formData.location.latitude = null;
+    formData.location.longitude = null;
 
     await setLocationHierarchy({
       province: survey.province || null,
       regency: survey.regency || null,
       district: survey.district || null,
-      village: survey.village || null
-    })
+      village: survey.village || null,
+    });
 
     formData.profil.namaDesa = parseVillageName(
       survey.villageInfo?.notes,
-      survey.village?.name || ''
-    )
-    const notes = survey.villageInfo?.notes
-    const parsedHouseholdCount = parseNumericNote(notes, 'Jumlah KK')
-    const parsedHouseCount = parseNumericNote(notes, 'Jumlah Rumah')
-    const legacyHouseCount = survey.villageInfo?.houseCount ?? survey.villageInfo?.householdCount
+      survey.village?.name || ""
+    );
+    const notes = survey.villageInfo?.notes;
+    const parsedHouseholdCount = parseNumericNote(notes, "Jumlah KK");
+    const parsedHouseCount = parseNumericNote(notes, "Jumlah Rumah");
+    const legacyHouseCount =
+      survey.villageInfo?.houseCount ?? survey.villageInfo?.householdCount;
 
-    formData.profil.jumlahPenduduk = asInputValue(survey.villageInfo?.populationCount)
-    formData.profil.jumlahKK = asInputValue(parsedHouseholdCount ?? survey.villageInfo?.householdCount)
-    formData.profil.jumlahRumah = asInputValue(parsedHouseCount ?? legacyHouseCount)
+    formData.profil.jumlahPenduduk = asInputValue(
+      survey.villageInfo?.populationCount
+    );
+    formData.profil.jumlahKK = asInputValue(
+      parsedHouseholdCount ?? survey.villageInfo?.householdCount
+    );
+    formData.profil.jumlahRumah = asInputValue(
+      parsedHouseCount ?? legacyHouseCount
+    );
 
-    formData.perniagaan = mapFacilityItemsFromSurvey(survey.commercial)
-    formData.pelayananUmum = mapFacilityItemsFromSurvey(survey.publicServices)
-    formData.pendidikan = mapFacilityItemsFromSurvey(survey.education)
-    formData.kesehatan = mapFacilityItemsFromSurvey(survey.health)
-    formData.peribadatan = mapFacilityItemsFromSurvey(survey.religious)
-    formData.rekreasi = mapFacilityItemsFromSurvey(survey.recreation)
-    formData.pemakaman = mapFacilityItemsFromSurvey(survey.cemetery)
-    formData.pertamanan = mapFacilityItemsFromSurvey(survey.greenSpace)
-    formData.parkir = mapFacilityItemsFromSurvey(survey.parking)
+    formData.perniagaan = mapFacilityItemsFromSurvey(survey.commercial);
+    formData.pelayananUmum = mapFacilityItemsFromSurvey(survey.publicServices);
+    formData.pendidikan = mapFacilityItemsFromSurvey(survey.education);
+    formData.kesehatan = mapFacilityItemsFromSurvey(survey.health);
+    formData.peribadatan = mapFacilityItemsFromSurvey(survey.religious);
+    formData.rekreasi = mapFacilityItemsFromSurvey(survey.recreation);
+    formData.pemakaman = mapFacilityItemsFromSurvey(survey.cemetery);
+    formData.pertamanan = mapFacilityItemsFromSurvey(survey.greenSpace);
+    formData.parkir = mapFacilityItemsFromSurvey(survey.parking);
 
     formData.jaringanListrik.tercakupSeluruhWilayah = Boolean(
       survey.electricity?.isFullCoverage
-    )
+    );
     formData.jaringanListrik.wilayahBelumTerjangkau = asInputValue(
       survey.electricity?.uncoveredDusunCount
-    )
+    );
 
-    formData.jaringanAirBersih.jumlahSPAM = asInputValue(survey.water?.spamCount)
+    formData.jaringanAirBersih.jumlahSPAM = asInputValue(
+      survey.water?.spamCount
+    );
 
-    formData.jaringanTelepon.jumlahOperator = asInputValue(survey.telecom?.operatorCount)
+    formData.jaringanTelepon.jumlahOperator = asInputValue(
+      survey.telecom?.operatorCount
+    );
     formData.jaringanTelepon.wilayahBelumTerjangkau = asInputValue(
       survey.telecom?.uncoveredDusunCount
-    )
+    );
 
-    formData.jaringanGas.jumlahAgenGas = asInputValue(survey.gas?.gasAgentCount)
+    formData.jaringanGas.jumlahAgenGas = asInputValue(
+      survey.gas?.gasAgentCount
+    );
 
-    formData.jaringanTransportasi.layananAngkutanUmum = buildTransportFromSurvey(
-      survey.transportation
-    )
+    formData.jaringanTransportasi.layananAngkutanUmum =
+      buildTransportFromSurvey(survey.transportation);
     formData.jaringanTransportasi.layananLainnya = asInputValue(
       survey.transportation?.otherTransportType
-    )
+    );
 
     formData.pemadamKebakaran.mobilDamkar = asInputValue(
       survey.fireDepartment?.fireTruckCount
-    )
+    );
     formData.pemadamKebakaran.pengelola = mapPengelolaLabel(
       survey.fireDepartment?.fireManager
-    )
-    formData.pemadamKebakaran.APAR = asInputValue(survey.fireDepartment?.aparCount)
+    );
+    formData.pemadamKebakaran.APAR = asInputValue(
+      survey.fireDepartment?.aparCount
+    );
 
     formData.peneranganJalan.jumlahLampuJalan = asInputValue(
       survey.streetLighting?.streetLightCount
-    )
+    );
 
-    currentStep.value = 1
+    currentStep.value = 1;
   } catch (error) {
-    console.error('Error loading survey for edit:', error)
-    errorMessage.value = error?.message || 'Gagal memuat data survei untuk diedit.'
+    console.error("Error loading survey for edit:", error);
+    errorMessage.value =
+      error?.message || "Gagal memuat data survei untuk diedit.";
   }
-}
+};
 
 const submitForm = async () => {
   // Validate form
-  if (!formRef.value) return
+  if (!formRef.value) return;
 
   if (!validateFacilityRows()) {
-    return
+    return;
   }
-  
-  const { valid } = await formRef.value.validate()
+
+  const { valid } = await formRef.value.validate();
   if (!valid) {
-    errorMessage.value = 'Mohon lengkapi semua field yang wajib diisi'
-    return
+    errorMessage.value = "Mohon lengkapi semua field yang wajib diisi";
+    return;
   }
 
   // Validate location
-  if (!formData.location.province || !formData.location.regency || 
-      !formData.location.district || !formData.location.village) {
-    errorMessage.value = 'Mohon pilih lokasi lengkap (Provinsi, Kabupaten/Kota, Kecamatan, Kelurahan)'
-    return
+  if (
+    !formData.location.province ||
+    !formData.location.regency ||
+    !formData.location.district ||
+    !formData.location.village
+  ) {
+    errorMessage.value =
+      "Mohon pilih lokasi lengkap (Provinsi, Kabupaten/Kota, Kecamatan, Kelurahan)";
+    return;
   }
 
-  const lat = parseFloat(formData.location.latitude)
-  const lng = parseFloat(formData.location.longitude)
+  const lat = parseFloat(formData.location.latitude);
+  const lng = parseFloat(formData.location.longitude);
   if (Number.isFinite(lat) && Number.isFinite(lng)) {
     try {
-      const reverseResult = await reverseGeocode(lat, lng)
+      const reverseResult = await reverseGeocode(lat, lng);
       const mismatch = (expected, actual) => {
-        const expectedId = resolveLocationId(expected)
-        const actualId = resolveLocationId(actual)
-        return expectedId && actualId && expectedId !== actualId
-      }
+        const expectedId = resolveLocationId(expected);
+        const actualId = resolveLocationId(actual);
+        return expectedId && actualId && expectedId !== actualId;
+      };
 
       if (
         mismatch(formData.location.village, reverseResult.village) ||
@@ -1927,121 +1964,127 @@ const submitForm = async () => {
         mismatch(formData.location.regency, reverseResult.regency) ||
         mismatch(formData.location.province, reverseResult.province)
       ) {
-        errorMessage.value = 'Koordinat tidak sesuai dengan wilayah yang dipilih.'
-        return
+        errorMessage.value =
+          "Koordinat tidak sesuai dengan wilayah yang dipilih.";
+        return;
       }
 
-      await applyLocationResult(reverseResult)
+      await applyLocationResult(reverseResult);
     } catch (error) {
-      errorMessage.value = error?.message || 'Validasi koordinat gagal. Silakan coba lagi.'
-      return
+      errorMessage.value =
+        error?.message || "Validasi koordinat gagal. Silakan coba lagi.";
+      return;
     }
   }
 
-  isSubmitting.value = true
-  errorMessage.value = ''
-  
+  isSubmitting.value = true;
+  errorMessage.value = "";
+
   try {
     // Transform form data to API format
-    const apiData = transformFormDataToAPI()
+    const apiData = transformFormDataToAPI();
 
     const response = isEditMode.value
       ? await facilityAPI.updateSurvey(editSurveyId.value, apiData)
-      : await facilityAPI.createSurvey(apiData)
+      : await facilityAPI.createSurvey(apiData);
 
     if (response?.success === false) {
-      throw new Error(response.message || 'Gagal mengirim survei infrastruktur.')
+      throw new Error(
+        response.message || "Gagal mengirim survei infrastruktur."
+      );
     }
 
     if (!isEditMode.value) {
-      saveLocalSubmission(buildLocalSubmission(response))
+      saveLocalSubmission(buildLocalSubmission(response));
     }
 
     alert(
       isEditMode.value
-        ? 'Perubahan survei infrastruktur berhasil disimpan!'
-        : 'Formulir survey infrastruktur berhasil dikirim!'
-    )
-    mapDataStore.signalRefresh()
+        ? "Perubahan survei infrastruktur berhasil disimpan!"
+        : "Formulir survey infrastruktur berhasil dikirim!"
+    );
+    mapDataStore.signalRefresh();
 
     if (!isEditMode.value) {
-      resetForm()
+      resetForm();
     }
 
     // Redirect based on role access
-    router.push(isAdminDesa.value ? '/home' : '/infrastructure-data')
+    router.push(isAdminDesa.value ? "/home" : "/infrastructure-data");
   } catch (error) {
-    console.error('Error submitting form:', error)
-    errorMessage.value = error?.message || 'Terjadi kesalahan saat mengirim formulir. Silakan coba lagi.'
+    console.error("Error submitting form:", error);
+    errorMessage.value =
+      error?.message ||
+      "Terjadi kesalahan saat mengirim formulir. Silakan coba lagi.";
   } finally {
-    isSubmitting.value = false
+    isSubmitting.value = false;
   }
-}
+};
 
 const resetForm = () => {
   // Reset all form fields
-  formData.surveyYear = new Date().getFullYear()
-  formData.surveyPeriod = 'q1'
-  formData.location.province = null
-  formData.location.regency = null
-  formData.location.district = null
-  formData.location.village = null
-  formData.location.latitude = null
-  formData.location.longitude = null
+  formData.surveyYear = new Date().getFullYear();
+  formData.surveyPeriod = "q1";
+  formData.location.province = null;
+  formData.location.regency = null;
+  formData.location.district = null;
+  formData.location.village = null;
+  formData.location.latitude = null;
+  formData.location.longitude = null;
 
-  formData.profil.namaDesa = ''
-  formData.profil.jumlahPenduduk = ''
-  formData.profil.jumlahKK = ''
-  formData.profil.jumlahRumah = ''
+  formData.profil.namaDesa = "";
+  formData.profil.jumlahPenduduk = "";
+  formData.profil.jumlahKK = "";
+  formData.profil.jumlahRumah = "";
 
-  formData.perniagaan = ensureFacilityItems()
-  formData.pelayananUmum = ensureFacilityItems()
-  formData.pendidikan = ensureFacilityItems()
-  formData.kesehatan = ensureFacilityItems()
-  formData.peribadatan = ensureFacilityItems()
-  formData.rekreasi = ensureFacilityItems()
-  formData.pemakaman = ensureFacilityItems()
-  formData.pertamanan = ensureFacilityItems()
-  formData.parkir = ensureFacilityItems()
+  formData.perniagaan = ensureFacilityItems();
+  formData.pelayananUmum = ensureFacilityItems();
+  formData.pendidikan = ensureFacilityItems();
+  formData.kesehatan = ensureFacilityItems();
+  formData.peribadatan = ensureFacilityItems();
+  formData.rekreasi = ensureFacilityItems();
+  formData.pemakaman = ensureFacilityItems();
+  formData.pertamanan = ensureFacilityItems();
+  formData.parkir = ensureFacilityItems();
 
-  formData.jaringanListrik.tercakupSeluruhWilayah = false
-  formData.jaringanListrik.wilayahBelumTerjangkau = ''
-  formData.jaringanAirBersih.jumlahSPAM = ''
-  formData.jaringanTelepon.jumlahOperator = ''
-  formData.jaringanTelepon.wilayahBelumTerjangkau = ''
-  formData.jaringanGas.jumlahAgenGas = ''
-  formData.jaringanTransportasi.layananAngkutanUmum = []
-  formData.jaringanTransportasi.layananLainnya = ''
-  formData.pemadamKebakaran.mobilDamkar = ''
-  formData.pemadamKebakaran.pengelola = ''
-  formData.pemadamKebakaran.APAR = ''
-  formData.peneranganJalan.jumlahLampuJalan = ''
-  
+  formData.jaringanListrik.tercakupSeluruhWilayah = false;
+  formData.jaringanListrik.wilayahBelumTerjangkau = "";
+  formData.jaringanAirBersih.jumlahSPAM = "";
+  formData.jaringanTelepon.jumlahOperator = "";
+  formData.jaringanTelepon.wilayahBelumTerjangkau = "";
+  formData.jaringanGas.jumlahAgenGas = "";
+  formData.jaringanTransportasi.layananAngkutanUmum = [];
+  formData.jaringanTransportasi.layananLainnya = "";
+  formData.pemadamKebakaran.mobilDamkar = "";
+  formData.pemadamKebakaran.pengelola = "";
+  formData.pemadamKebakaran.APAR = "";
+  formData.peneranganJalan.jumlahLampuJalan = "";
+
   // Reset location options
-  regencyOptions.value = []
-  districtOptions.value = []
-  villageOptions.value = []
-  
-  currentStep.value = 1
-  errorMessage.value = ''
-  locationSelectError.value = ''
-  locationSyncMessage.value = ''
-  locationSyncType.value = 'info'
-  locationPickerOpen.value = false
-  locationPickerLat.value = null
-  locationPickerLng.value = null
-  locationLoading.isSyncing = false
-  isProgrammaticLocationSync.value = false
-  formRef.value?.resetValidation()
-}
+  regencyOptions.value = [];
+  districtOptions.value = [];
+  villageOptions.value = [];
+
+  currentStep.value = 1;
+  errorMessage.value = "";
+  locationSelectError.value = "";
+  locationSyncMessage.value = "";
+  locationSyncType.value = "info";
+  locationPickerOpen.value = false;
+  locationPickerLat.value = null;
+  locationPickerLng.value = null;
+  locationLoading.isSyncing = false;
+  isProgrammaticLocationSync.value = false;
+  formRef.value?.resetValidation();
+};
 
 // Lifecycle
 onMounted(async () => {
-  await fetchProvinces()
+  await fetchProvinces();
   if (isEditMode.value) {
-    await loadSurveyForEdit()
+    await loadSurveyForEdit();
   }
-})
+});
 </script>
 
 <style scoped>
@@ -2066,6 +2109,48 @@ onMounted(async () => {
   .form-stepper :deep(.v-stepper-item) {
     flex: 1 1 50%;
     min-width: 140px;
+  }
+}
+
+/* Tambahkan atau perbarui di bagian <style scoped> */
+@media (max-width: 600px) {
+  /* Memaksa stepper tetap ke samping (tidak membungkus ke bawah) */
+  .form-stepper :deep(.v-stepper-header) {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding-bottom: 4px;
+    scrollbar-width: none; /* Sembunyikan scrollbar di Firefox */
+  }
+
+  .form-stepper :deep(.v-stepper-header::-webkit-scrollbar) {
+    display: none; /* Sembunyikan scrollbar di Chrome/Safari */
+  }
+
+  .form-stepper :deep(.v-stepper-item) {
+    padding: 4px 8px !important;
+    min-width: 100px !important; /* Supaya tetap kecil tapi terbaca */
+    flex-shrink: 0;
+  }
+
+  /* Mengecilkan ukuran avatar/angka langkah */
+  .form-stepper :deep(.v-stepper-item__avatar) {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    font-size: 0.75rem !important;
+    margin-bottom: 4px !important;
+  }
+
+  /* Mengecilkan teks judul langkah */
+  .form-stepper :deep(.v-stepper-item__title) {
+    font-size: 0.65rem !important;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+
+  /* Menghilangkan divider di mobile agar tidak memakan tempat */
+  .form-stepper :deep(.v-divider) {
+    display: none !important;
   }
 }
 </style>

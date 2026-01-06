@@ -210,7 +210,11 @@
                 <v-col cols="12" md="6">
                   <h4 class="text-subtitle-1 mb-0">Alamat Rumah</h4>
                 </v-col>
-                <v-col cols="12" md="6" class="d-flex justify-end location-action-col">
+                <v-col
+                  cols="12"
+                  md="6"
+                  class="d-flex justify-end location-action-col"
+                >
                   <v-btn
                     size="small"
                     color="primary"
@@ -3520,7 +3524,6 @@ const applyLocationResult = async (result) => {
 async function reverseGeocode(lat, lng) {
   try {
     const response = await locationAPI.reverseGeocode(lat, lng);
-    
 
     if (response.success && response.data) {
       const mapped = mapReverseGeocodeResponse(response.data);
@@ -4693,6 +4696,48 @@ const resetForm = () => {
   .form-stepper :deep(.v-stepper-item) {
     flex: 1 1 50%;
     min-width: 140px;
+  }
+}
+
+/* Tambahkan atau perbarui di bagian <style scoped> */
+@media (max-width: 600px) {
+  /* Memaksa stepper tetap ke samping (tidak membungkus ke bawah) */
+  .form-stepper :deep(.v-stepper-header) {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding-bottom: 4px;
+    scrollbar-width: none; /* Sembunyikan scrollbar di Firefox */
+  }
+
+  .form-stepper :deep(.v-stepper-header::-webkit-scrollbar) {
+    display: none; /* Sembunyikan scrollbar di Chrome/Safari */
+  }
+
+  .form-stepper :deep(.v-stepper-item) {
+    padding: 4px 8px !important;
+    min-width: 100px !important; /* Supaya tetap kecil tapi terbaca */
+    flex-shrink: 0;
+  }
+
+  /* Mengecilkan ukuran avatar/angka langkah */
+  .form-stepper :deep(.v-stepper-item__avatar) {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    font-size: 0.75rem !important;
+    margin-bottom: 4px !important;
+  }
+
+  /* Mengecilkan teks judul langkah */
+  .form-stepper :deep(.v-stepper-item__title) {
+    font-size: 0.65rem !important;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+
+  /* Menghilangkan divider di mobile agar tidak memakan tempat */
+  .form-stepper :deep(.v-divider) {
+    display: none !important;
   }
 }
 </style>
