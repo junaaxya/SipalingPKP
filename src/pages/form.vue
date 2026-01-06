@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-container>
+    <v-container fluid class="px-2 px-sm-6 py-4">
       <v-snackbar
         v-model="photoToastOpen"
         :color="photoToastColor"
@@ -21,7 +21,7 @@
           </span>
         </div>
       </v-alert>
-      <v-card class="mx-auto" max-width="1000">
+      <v-card class="mx-auto w-100 form-card" max-width="1000">
         <!-- Header -->
         <v-card-title class="text-h5 text-center py-4">
           Formulir Survey Rumah Masyarakat
@@ -29,7 +29,11 @@
 
         <!-- Progress Bar -->
         <v-card-text class="pb-0">
-          <v-stepper v-model="currentStep" alt-labels class="elevation-0">
+          <v-stepper
+            v-model="currentStep"
+            alt-labels
+            class="elevation-0 form-stepper"
+          >
             <v-stepper-header>
               <template v-for="(step, index) in steps" :key="index">
                 <v-stepper-item
@@ -4665,5 +4669,29 @@ const resetForm = () => {
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   border: 0;
+}
+
+.form-card {
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .form-card :deep(.v-card-title) {
+    font-size: 1.1rem;
+    text-align: left;
+  }
+
+  .form-card :deep(.v-card-text) {
+    padding: 16px !important;
+  }
+
+  .form-stepper :deep(.v-stepper-header) {
+    flex-wrap: wrap;
+  }
+
+  .form-stepper :deep(.v-stepper-item) {
+    flex: 1 1 50%;
+    min-width: 140px;
+  }
 }
 </style>

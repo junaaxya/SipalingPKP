@@ -1,8 +1,8 @@
 <template>
   <div>
-    <v-container>
+    <v-container fluid class="px-2 px-sm-6 py-4">
       <v-card
-        class="mx-auto"
+        class="mx-auto w-100 form-card"
         max-width="1200"
       >
         <!-- Header -->
@@ -15,7 +15,7 @@
           <v-stepper
             v-model="currentStep"
             alt-labels
-            class="elevation-0"
+            class="elevation-0 form-stepper"
           >
             <v-stepper-header>
               <template
@@ -2043,3 +2043,29 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped>
+.form-card {
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .form-card :deep(.v-card-title) {
+    font-size: 1.1rem;
+    text-align: left;
+  }
+
+  .form-card :deep(.v-card-text) {
+    padding: 16px !important;
+  }
+
+  .form-stepper :deep(.v-stepper-header) {
+    flex-wrap: wrap;
+  }
+
+  .form-stepper :deep(.v-stepper-item) {
+    flex: 1 1 50%;
+    min-width: 140px;
+  }
+}
+</style>

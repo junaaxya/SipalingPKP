@@ -5,7 +5,7 @@
       <v-progress-circular color="primary" indeterminate size="64" />
     </v-overlay>
 
-    <v-container fluid>
+    <v-container fluid class="px-2 px-sm-6 py-4">
       <!-- Header Section -->
       <v-row class="mb-4">
         <v-col cols="12">
@@ -289,18 +289,21 @@
               </div>
             </v-card-title>
 
-            <v-data-table-server
-              :headers="headers"
-              :items="submissions"
-              :loading="isLoading"
-              :items-per-page="pagination.itemsPerPage"
-              :items-per-page-options="itemsPerPageOptions"
-              :page="pagination.currentPage"
-              :items-length="pagination.totalItems"
-              class="elevation-0"
-              @update:page="handlePageChange"
-              @update:items-per-page="handleItemsPerPageChange"
-            >
+            <div class="data-table-wrapper">
+              <v-data-table-server
+                :headers="headers"
+                :items="submissions"
+                :loading="isLoading"
+                :items-per-page="pagination.itemsPerPage"
+                :items-per-page-options="itemsPerPageOptions"
+                :page="pagination.currentPage"
+                :items-length="pagination.totalItems"
+                class="elevation-0 data-table"
+                density="compact"
+                mobile-breakpoint="960"
+                @update:page="handlePageChange"
+                @update:items-per-page="handleItemsPerPageChange"
+              >
               <!-- Status Column -->
               <template #item.status="{ item }">
                 <v-chip
@@ -442,7 +445,8 @@
                   </v-btn>
                 </div>
               </template>
-            </v-data-table-server>
+              </v-data-table-server>
+            </div>
           </v-card>
         </v-col>
       </v-row>
@@ -2593,5 +2597,24 @@ watch(
 <style scoped>
 .v-card {
   border-radius: 8px;
+}
+
+.data-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.data-table {
+  min-width: 720px;
+}
+
+@media (max-width: 600px) {
+  .v-card-title {
+    row-gap: 8px;
+  }
+
+  .data-table {
+    min-width: 640px;
+  }
 }
 </style>

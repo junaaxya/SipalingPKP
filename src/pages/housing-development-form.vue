@@ -1,8 +1,8 @@
 <template>
   <div>
-    <v-container>
+    <v-container fluid class="px-2 px-sm-6 py-4">
       <v-card
-        class="mx-auto"
+        class="mx-auto w-100 form-card"
         max-width="1200"
       >
         <!-- Header -->
@@ -1300,5 +1300,20 @@ onMounted(async () => {
 <style scoped>
 .v-card {
   border-radius: 8px;
+}
+
+.form-card {
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .form-card :deep(.v-card-title) {
+    font-size: 1.1rem;
+    text-align: left;
+  }
+
+  .form-card :deep(.v-card-text) {
+    padding: 16px !important;
+  }
 }
 </style>
