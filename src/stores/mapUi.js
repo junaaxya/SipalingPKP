@@ -7,7 +7,7 @@ const CATEGORY_LABELS = {
   kabupaten: 'Kabupaten'
 }
 
-const SEARCH_INDEX_CACHE_KEY = 'sipaling-search-index-v1'
+const SEARCH_INDEX_CACHE_KEY = 'sipaling-search-index-v2'
 const SEARCH_INDEX_CACHE_TTL = 24 * 60 * 60 * 1000
 const LOG_ENDPOINT = import.meta.env.VITE_CLIENT_LOG_ENDPOINT
 
@@ -101,6 +101,7 @@ const normalizeEntry = (entry, index) => {
     category: categoryKey,
     categoryLabel: CATEGORY_LABELS[categoryKey] || 'Desa',
     parent,
+    layerId: entry.layer_id || entry.layerId || entry.layer || null,
     lat: coords.lat,
     lng: coords.lng,
     zoom: zoom ?? undefined

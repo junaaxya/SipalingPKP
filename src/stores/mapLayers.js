@@ -149,6 +149,7 @@ export const useMapLayersStore = defineStore("mapLayers", {
       tata_ruang: {},
       bencana: {},
     },
+    highlightedFeatureId: null,
   }),
   getters: {
     activeLayers: (state) => {
@@ -225,6 +226,14 @@ export const useMapLayersStore = defineStore("mapLayers", {
       } catch (error) {
         layer.active = false;
       }
+    },
+    setHighlight(id) {
+      this.highlightedFeatureId = id;
+    },
+
+    // Fungsi untuk menghapus tanda
+    clearHighlight() {
+      this.highlightedFeatureId = null;
     },
   },
 });

@@ -1455,6 +1455,8 @@ let buildingChart = null;
 let scaleControl = null;
 let searchDebounceTimer = null;
 let searchPopup = null;
+let activeHighlightLayer = null;
+let lastSearchContext = null;
 
 const mapFilters = ref([
   {
@@ -3679,6 +3681,44 @@ const resolveSearchItem = (value) => {
   return value;
 };
 
+const resolveSearchLatLng = (item) => {
+  if (!item) {
+    return null;
+  }
+
+  const lat = Number(item.lat ?? item.latitude);
+  const lng = Number(item.lng ?? item.lon ?? item.longitude);
+  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+    return L.latLng(lat, lng);
+  }
+
+  const coords =
+    item.coords ||
+    item.coord ||
+    item.center ||
+    item.centroid ||
+    item.coordinates;
+  if (Array.isArray(coords) && coords.length >= 2) {
+    const first = Number(coords[0]);
+    const second = Number(coords[1]);
+    if (Number.isFinite(first) && Number.isFinite(second)) {
+      const firstAbs = Math.abs(first);
+      const secondAbs = Math.abs(second);
+
+      if (firstAbs <= 90 && secondAbs > 90) {
+        return L.latLng(first, second);
+      }
+      if (firstAbs > 90 && secondAbs <= 90) {
+        return L.latLng(second, first);
+      }
+
+      return L.latLng(second, first);
+    }
+  }
+
+  return null;
+};
+
 const handleSearchSelect = async (value) => {
   const item = resolveSearchItem(value);
   if (!item || !mapInstance.value) {
@@ -3688,42 +3728,46 @@ const handleSearchSelect = async (value) => {
   searchQuery.value = item.name;
   searchMenu.value = false;
 
-  const lat = Number(item.lat);
-  const lng = Number(item.lng);
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-    return;
+  // A. Pindah Kamera (FlyTo)
+  const latlng = resolveSearchLatLng(item);
+  if (latlng) {
+    const zoomCategory = item.category || "desa";
+    const zoom = Number.isFinite(item.zoom)
+      ? item.zoom
+      : searchZoomLevels[zoomCategory] || 12;
+
+    mapInstance.value.flyTo(latlng, zoom, { duration: 1.2 });
   }
 
-  const category = item.category || "desa";
-  const zoom = Number.isFinite(item.zoom)
-    ? item.zoom
-    : searchZoomLevels[category] || 12;
-  const latlng = L.latLng(lat, lng);
-
-  mapInstance.value.flyTo(latlng, zoom, { duration: 1.2 });
   clearSearchHighlight();
   clearSearchPopup();
-  addSearchHighlight(latlng, category);
 
-  const popupContent = buildSearchPopupContent(item);
-  if (popupContent) {
-    searchPopup = L.popup({
-      closeButton: true,
-      autoClose: true,
-      className: "search-popup",
-    })
-      .setLatLng(latlng)
-      .setContent(popupContent)
-      .openOn(mapInstance.value);
-  }
+  // B. Lazy-load GeoJSON & Set Highlight ID
+  // Gunakan layer_id dari search_index.json yang digenerate dari DB
+  const boundaryConfig = boundaryLayerConfig[item.category];
+  const layerId = item.layerId || item.layer_id || boundaryConfig?.layerId;
+  const categoryKey = boundaryConfig?.category || "administrasi";
+  lastSearchContext = {
+    id: item.id || null,
+    categoryKey,
+    layerId,
+    item,
+    latlng,
+  };
 
-  const boundaryConfig = boundaryLayerConfig[category];
-  if (boundaryConfig) {
-    const layerData = await mapLayersStore.loadLayerData(
-      boundaryConfig.category,
-      boundaryConfig.layerId
-    );
-    addSearchBoundary(item, layerData);
+  if (layerId) {
+    try {
+      if (!mapLayersStore.loadedData?.[categoryKey]?.[layerId]) {
+        await mapLayersStore.loadLayerData(categoryKey, layerId);
+      }
+
+      // Simpan ID unik dari Postgres ke store untuk mentrigger watcher
+      if (item.id) {
+        mapLayersStore.setHighlight(item.id);
+      }
+    } catch (e) {
+      console.error("Gagal mengaktifkan layer pencarian:", e);
+    }
   }
 };
 
@@ -3889,12 +3933,121 @@ watch(searchSelection, (value) => {
   if (!resolved) {
     clearSearchHighlight();
     clearSearchPopup();
+    mapLayersStore.clearHighlight();
   }
 });
 
 watch(searchErrorMessage, (value) => {
   searchErrorSnackbar.value = Boolean(value);
 });
+
+watch(
+  () => mapLayersStore.highlightedFeatureId,
+  (newId) => {
+    // Bersihkan highlight lama
+    if (activeHighlightLayer && mapInstance.value) {
+      mapInstance.value.removeLayer(activeHighlightLayer);
+      activeHighlightLayer = null;
+    }
+
+    clearSearchHighlight();
+    clearSearchPopup();
+
+    if (!newId || !mapInstance.value) {
+      return;
+    }
+
+    // Cari Feature GeoJSON yang cocok di loadedData
+    // Karena kita pakai Postgres, ID di properties.id pasti unik
+    const normalizedId = String(newId);
+    const matchFeatureId = (feature) => {
+      if (!feature) {
+        return false;
+      }
+      const featureId = feature?.properties?.id ?? feature?.id;
+      if (featureId === undefined || featureId === null) {
+        return false;
+      }
+      return featureId === newId || String(featureId) === normalizedId;
+    };
+    let foundFeature = null;
+    const isContextMatch = lastSearchContext?.id === newId;
+    const contextLayerData = isContextMatch
+      ? mapLayersStore.loadedData?.[lastSearchContext.categoryKey]?.[
+          lastSearchContext.layerId
+        ]
+      : null;
+
+    if (contextLayerData?.features) {
+      foundFeature = contextLayerData.features.find(matchFeatureId) || null;
+    }
+
+    if (!foundFeature) {
+      const loadedData = mapLayersStore.loadedData || {};
+      for (const categoryKey in loadedData) {
+        const layers = loadedData[categoryKey] || {};
+        for (const layerKey in layers) {
+          const geoJson = layers[layerKey];
+          if (geoJson?.features) {
+            foundFeature = geoJson.features.find(matchFeatureId) || null;
+            if (foundFeature) {
+              break;
+            }
+          }
+        }
+        if (foundFeature) {
+          break;
+        }
+      }
+    }
+
+    // Jika ketemu, gambar Highlight Kuning
+    if (foundFeature) {
+      const searchItem =
+        (isContextMatch ? lastSearchContext?.item : null) ||
+        searchItems.value.find((entry) => entry.id === newId) ||
+        null;
+      const markerLatLng =
+        (isContextMatch ? lastSearchContext?.latlng : null) ||
+        resolveSearchLatLng(searchItem) ||
+        getFeatureCenter(foundFeature);
+
+      activeHighlightLayer = L.geoJSON(foundFeature, {
+        coordsToLatLng,
+        style: {
+          color: "#FFD700",
+          weight: 4,
+          opacity: 1,
+          fillColor: "#FFD700",
+          fillOpacity: 0.25,
+          dashArray: null,
+        },
+        pane: MAP_PANES.search,
+        interactive: false,
+      }).addTo(mapInstance.value);
+
+      if (markerLatLng) {
+        const markerCategory =
+          searchItem?.category || lastSearchContext?.item?.category || "desa";
+        addSearchHighlight(markerLatLng, markerCategory);
+
+        const popupContent = searchItem
+          ? buildSearchPopupContent(searchItem)
+          : buildPopupContent(foundFeature?.properties);
+        if (popupContent) {
+          searchPopup = L.popup({
+            closeButton: true,
+            autoClose: true,
+            className: "search-popup",
+          })
+            .setLatLng(markerLatLng)
+            .setContent(popupContent)
+            .openOn(mapInstance.value);
+        }
+      }
+    }
+  }
+);
 
 const resolveLayerStyle = (categoryKey, layerId, feature) => {
   const geometryType = feature?.geometry?.type;
