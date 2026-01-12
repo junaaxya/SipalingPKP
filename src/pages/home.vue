@@ -2790,9 +2790,38 @@ const createMarkers = (
   markerLayers.infrastructure.clearLayers();
 
   const markerColors = {
-    housing: "#1976D2",     // Biru
+    housing: {
+      livable: "#2E7D32",
+      notLivable: "#D32F2F",
+      unknown: "#1976D2"
+    },
     "housing-development": "#4CAF50", // Hijau
     infrastructure: "#00ACC1", // Cyan
+  };
+
+  const resolveLivableState = (item) => {
+    const raw = item?.isLivable ?? item?.is_livable;
+    if (raw === true || raw === "true" || raw === 1 || raw === "1") {
+      return true;
+    }
+    if (raw === false || raw === "false" || raw === 0 || raw === "0") {
+      return false;
+    }
+    return null;
+  };
+
+  const getLivableLabel = (item) => {
+    const state = resolveLivableState(item);
+    if (state === true) return "Layak Huni";
+    if (state === false) return "Tidak Layak Huni";
+    return "Belum Dinilai";
+  };
+
+  const getHousingMarkerColor = (item) => {
+    const state = resolveLivableState(item);
+    if (state === true) return markerColors.housing.livable;
+    if (state === false) return markerColors.housing.notLivable;
+    return markerColors.housing.unknown;
   };
 
   // Helper membuat titik ringan (Canvas)
@@ -2815,15 +2844,17 @@ const createMarkers = (
       const latLng = toLatLng(coordinates);
 
       if (latLng) {
-        const marker = createOptimizedMarker(latLng, markerColors.housing);
+        const housingColor = getHousingMarkerColor(item);
+        const marker = createOptimizedMarker(latLng, housingColor);
         marker.bindPopup(`
           <div style="font-family: sans-serif; font-size: 12px; min-width: 160px;">
-            <h3 style="margin: 0 0 8px 0; font-size: 14px; color: ${markerColors.housing}; border-bottom: 1px solid #eee; padding-bottom: 4px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 14px; color: ${housingColor}; border-bottom: 1px solid #eee; padding-bottom: 4px;">
               🏠 Rumah Masyarakat
             </h3>
             <div style="margin-bottom: 4px;"><strong>Pemilik:</strong> ${item.householdOwner?.ownerName || "Tidak ada"}</div>
             <div style="margin-bottom: 4px;"><strong>Alamat:</strong> ${item.householdOwner?.houseNumber || "-"}, RT ${item.householdOwner?.rt || "-"} / RW ${item.householdOwner?.rw || "-"}</div>
             <div style="margin-bottom: 4px;"><strong>Kelurahan:</strong> ${item.householdOwner?.village?.name || "-"}</div>
+            <div style="margin-bottom: 4px;"><strong>Kelayakan:</strong> ${getLivableLabel(item)}</div>
             <div><strong>Status:</strong> ${item.status || "-"}</div>
           </div>
         `);
