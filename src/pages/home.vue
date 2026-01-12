@@ -1457,6 +1457,11 @@ let searchDebounceTimer = null;
 let searchPopup = null;
 let activeHighlightLayer = null;
 let lastSearchContext = null;
+let lastSearchFeature = null;
+let searchPinMarker = null;
+let searchPinHalo = null;
+let stickySearchCenterLatLng = null;
+let isStickySearchRecentering = false;
 
 const mapFilters = ref([
   {
@@ -1647,23 +1652,35 @@ const exportLoading = ref(false);
 const searchDebounceMs = 300;
 const MAX_SEARCH_SUGGESTIONS = 50;
 
+const VISIBLE_GIS_CATEGORIES = new Set(["tata_ruang", "bencana"]);
+
 const activeLayerCount = computed(() => {
   let count = 0;
-  Object.values(mapLayersStore.availableLayers).forEach((category) => {
+  Object.entries(mapLayersStore.availableLayers).forEach(
+    ([categoryKey, category]) => {
+      if (!VISIBLE_GIS_CATEGORIES.has(categoryKey)) {
+        return;
+      }
     category.layers.forEach((layer) => {
       if (layer.active) {
         count += 1;
       }
     });
-  });
+    }
+  );
   return count;
 });
 
 const getTotalLayerCount = () => {
   let total = 0;
-  Object.values(mapLayersStore.availableLayers).forEach((category) => {
+  Object.entries(mapLayersStore.availableLayers).forEach(
+    ([categoryKey, category]) => {
+      if (!VISIBLE_GIS_CATEGORIES.has(categoryKey)) {
+        return;
+      }
     total += category.layers.length;
-  });
+    }
+  );
   return total;
 };
 
@@ -1676,6 +1693,9 @@ const filteredLayerEntries = computed(() => {
   const entries = [];
 
   Object.entries(mapLayersStore.availableLayers).forEach(([key, category]) => {
+    if (!VISIBLE_GIS_CATEGORIES.has(key)) {
+      return;
+    }
     const filteredLayers = query
       ? category.layers.filter((layer) => {
           const label = layer.label?.toLowerCase() || "";
@@ -1711,6 +1731,13 @@ const searchZoomLevels = {
   kecamatan: 13,
   kabupaten: 11,
 };
+
+const GIS_EXPORT_CATEGORIES = new Set(VISIBLE_GIS_CATEGORIES);
+
+const getActiveGisLayerFilters = () =>
+  (mapLayersStore.activeLayers || [])
+    .filter((layer) => GIS_EXPORT_CATEGORIES.has(layer.category))
+    .map((layer) => `${layer.category}:${layer.id}`);
 
 const ensureSearchIndex = async () => {
   await mapUiStore.loadSearchIndex();
@@ -1837,6 +1864,9 @@ const legendEntries = computed(() => {
 
   Object.entries(mapLayersStore.availableLayers).forEach(
     ([categoryKey, category]) => {
+      if (!VISIBLE_GIS_CATEGORIES.has(categoryKey)) {
+        return;
+      }
       category.layers.forEach((layer) => {
         if (layer.active) {
           const style = GIS_STANDARDS[categoryKey]?.[layer.id] || {
@@ -2880,6 +2910,14 @@ const loadMapData = async () => {
     return;
   }
 
+  const hasActiveFilters = mapFilters.value.some((filter) => filter.enabled);
+  if (!hasActiveFilters) {
+    markerLayers.housing.clearLayers();
+    markerLayers["housing-development"].clearLayers();
+    markerLayers.infrastructure.clearLayers();
+    return;
+  }
+
   try {
     const locationParams = getDashboardFilterParams();
     
@@ -2934,9 +2972,31 @@ const loadMapData = async () => {
     let infrastructureData = [];
     if (infraRes?.success) {
       const rows = infraRes.data?.surveys?.rows || infraRes.data?.surveys || [];
+      const features = infraRes.data?.geojson?.features || [];
+      const featureById = new Map(
+        features
+          .filter((feature) => feature && (feature.id || feature.properties?.id))
+          .map((feature) => [
+            String(feature.properties?.id ?? feature.id),
+            feature,
+          ])
+      );
+
       // Kita map juga agar field villageName pasti ada
       infrastructureData = rows.map(item => ({
         ...item, // Salin semua properti asli (termasuk latitude/longitude/surveyYear)
+        coordinates: (() => {
+          const feature = featureById.get(String(item.id));
+          const coords = feature?.geometry?.coordinates;
+          if (Array.isArray(coords) && coords.length >= 2) {
+            const lng = parseFloat(coords[0]);
+            const lat = parseFloat(coords[1]);
+            if (Number.isFinite(lat) && Number.isFinite(lng)) {
+              return { lat, lng };
+            }
+          }
+          return item.coordinates;
+        })(),
         // Pastikan nama desa terambil dari relasi database
         villageName: item.village?.name || item.profil?.namaDesa 
       }));
@@ -3019,9 +3079,7 @@ watch(
 // Watchers for map filter selections
 watch(selectedLocationFilters, (newSelection) => {
   const activeValues =
-    newSelection.length > 0
-      ? new Set(newSelection)
-      : new Set(locationFilterOptions.map((option) => option.value));
+    newSelection.length > 0 ? new Set(newSelection) : new Set();
 
   mapFilters.value.forEach((filter) => {
     filter.enabled = activeValues.has(filter.type);
@@ -3081,6 +3139,7 @@ const initializeMap = () => {
   }).setView([-2.5, 118], 5);
 
   initMapPanes(mapInstance.value);
+  mapInstance.value.on("moveend zoomend", handleStickySearchCenter);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
@@ -3413,6 +3472,9 @@ const legendSwatchStyle = (style) => {
 
 const clearSearchHighlight = () => {
   searchHighlightLayer.clearLayers();
+  searchPinMarker = null;
+  searchPinHalo = null;
+  stickySearchCenterLatLng = null;
 };
 
 const clearSearchPopup = () => {
@@ -3420,6 +3482,35 @@ const clearSearchPopup = () => {
     mapInstance.value.closePopup(searchPopup);
   }
   searchPopup = null;
+};
+
+const setStickySearchCenter = (latlng) => {
+  stickySearchCenterLatLng = latlng || null;
+};
+
+const handleStickySearchCenter = () => {
+  if (
+    !mapInstance.value ||
+    !stickySearchCenterLatLng ||
+    isStickySearchRecentering
+  ) {
+    return;
+  }
+
+  const center = mapInstance.value.getCenter();
+  if (center && center.distanceTo(stickySearchCenterLatLng) < 0.5) {
+    return;
+  }
+
+  isStickySearchRecentering = true;
+  mapInstance.value.once("moveend", () => {
+    isStickySearchRecentering = false;
+  });
+  mapInstance.value.setView(
+    stickySearchCenterLatLng,
+    mapInstance.value.getZoom(),
+    { animate: false }
+  );
 };
 
 const stripBoundaryPrefix = (value) =>
@@ -3463,7 +3554,7 @@ const buildSearchPopupContent = (item) => {
 
 const addSearchHighlight = (latlng, category) => {
   if (!mapInstance.value || !latlng) {
-    return;
+    return null;
   }
 
   const pulseIcon = L.divIcon({
@@ -3476,17 +3567,31 @@ const addSearchHighlight = (latlng, category) => {
   const marker = L.marker(latlng, { icon: pulseIcon, pane: MAP_PANES.search });
   const radius =
     category === "desa" ? 200 : category === "kecamatan" ? 800 : 2000;
-  const halo = L.circle(latlng, {
-    radius,
-    color: "#1976D2",
-    weight: 2,
-    opacity: 0.6,
-    fillOpacity: 0.08,
-    pane: MAP_PANES.search,
-  });
 
-  searchHighlightLayer.addLayer(halo);
-  searchHighlightLayer.addLayer(marker);
+  if (!searchPinMarker) {
+    searchPinMarker = marker;
+    searchHighlightLayer.addLayer(searchPinMarker);
+  } else {
+    searchPinMarker.setLatLng(latlng);
+    searchPinMarker.setIcon(pulseIcon);
+  }
+
+  if (!searchPinHalo) {
+    searchPinHalo = L.circle(latlng, {
+      radius,
+      color: "#1976D2",
+      weight: 2,
+      opacity: 0.6,
+      fillOpacity: 0.08,
+      pane: MAP_PANES.search,
+    });
+    searchHighlightLayer.addLayer(searchPinHalo);
+  } else {
+    searchPinHalo.setLatLng(latlng);
+    searchPinHalo.setRadius(radius);
+  }
+
+  return searchPinMarker;
 };
 
 const boundaryLayerConfig = {
@@ -3754,19 +3859,37 @@ const handleSearchSelect = async (value) => {
     item,
     latlng,
   };
+  lastSearchFeature = null;
+
+  if (item.id) {
+    try {
+      const feature = await locationAPI.getSpatialFeatureById(item.id);
+      lastSearchFeature = feature || null;
+      // Simpan ID unik dari Postgres ke store untuk mentrigger watcher
+      mapLayersStore.setHighlight(item.id);
+    } catch (e) {
+      console.error("Gagal memuat feature pencarian:", e);
+      if (layerId) {
+        try {
+          if (!mapLayersStore.loadedData?.[categoryKey]?.[layerId]) {
+            await mapLayersStore.loadLayerData(categoryKey, layerId);
+          }
+          mapLayersStore.setHighlight(item.id);
+        } catch (fallbackError) {
+          console.error("Gagal memuat layer pencarian:", fallbackError);
+        }
+      }
+    }
+    return;
+  }
 
   if (layerId) {
     try {
       if (!mapLayersStore.loadedData?.[categoryKey]?.[layerId]) {
         await mapLayersStore.loadLayerData(categoryKey, layerId);
       }
-
-      // Simpan ID unik dari Postgres ke store untuk mentrigger watcher
-      if (item.id) {
-        mapLayersStore.setHighlight(item.id);
-      }
     } catch (e) {
-      console.error("Gagal mengaktifkan layer pencarian:", e);
+      console.error("Gagal memuat layer pencarian:", e);
     }
   }
 };
@@ -3793,6 +3916,7 @@ const handleSearchEnter = async () => {
 const exportTypeMap = {
   housing: "housing",
   "housing-development": "housing-development",
+  infrastructure: "facility",
   infrastruktur: "facility",
 };
 
@@ -3876,6 +4000,31 @@ const handleExport = async () => {
 
   try {
     const exportParams = getDashboardFilterParams();
+    const activeGisLayers = getActiveGisLayerFilters();
+    if (activeGisLayers.length > 0) {
+      exportParams.gisLayers = activeGisLayers.join(",");
+      try {
+        const previewResponse = await exportAPI.preview(
+          exportType,
+          exportParams
+        );
+        const previewCount = Number(
+          previewResponse?.data?.data?.count ?? previewResponse?.data?.count ?? 0
+        );
+        if (Number.isFinite(previewCount) && previewCount === 0) {
+          exportInfoMessage.value =
+            "Tidak ada data yang masuk ke dalam poligon layer GIS yang dipilih.";
+          exportInfoSnackbar.value = true;
+          return;
+        }
+      } catch (previewError) {
+        console.warn("Preview ekspor gagal:", previewError);
+        exportErrorMessage.value =
+          "Pratinjau ekspor gagal atau terlalu lama. Silakan coba lagi.";
+        exportErrorSnackbar.value = true;
+        return;
+      }
+    }
     if (
       exportParams.regencyId &&
       !exportParams.districtId &&
@@ -3934,6 +4083,9 @@ watch(searchSelection, (value) => {
     clearSearchHighlight();
     clearSearchPopup();
     mapLayersStore.clearHighlight();
+    setStickySearchCenter(null);
+    lastSearchFeature = null;
+    lastSearchContext = null;
   }
 });
 
@@ -3954,6 +4106,7 @@ watch(
     clearSearchPopup();
 
     if (!newId || !mapInstance.value) {
+      setStickySearchCenter(null);
       return;
     }
 
@@ -3972,13 +4125,22 @@ watch(
     };
     let foundFeature = null;
     const isContextMatch = lastSearchContext?.id === newId;
+    let featureOverride = lastSearchFeature;
+    if (featureOverride?.type === "FeatureCollection") {
+      featureOverride = featureOverride.features?.[0] || null;
+    }
+
+    if (featureOverride?.geometry && matchFeatureId(featureOverride)) {
+      foundFeature = featureOverride;
+    }
+
     const contextLayerData = isContextMatch
       ? mapLayersStore.loadedData?.[lastSearchContext.categoryKey]?.[
           lastSearchContext.layerId
         ]
       : null;
 
-    if (contextLayerData?.features) {
+    if (!foundFeature && contextLayerData?.features) {
       foundFeature = contextLayerData.features.find(matchFeatureId) || null;
     }
 
@@ -4029,22 +4191,28 @@ watch(
       if (markerLatLng) {
         const markerCategory =
           searchItem?.category || lastSearchContext?.item?.category || "desa";
-        addSearchHighlight(markerLatLng, markerCategory);
+        const marker = addSearchHighlight(markerLatLng, markerCategory);
+        setStickySearchCenter(markerLatLng);
 
         const popupContent = searchItem
           ? buildSearchPopupContent(searchItem)
           : buildPopupContent(foundFeature?.properties);
-        if (popupContent) {
-          searchPopup = L.popup({
+        if (popupContent && marker) {
+          marker.unbindPopup();
+          marker.bindPopup(popupContent, {
             closeButton: true,
-            autoClose: true,
+            autoClose: false,
+            closeOnClick: false,
             className: "search-popup",
-          })
-            .setLatLng(markerLatLng)
-            .setContent(popupContent)
-            .openOn(mapInstance.value);
+          });
+          marker.openPopup();
+          searchPopup = marker.getPopup();
         }
+      } else {
+        setStickySearchCenter(null);
       }
+    } else {
+      setStickySearchCenter(null);
     }
   }
 );

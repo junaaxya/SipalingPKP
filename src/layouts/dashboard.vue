@@ -305,26 +305,52 @@ const notificationCategory = ref('all')
 const resolveFileUrl = (rawValue) => {
   if (!rawValue) return ''
   const raw = String(rawValue).replace(/\\/g, '/')
-  if (/^https?:\/\//i.test(raw) || raw.startsWith('blob:')) return raw
   const baseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
   const apiRoot = baseUrl.replace(/\/api$/i, '')
+  const rebasePath = (path) => (apiRoot ? `${apiRoot}${path}` : path)
+
+  if (/^https?:\/\//i.test(raw) || raw.startsWith('blob:')) {
+    try {
+      const url = new URL(raw)
+      if (url.pathname.startsWith('/api/files/')) {
+        return rebasePath(url.pathname)
+      }
+      if (url.pathname.startsWith('/files/')) {
+        return rebasePath(`/api${url.pathname}`)
+      }
+    } catch {
+      return raw
+    }
+    return raw
+  }
+
   if (raw.startsWith('/api/files/') || raw.startsWith('api/files/')) {
     const path = raw.startsWith('/') ? raw : `/${raw}`
-    return `${apiRoot}${path}`
+    return rebasePath(path)
   }
   if (raw.startsWith('/files/') || raw.startsWith('files/')) {
     const path = raw.startsWith('/') ? raw : `/${raw}`
-    return `${apiRoot}/api${path}`
+    return rebasePath(`/api${path}`)
   }
   const prefix = baseUrl ? `${baseUrl}/files/` : '/api/files/'
   return `${prefix}${raw.replace(/^\/+/, '')}`
 }
 
-const userProfile = computed(() => ({
-  name: appStore.user?.fullName || 'User',
-  role: appStore.primaryRoleName || appStore.user?.userLevel || 'User',
-  avatar: resolveFileUrl(appStore.user?.avatarUrl)
-}))
+const userProfile = computed(() => {
+  const avatarSource =
+    appStore.user?.avatarUrl
+    || appStore.user?.avatar_url
+    || appStore.user?.avatar
+    || appStore.user?.profilePhotoUrl
+    || appStore.user?.photoUrl
+    || ''
+
+  return {
+    name: appStore.user?.fullName || 'User',
+    role: appStore.primaryRoleName || appStore.user?.userLevel || 'User',
+    avatar: resolveFileUrl(avatarSource)
+  }
+})
 
 const baseNavigationItems = [
   {

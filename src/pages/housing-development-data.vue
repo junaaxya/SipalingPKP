@@ -13,6 +13,17 @@
     </v-overlay>
 
     <v-container fluid class="px-2 px-sm-6 py-4">
+      <v-snackbar
+        v-model="snackbar.show"
+        :color="snackbar.color"
+        location="top right"
+        timeout="4000"
+      >
+        {{ snackbar.message }}
+        <template #actions>
+          <v-btn variant="text" @click="snackbar.show = false">Tutup</v-btn>
+        </template>
+      </v-snackbar>
       <!-- Header Section -->
       <v-row class="mb-4">
         <v-col cols="12">
@@ -906,6 +917,11 @@ const pagination = ref({
   hasNextPage: false,
   hasPrevPage: false
 })
+const snackbar = ref({
+  show: false,
+  message: '',
+  color: 'error'
+})
 
 // Filters
 const filters = ref({
@@ -924,6 +940,14 @@ const headers = [
   { title: 'Aksi', key: 'actions', sortable: false, width: '120px' }
 ]
 const itemsPerPageOptions = [10, 20, 50, 100]
+
+const showSnackbar = (message, color = 'error') => {
+  snackbar.value = {
+    show: true,
+    message,
+    color
+  }
+}
 
 // Computed properties
 const resolveStatus = (status, verificationStatus = null) => {
@@ -1794,7 +1818,7 @@ const viewSubmission = async (item) => {
     await markUnderReview(item)
   } catch (error) {
     console.error('Error loading development detail:', error)
-    alert(error?.message || 'Gagal memuat detail perumahan.')
+    showSnackbar(error?.message || 'Gagal memuat detail perumahan.', 'error')
     showDetailDialog.value = false
   } finally {
     isLoading.value = false
@@ -1839,7 +1863,7 @@ const submitReviewDirect = async (item, status) => {
     }
   } catch (error) {
     console.error('Error reviewing submission:', error)
-    alert(error?.message || 'Gagal memverifikasi perumahan.')
+    showSnackbar(error?.message || 'Gagal memverifikasi perumahan.', 'error')
   } finally {
     isLoading.value = false
   }
@@ -1870,7 +1894,7 @@ const submitReview = async () => {
     }
   } catch (error) {
     console.error('Error reviewing submission:', error)
-    alert(error?.message || 'Gagal memverifikasi perumahan.')
+    showSnackbar(error?.message || 'Gagal memverifikasi perumahan.', 'error')
   } finally {
     isLoading.value = false
   }

@@ -1,6 +1,17 @@
 <template>
   <div>
     <v-container fluid class="px-2 px-sm-6 py-4">
+      <v-snackbar
+        v-model="snackbar.show"
+        :color="snackbar.color"
+        location="top right"
+        timeout="4000"
+      >
+        {{ snackbar.message }}
+        <template #actions>
+          <v-btn variant="text" @click="snackbar.show = false">Tutup</v-btn>
+        </template>
+      </v-snackbar>
       <v-card
         class="mx-auto w-100 form-card"
         max-width="1200"
@@ -582,7 +593,21 @@ const manualLocationLoading = ref({
   villages: false
 })
 const isManualLocationSync = ref(false)
+const snackbar = ref({
+  show: false,
+  message: '',
+  color: 'success'
+})
 let housingIdCounter = 0
+
+const showSnackbar = (message, color = 'success') => {
+  snackbar.value = {
+    show: true,
+    message,
+    color
+  }
+}
+const SUCCESS_REDIRECT_DELAY_MS = 800
 
 // Methods
 const addHousing = () => {
@@ -619,8 +644,10 @@ const removeHousing = (id) => {
 }
 
 const formatCoordinateString = (latitude, longitude) => {
-  const lat = Number.isFinite(latitude) ? latitude.toFixed(6) : ''
-  const lng = Number.isFinite(longitude) ? longitude.toFixed(6) : ''
+  const latValue = Number(latitude)
+  const lngValue = Number(longitude)
+  const lat = Number.isFinite(latValue) ? latValue.toFixed(6) : ''
+  const lng = Number.isFinite(lngValue) ? lngValue.toFixed(6) : ''
   return lat && lng ? `${lat}, ${lng}` : ''
 }
 
@@ -1135,7 +1162,7 @@ const loadDevelopmentForEdit = async () => {
     ]
   } catch (error) {
     console.error('Error loading housing development for edit:', error)
-    alert(error?.message || 'Gagal memuat data perumahan untuk diedit.')
+    showSnackbar(error?.message || 'Gagal memuat data perumahan untuk diedit.', 'error')
   }
 }
 
@@ -1191,12 +1218,12 @@ const saveLocalSubmission = (submissionData) => {
 
 const submitForm = async () => {
   if (housingDevelopments.value.length === 0) {
-    alert('Silakan tambahkan minimal 1 perumahan')
+    showSnackbar('Silakan tambahkan minimal 1 perumahan', 'warning')
     return
   }
 
   if (isEditMode.value && housingDevelopments.value.length !== 1) {
-    alert('Edit perumahan hanya mendukung 1 data perumahan.')
+    showSnackbar('Edit perumahan hanya mendukung 1 data perumahan.', 'warning')
     return
   }
 
@@ -1207,7 +1234,7 @@ const submitForm = async () => {
   })
 
   if (hasEmptyFields) {
-    alert('Mohon lengkapi semua field yang wajib diisi untuk setiap perumahan')
+    showSnackbar('Mohon lengkapi semua field yang wajib diisi untuk setiap perumahan', 'warning')
     return
   }
 
@@ -1227,7 +1254,7 @@ const submitForm = async () => {
       if (response?.success === false) {
         throw new Error(response.message || 'Gagal menyimpan perubahan perumahan.')
       }
-      alert('Perubahan perumahan berhasil disimpan!')
+      showSnackbar('Perubahan perumahan berhasil disimpan!', 'success')
     } else {
       const payloads = housingDevelopments.value.map(buildDevelopmentPayload)
       let firstResponse = null
@@ -1242,15 +1269,16 @@ const submitForm = async () => {
       }
 
       saveLocalSubmission(buildLocalSubmission(firstResponse))
-      alert('Formulir survey perumahan berhasil dikirim!')
+      showSnackbar('Formulir survey perumahan berhasil dikirim!', 'success')
       resetForm()
     }
 
     mapDataStore.signalRefresh()
+    await new Promise((resolve) => setTimeout(resolve, SUCCESS_REDIRECT_DELAY_MS))
     router.push('/housing-development-data')
   } catch (error) {
     console.error('Error submitting form:', error)
-    alert(error?.message || 'Terjadi kesalahan saat submit form')
+    showSnackbar(error?.message || 'Terjadi kesalahan saat submit form', 'error')
   } finally {
     isSubmitting.value = false
   }

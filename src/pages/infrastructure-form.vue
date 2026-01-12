@@ -1,6 +1,17 @@
 <template>
   <div>
     <v-container fluid class="px-2 px-sm-6 py-4">
+      <v-snackbar
+        v-model="snackbar.show"
+        :color="snackbar.color"
+        location="top right"
+        timeout="4000"
+      >
+        {{ snackbar.message }}
+        <template #actions>
+          <v-btn variant="text" @click="snackbar.show = false">Tutup</v-btn>
+        </template>
+      </v-snackbar>
       <v-card class="mx-auto w-100 form-card" max-width="1200">
         <!-- Header -->
         <v-card-title class="text-h6 text-sm-h5 text-center py-4">
@@ -1086,6 +1097,12 @@ const currentStep = ref(1);
 const isSubmitting = ref(false);
 const formRef = ref(null);
 const errorMessage = ref("");
+const snackbar = ref({
+  show: false,
+  message: "",
+  color: "success",
+});
+const SUCCESS_REDIRECT_DELAY_MS = 800;
 const locationPickerOpen = ref(false);
 const locationPickerLat = ref(null);
 const locationPickerLng = ref(null);
@@ -1108,6 +1125,14 @@ const validateFacilityRows = () => {
   }
 
   return true;
+};
+
+const showSnackbar = (message, color = "success") => {
+  snackbar.value = {
+    show: true,
+    message,
+    color,
+  };
 };
 
 // Methods
@@ -1736,6 +1761,10 @@ const transformFormDataToAPI = () => {
   const layananAngkutan =
     formData.jaringanTransportasi.layananAngkutanUmum || [];
   const now = new Date().toISOString();
+  const latitudeValue = parseFloat(formData.location.latitude);
+  const longitudeValue = parseFloat(formData.location.longitude);
+  const latitude = Number.isFinite(latitudeValue) ? latitudeValue : null;
+  const longitude = Number.isFinite(longitudeValue) ? longitudeValue : null;
 
   return {
     surveyYear: parseInt(formData.surveyYear) || new Date().getFullYear(),
@@ -1744,6 +1773,8 @@ const transformFormDataToAPI = () => {
     districtId: resolveLocationId(formData.location.district),
     regencyId: resolveLocationId(formData.location.regency),
     provinceId: resolveLocationId(formData.location.province),
+    latitude,
+    longitude,
     status: "submitted",
     submittedAt: now,
 
@@ -1831,8 +1862,10 @@ const loadSurveyForEdit = async () => {
 
     formData.surveyYear = survey.surveyYear || new Date().getFullYear();
     formData.surveyPeriod = survey.surveyPeriod || "q1";
-    formData.location.latitude = null;
-    formData.location.longitude = null;
+    const latValue = parseFloat(survey.latitude ?? survey.location?.latitude);
+    const lngValue = parseFloat(survey.longitude ?? survey.location?.longitude);
+    formData.location.latitude = Number.isFinite(latValue) ? latValue : null;
+    formData.location.longitude = Number.isFinite(lngValue) ? lngValue : null;
 
     await setLocationHierarchy({
       province: survey.province || null,
@@ -1998,10 +2031,11 @@ const submitForm = async () => {
       saveLocalSubmission(buildLocalSubmission(response));
     }
 
-    alert(
+    showSnackbar(
       isEditMode.value
         ? "Perubahan survei infrastruktur berhasil disimpan!"
-        : "Formulir survey infrastruktur berhasil dikirim!"
+        : "Formulir survey infrastruktur berhasil dikirim!",
+      "success"
     );
     mapDataStore.signalRefresh();
 
@@ -2010,6 +2044,9 @@ const submitForm = async () => {
     }
 
     // Redirect based on role access
+    await new Promise((resolve) =>
+      setTimeout(resolve, SUCCESS_REDIRECT_DELAY_MS)
+    );
     router.push(isAdminDesa.value ? "/home" : "/infrastructure-data");
   } catch (error) {
     console.error("Error submitting form:", error);

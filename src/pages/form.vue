@@ -3485,7 +3485,10 @@ const loadSubmissionForEdit = async (submissionId) => {
       submission.reviewNotes || submission.verificationNotes || "";
 
     if (submission.status === "approved") {
-      alert("Data yang sudah disetujui tidak dapat diperbarui.");
+      showPhotoToast(
+        "Data yang sudah disetujui tidak dapat diperbarui.",
+        "warning"
+      );
       editSubmissionId.value = null;
       router.push("/home");
       return;
@@ -3497,7 +3500,7 @@ const loadSubmissionForEdit = async (submissionId) => {
     isDraftSyncPaused.value = false;
   } catch (error) {
     console.error("Failed to load submission for edit:", error);
-    alert(error.message || "Gagal memuat data pengajuan.");
+    showPhotoToast(error.message || "Gagal memuat data pengajuan.", "error");
     editSubmissionId.value = null;
   }
 };
@@ -4098,19 +4101,20 @@ const submitForm = async () => {
     const result = await housingStore.submitForm(formPayload);
 
     if (result.success) {
-      // Show success message
-      alert("Form berhasil disubmit!");
       mapDataStore.signalRefresh();
 
       // Reset form
       housingStore.clearDraft();
       resetForm();
+
+      // Show success message
+      showPhotoToast("Form berhasil disubmit!", "success");
     } else {
-      alert(`Terjadi kesalahan: ${result.error}`);
+      showPhotoToast(`Terjadi kesalahan: ${result.error}`, "error");
     }
   } catch (error) {
     console.error("Error submitting form:", error);
-    alert("Terjadi kesalahan saat submit form");
+    showPhotoToast("Terjadi kesalahan saat submit form", "error");
   } finally {
     isSubmitting.value = false;
   }

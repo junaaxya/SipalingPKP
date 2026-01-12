@@ -31,6 +31,16 @@ export const authAPI = {
     return await api.post('/auth/reactivate', payload)
   },
 
+  // Request password reset
+  requestPasswordReset: async (payload) => {
+    return await api.post('/auth/forgot-password', payload)
+  },
+
+  // Reset password with OTP or token
+  resetPassword: async (payload) => {
+    return await api.post('/auth/reset-password', payload)
+  },
+
   // Get Google OAuth authorization URL
   getGoogleAuthUrl: async (redirectUrl = null) => {
     const params = redirectUrl ? { state: redirectUrl } : {}
@@ -239,6 +249,11 @@ export const locationAPI = {
     })
   },
 
+  // Get spatial feature by id
+  getSpatialFeatureById: async (id) => {
+    return await api.get(`/locations/feature/${encodeURIComponent(id)}`)
+  },
+
   // Get GeoJSON data
   getGeoJSON: async (fileName) => {
     return await api.get('/locations/geojson', {
@@ -326,6 +341,16 @@ export const exportAPI = {
     return await api.get(`/export/${type}`, {
       params,
       responseType: 'blob'
+    })
+  },
+  preview: async (type, params = {}) => {
+    return await api.get(`/export/${type}`, {
+      params: {
+        ...params,
+        preview: true,
+        format: 'json',
+        _ts: Date.now(),
+      }
     })
   },
   getData: async (type, params = {}) => {
