@@ -306,13 +306,18 @@ const formatPhoneNumber = (value) => {
   return `+62 ${groups.join('-')}`
 }
 
+const isValidIndonesianPhone = (value) => {
+  const raw = String(value || '').trim()
+  if (!raw) return true
+  const rawPattern = /^(?:\\+?62|0)\\s*8[\\d\\s()-]{7,12}$/
+  if (rawPattern.test(raw)) return true
+  const digits = normalizePhoneDigits(raw)
+  return /^628\\d{7,12}$/.test(digits)
+}
+
 const phoneRules = [
   v => !v || sanitizeDigits(v).length <= 20 || 'Nomor telepon maksimal 20 karakter',
-  v => {
-    const digits = normalizePhoneDigits(v)
-    if (!digits) return true
-    return /^62\\d{7,12}$/.test(digits) || 'Gunakan format Indonesia (contoh: 08xx atau +62 8xx)'
-  }
+  v => isValidIndonesianPhone(v) || 'Gunakan format Indonesia (contoh: 08xx atau +62 8xx)'
 ]
 
 const maskEmail = (value) => {
