@@ -181,17 +181,30 @@ export const housingAPI = {
 
   // Update form submission (verifier edits)
   updateSubmission: async (submissionId, payload) => {
-    return await api.put(`/housing/submissions/${submissionId}/edit`, payload)
+    const isMultipart = typeof FormData !== 'undefined' && payload instanceof FormData
+    const config = isMultipart
+      ? { headers: { 'Content-Type': 'multipart/form-data' } }
+      : undefined
+    return await api.put(`/housing/submissions/${submissionId}/edit`, payload, config)
   },
 
   // Update own submission (masyarakat)
   updateOwnSubmission: async (submissionId, payload) => {
-    return await api.put(`/housing/submissions/${submissionId}/self`, payload)
+    const isMultipart = typeof FormData !== 'undefined' && payload instanceof FormData
+    const config = isMultipart
+      ? { headers: { 'Content-Type': 'multipart/form-data' } }
+      : undefined
+    return await api.put(`/housing/submissions/${submissionId}/self`, payload, config)
   },
 
   // Admin - Get all submissions
   getAllSubmissions: async (params = {}) => {
     return await api.get('/housing/admin/submissions', { params })
+  },
+
+  // Super Admin - Hard delete submission
+  deleteSubmission: async (submissionId) => {
+    return await api.delete(`/housing/submissions/${submissionId}`)
   },
 }
 
@@ -298,6 +311,11 @@ export const facilityAPI = {
     return await api.post(`/facility/surveys/${surveyId}/review`, reviewData)
   },
 
+  // Super Admin - Hard delete facility survey
+  deleteSurvey: async (surveyId) => {
+    return await api.delete(`/facility/surveys/${surveyId}`)
+  },
+
   // Get facility statistics
   getStatistics: async (params = {}) => {
     return await api.get('/facility/statistics', { params })
@@ -327,6 +345,10 @@ export const housingDevelopmentAPI = {
   },
   reviewDevelopment: async (developmentId, reviewData = {}) => {
     return await api.post(`/housing-development/${developmentId}/review`, reviewData)
+  },
+  // Super Admin - Hard delete housing development
+  deleteDevelopment: async (developmentId) => {
+    return await api.delete(`/housing-development/${developmentId}`)
   },
 
   // Get housing development statistics

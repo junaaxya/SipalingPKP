@@ -19,10 +19,10 @@
           class="mx-auto mb-8"
         />
         <h1 class="text-h2 font-weight-bold text-primary mb-4">
-          Welcome to SIPALING PKP
+          Selamat Datang di SIPALING PKP
         </h1>
         <p class="text-h6 text-medium-emphasis mb-8">
-          Manage your application with ease
+          Kelola aplikasi Anda dengan mudah
         </p>
         
         <div class="d-flex flex-column flex-sm-row justify-center gap-4">
@@ -33,7 +33,7 @@
             to="/auth/signin"
             class="px-8"
           >
-            Sign In
+            Masuk
           </v-btn>
           
           <v-btn
@@ -44,7 +44,7 @@
             to="/auth/signup"
             class="px-8"
           >
-            Sign Up
+            Daftar
           </v-btn>
         </div>
       </v-col>

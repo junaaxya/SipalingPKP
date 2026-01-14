@@ -20,7 +20,7 @@
                 <v-card variant="outlined" rounded="lg">
                   <v-card-title class="px-4 py-3">
                     <h3 class="text-subtitle-1 font-weight-bold">
-                      Ganti Password
+                      Ganti Kata Sandi
                     </h3>
                   </v-card-title>
                   <v-card-text>
@@ -32,7 +32,7 @@
                         v-model="currentPassword"
                         :rules="currentPasswordRules"
                         :type="showCurrentPassword ? 'text' : 'password'"
-                        label="Password Saat Ini"
+                        label="Kata Sandi Saat Ini"
                         variant="outlined"
                         class="mb-4"
                         prepend-inner-icon="mdi-lock"
@@ -44,7 +44,7 @@
                         v-model="newPassword"
                         :rules="newPasswordRules"
                         :type="showNewPassword ? 'text' : 'password'"
-                        label="Password Baru"
+                        label="Kata Sandi Baru"
                         variant="outlined"
                         class="mb-2"
                         prepend-inner-icon="mdi-lock-reset"
@@ -55,7 +55,7 @@
                       <div class="mb-3">
                         <div class="d-flex align-center justify-space-between mb-1">
                           <span class="text-caption text-medium-emphasis">
-                            Kekuatan Password: {{ strengthLabel }}
+                            Kekuatan Kata Sandi: {{ strengthLabel }}
                           </span>
                           <span class="text-caption text-medium-emphasis">
                             {{ strengthScore }}/3
@@ -73,7 +73,7 @@
                         v-model="confirmPassword"
                         :rules="confirmPasswordRules"
                         :type="showConfirmPassword ? 'text' : 'password'"
-                        label="Konfirmasi Password Baru"
+                        label="Konfirmasi Kata Sandi Baru"
                         variant="outlined"
                         class="mb-4"
                         prepend-inner-icon="mdi-lock-check"
@@ -88,7 +88,7 @@
                         block
                         @click="handleChangePassword"
                       >
-                        Simpan Password
+                        Simpan Kata Sandi
                       </v-btn>
                     </v-form>
                   </v-card-text>
@@ -311,15 +311,15 @@ const isStaffUser = computed(() => !appStore.isMasyarakat)
 const canViewPrivacyTab = computed(() => !appStore.isMasyarakat)
 
 const currentPasswordRules = [
-  v => !!v || 'Password saat ini wajib diisi'
+  v => !!v || 'Kata sandi saat ini wajib diisi'
 ]
 const newPasswordRules = [
-  v => !!v || 'Password baru wajib diisi',
+  v => !!v || 'Kata sandi baru wajib diisi',
   v => v.length >= 8 || 'Minimal 8 karakter',
   v => /\d/.test(v) || 'Harus mengandung angka'
 ]
 const confirmPasswordRules = [
-  v => !!v || 'Konfirmasi wajib diisi',
+  v => !!v || 'Konfirmasi kata sandi wajib diisi',
   v => v === newPassword.value || 'Konfirmasi tidak cocok'
 ]
 
@@ -537,7 +537,7 @@ const handleChangePassword = async () => {
       resetForm()
       snackbar.value = {
         show: true,
-        text: response.message || 'Password berhasil diperbarui',
+        text: response.message || 'Kata sandi berhasil diperbarui',
         color: 'success'
       }
     } else {

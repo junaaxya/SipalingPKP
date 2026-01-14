@@ -519,7 +519,7 @@
                           {{ MAX_IMAGES_PER_SECTION }} foto).
                         </p>
                       </div>
-                      <div class="d-flex flex-wrap gap-2">
+                      <div v-if="canUploadPhotos" class="d-flex flex-wrap gap-2">
                         <v-btn
                           color="primary"
                           variant="outlined"
@@ -599,8 +599,9 @@
 
                       <v-col
                         v-if="
+                          canUploadPhotos &&
                           formData.kemiskinan.photos.length <
-                          MAX_IMAGES_PER_SECTION
+                            MAX_IMAGES_PER_SECTION
                         "
                         cols="12"
                         sm="6"
@@ -761,7 +762,7 @@
                       rumah. Ukuran tiap foto hingga {{ MAX_IMAGE_SIZE_MB }}MB.
                     </p>
                   </div>
-                  <div class="d-flex flex-wrap gap-2">
+                  <div v-if="canUploadPhotos" class="d-flex flex-wrap gap-2">
                     <v-btn
                       color="primary"
                       variant="outlined"
@@ -838,7 +839,10 @@
                   </v-col>
 
                   <v-col
-                    v-if="formData.rumah.photos.length < MAX_IMAGES_PER_SECTION"
+                    v-if="
+                      canUploadPhotos &&
+                      formData.rumah.photos.length < MAX_IMAGES_PER_SECTION
+                    "
                     cols="12"
                     sm="6"
                     md="4"
@@ -963,7 +967,7 @@
                       {{ MAX_IMAGE_SIZE_MB }}MB.
                     </p>
                   </div>
-                  <div class="d-flex flex-wrap gap-2">
+                  <div v-if="canUploadPhotos" class="d-flex flex-wrap gap-2">
                     <v-btn
                       color="primary"
                       class="mr-2"
@@ -1043,6 +1047,7 @@
 
                   <v-col
                     v-if="
+                      canUploadPhotos &&
                       formData.bangunan.photos.length < MAX_IMAGES_PER_SECTION
                     "
                     cols="12"
@@ -1214,7 +1219,7 @@
                       {{ MAX_IMAGE_SIZE_MB }}MB.
                     </p>
                   </div>
-                  <div class="d-flex flex-wrap gap-2">
+                  <div v-if="canUploadPhotos" class="d-flex flex-wrap gap-2">
                     <v-btn
                       color="primary"
                       class="mr-2"
@@ -1294,6 +1299,7 @@
 
                   <v-col
                     v-if="
+                      canUploadPhotos &&
                       formData.kesehatan.photos.length < MAX_IMAGES_PER_SECTION
                     "
                     cols="12"
@@ -1538,7 +1544,7 @@
                       {{ MAX_IMAGE_SIZE_MB }}MB.
                     </p>
                   </div>
-                  <div class="d-flex flex-wrap gap-2">
+                  <div v-if="canUploadPhotos" class="d-flex flex-wrap gap-2">
                     <v-btn
                       color="primary"
                       class="mr-2"
@@ -1618,6 +1624,7 @@
 
                   <v-col
                     v-if="
+                      canUploadPhotos &&
                       formData.sanitasi.photos.length < MAX_IMAGES_PER_SECTION
                     "
                     cols="12"
@@ -1758,7 +1765,7 @@
                       {{ MAX_IMAGE_SIZE_MB }}MB.
                     </p>
                   </div>
-                  <div class="d-flex flex-wrap gap-2">
+                  <div v-if="canUploadPhotos" class="d-flex flex-wrap gap-2">
                     <v-btn
                       color="primary"
                       class="mr-2"
@@ -1838,8 +1845,9 @@
 
                   <v-col
                     v-if="
+                      canUploadPhotos &&
                       formData.persampahan.photos.length <
-                      MAX_IMAGES_PER_SECTION
+                        MAX_IMAGES_PER_SECTION
                     "
                     cols="12"
                     sm="6"
@@ -1957,7 +1965,7 @@
                       jalan. Ukuran tiap foto hingga {{ MAX_IMAGE_SIZE_MB }}MB.
                     </p>
                   </div>
-                  <div class="d-flex flex-wrap gap-2">
+                  <div v-if="canUploadPhotos" class="d-flex flex-wrap gap-2">
                     <v-btn
                       color="primary"
                       variant="outlined"
@@ -2034,7 +2042,10 @@
                   </v-col>
 
                   <v-col
-                    v-if="formData.jalan.photos.length < MAX_IMAGES_PER_SECTION"
+                    v-if="
+                      canUploadPhotos &&
+                      formData.jalan.photos.length < MAX_IMAGES_PER_SECTION
+                    "
                     cols="12"
                     sm="6"
                     md="4"
@@ -2163,7 +2174,7 @@
                       energi. Ukuran tiap foto hingga {{ MAX_IMAGE_SIZE_MB }}MB.
                     </p>
                   </div>
-                  <div class="d-flex flex-wrap gap-2">
+                  <div v-if="canUploadPhotos" class="d-flex flex-wrap gap-2">
                     <v-btn
                       color="primary"
                       class="mr-2"
@@ -2241,6 +2252,7 @@
 
                   <v-col
                     v-if="
+                      canUploadPhotos &&
                       formData.energi.photos.length < MAX_IMAGES_PER_SECTION
                     "
                     cols="12"
@@ -2305,7 +2317,11 @@
             <div v-if="currentStep === 10">
               <h3 class="text-h6 mb-4">Tinjau Data</h3>
               <v-alert type="info" class="mb-4">
-                Silakan review data yang telah diisi sebelum submit.
+                {{
+                  isEditMode
+                    ? "Silakan tinjau data yang telah diisi sebelum menyimpan perubahan."
+                    : "Silakan review data yang telah diisi sebelum submit."
+                }}
               </v-alert>
 
               <!-- Summary Cards -->
@@ -2391,7 +2407,7 @@
             @click="submitForm"
           >
             <v-icon start> mdi-check </v-icon>
-            Kirim Formulir
+            {{ isEditMode ? "Simpan Perubahan" : "Kirim Formulir" }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -2417,6 +2433,7 @@ import {
 } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { definePage } from "unplugin-vue-router/runtime";
+import { useAppStore } from "@/stores/app";
 import { useHousingStore } from "@/stores/housing";
 import { useMapDataStore } from "@/stores/mapData";
 import { locationAPI } from "@/services";
@@ -2433,6 +2450,7 @@ definePage({
 });
 
 const housingStore = useHousingStore();
+const appStore = useAppStore();
 const mapDataStore = useMapDataStore();
 const route = useRoute();
 const router = useRouter();
@@ -2654,6 +2672,14 @@ const editSubmissionId = ref(null);
 const editSubmissionStatus = ref("");
 const editSubmissionNotes = ref("");
 const isEditMode = computed(() => Boolean(editSubmissionId.value));
+const canUploadPhotos = computed(() => true);
+const editSubmissionRouteId = computed(() => {
+  const raw = route.query?.edit || route.query?.editId || route.query?.id;
+  if (typeof raw === "string" && raw.trim()) {
+    return raw.trim();
+  }
+  return null;
+});
 
 const provinceOptions = ref([]);
 const regencyOptions = ref([]);
@@ -2706,6 +2732,14 @@ const imageProcessing = reactive(
     return acc;
   }, {})
 );
+const photoRemovals = reactive({
+  houseData: [],
+  waterAccess: [],
+  sanitationAccess: [],
+  wasteManagement: [],
+  roadAccess: [],
+  energyAccess: [],
+});
 const photoToastOpen = ref(false);
 const photoToastMessage = ref("");
 const photoToastColor = ref("error");
@@ -2726,6 +2760,9 @@ const buildDraftPayload = () => {
 
 const scheduleDraftSave = () => {
   if (isDraftSyncPaused.value) {
+    return;
+  }
+  if (isEditMode.value && !appStore.isMasyarakat) {
     return;
   }
   if (draftSaveTimer) {
@@ -3043,6 +3080,10 @@ watch(
 
 onMounted(async () => {
   await fetchProvinces();
+  if (editSubmissionRouteId.value) {
+    await loadSubmissionForEdit(editSubmissionRouteId.value);
+    return;
+  }
   const draft = housingStore.loadDraft();
   if (draft) {
     isDraftSyncPaused.value = true;
@@ -3053,6 +3094,16 @@ onMounted(async () => {
     }
   }
 });
+
+watch(
+  () => editSubmissionRouteId.value,
+  async (newId) => {
+    if (!newId || newId === editSubmissionId.value) {
+      return;
+    }
+    await loadSubmissionForEdit(newId);
+  }
+);
 
 onBeforeUnmount(() => {
   imageSections.forEach((section) => {
@@ -3269,6 +3320,12 @@ const mergeSectionData = (target, source) => {
   });
 };
 
+const resetPhotoRemovals = () => {
+  Object.keys(photoRemovals).forEach((key) => {
+    photoRemovals[key] = [];
+  });
+};
+
 const normalizeLegacyDraft = (draftPemilik) => {
   if (!draftPemilik) return;
   if (
@@ -3351,6 +3408,116 @@ const resolveKriteriaMiskin = (owner) => {
   return { kriteriaMiskin: "Lainnya", kriteriaMiskinLainnya: "" };
 };
 
+const extractFileName = (value) => {
+  if (!value) return "";
+  const normalized = String(value).split("?")[0];
+  const parts = normalized.split(/[\\/]/);
+  return parts[parts.length - 1] || "";
+};
+
+const normalizeStoredFilePath = (value) => {
+  if (!value) return "";
+  const raw = String(value).trim();
+  if (!raw) return "";
+  if (/^https?:\/\//i.test(raw)) {
+    return raw;
+  }
+  const normalized = raw.replace(/\\/g, "/");
+  if (normalized.startsWith("uploads/")) {
+    return normalized.slice("uploads/".length);
+  }
+  const uploadsIndex = normalized.indexOf("/uploads/");
+  if (uploadsIndex !== -1) {
+    return normalized.slice(uploadsIndex + "/uploads/".length);
+  }
+  return normalized.replace(/^\/+/, "");
+};
+
+const buildFileUrl = (value) => {
+  const normalizedValue = normalizeStoredFilePath(value);
+  if (!normalizedValue) return "";
+  if (/^https?:\/\//i.test(normalizedValue)) {
+    return normalizedValue;
+  }
+
+  const apiBase =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+  const trimmedBase = apiBase.replace(/\/$/, "");
+  const fileBase = trimmedBase.endsWith("/api")
+    ? `${trimmedBase}/files/`
+    : `${trimmedBase}/api/files/`;
+
+  const normalized = normalizedValue;
+  if (normalized.startsWith("api/files/")) {
+    return `${fileBase}${normalized.replace(/^api\/files\//, "")}`;
+  }
+  if (normalized.startsWith("files/")) {
+    return `${fileBase}${normalized.replace(/^files\//, "")}`;
+  }
+  return `${fileBase}${normalized}`;
+};
+
+const resolvePhotoUrl = (photo) => {
+  const explicitUrl = photo?.fileUrl || photo?.fileURL || photo?.url;
+  if (explicitUrl && /^https?:\/\//i.test(explicitUrl)) {
+    return explicitUrl;
+  }
+  const rawPath = photo?.filePath || photo?.file_path || explicitUrl;
+  return buildFileUrl(rawPath);
+};
+
+const buildExistingPhoto = (photo, fallbackLabel, index) => {
+  const url = resolvePhotoUrl(photo);
+  const fileName = extractFileName(url || photo?.filePath || photo?.file_path);
+  const caption = photo?.caption ? String(photo.caption) : "";
+  const name =
+    fileName ||
+    (caption ? `${caption} ${index + 1}` : `${fallbackLabel} ${index + 1}`);
+  const sizeValue = Number(photo?.fileSize ?? photo?.file_size);
+
+  return {
+    id: photo?.id || null,
+    url,
+    name,
+    size: Number.isFinite(sizeValue) ? sizeValue : null,
+    existing: true,
+    caption,
+  };
+};
+
+const mapExistingPhotos = (photos, fallbackLabel = "Foto") => {
+  if (!Array.isArray(photos)) return [];
+  return photos
+    .map((photo, index) => buildExistingPhoto(photo, fallbackLabel, index))
+    .filter((photo) => photo.url);
+};
+
+const isKriteriaMiskinPhoto = (photo) => {
+  const caption = String(photo?.caption || photo?.name || "").toLowerCase();
+  return caption.includes("kriteria") || caption.includes("kemiskinan");
+};
+
+const splitHousePhotos = (photos) => {
+  const rumahPhotos = [];
+  const bangunanPhotos = [];
+  const kemiskinanPhotos = [];
+
+  photos.forEach((photo) => {
+    if (isKriteriaMiskinPhoto(photo)) {
+      kemiskinanPhotos.push(photo);
+      return;
+    }
+    const caption = (photo?.caption || "").toLowerCase();
+    if (caption.includes("bangunan")) {
+      bangunanPhotos.push(photo);
+      return;
+    }
+    rumahPhotos.push(photo);
+  });
+
+  return { rumahPhotos, bangunanPhotos, kemiskinanPhotos };
+};
+
 const buildDraftFromSubmission = (submission) => {
   const respondent = submission?.formRespondent || {};
   const owner = submission?.householdOwner || {};
@@ -3361,6 +3528,9 @@ const buildDraftFromSubmission = (submission) => {
   const road = submission?.roadAccess || {};
   const energy = submission?.energyAccess || {};
 
+  const housePhotoList = mapExistingPhotos(house.photos, "Foto Rumah");
+  const { rumahPhotos, bangunanPhotos, kemiskinanPhotos } =
+    splitHousePhotos(housePhotoList);
   const kriteriaMiskin = resolveKriteriaMiskin(owner);
 
   return {
@@ -3372,9 +3542,9 @@ const buildDraftFromSubmission = (submission) => {
     },
     pemilik: {
       nama: owner.ownerName || "",
-      noTelp: owner.ownerPhone || "",
+      noTelp: sanitizeDigits(owner.ownerPhone || ""),
       namaKepalaKeluarga: owner.headOfFamilyName || "",
-      noTelpKepalaKeluarga: owner.headOfFamilyPhone || "",
+      noTelpKepalaKeluarga: sanitizeDigits(owner.headOfFamilyPhone || ""),
       usia: toText(owner.headOfFamilyAge ?? owner.age),
       noKK: owner.familyCardNumber || "",
       jumlahKK: toText(owner.totalFamilyMembers),
@@ -3407,13 +3577,13 @@ const buildDraftFromSubmission = (submission) => {
       memilikiIMB: toYesNo(house.hasBuildingPermit),
       jenisRumah: mapHouseTypeFromApi(house.houseType),
       jumlahPenghuni: toText(house.totalOccupants),
-      photos: [],
+      photos: rumahPhotos,
     },
     bangunan: {
       lantai: mapFloorMaterialFromApi(house.floorMaterial),
       dinding: mapWallMaterialFromApi(house.wallMaterial),
       atap: mapRoofMaterialFromApi(house.roofMaterial),
-      photos: [],
+      photos: bangunanPhotos,
     },
     kesehatan: {
       sumberAirMCK: mapWaterSourceFromApi(water.sanitationWaterSource),
@@ -3421,7 +3591,7 @@ const buildDraftFromSubmission = (submission) => {
       lokasiSumberAir: mapWaterLocationFromApi(water.sanitationWaterLocation),
       sumberAirMinum: mapWaterSourceFromApi(water.drinkingWaterSource),
       kedalamanSumurBorMinum: toText(water.drinkingWaterDepth),
-      photos: [],
+      photos: mapExistingPhotos(water.photos, "Foto Air Bersih"),
     },
     sanitasi: {
       kepemilikanJamban: mapToiletOwnershipFromApi(sanitation.toiletOwnership),
@@ -3437,7 +3607,7 @@ const buildDraftFromSubmission = (submission) => {
       pengaliranAirLimbah: mapWastewaterDisposalFromApi(
         sanitation.wastewaterDisposal
       ),
-      photos: [],
+      photos: mapExistingPhotos(sanitation.photos, "Foto Sanitasi"),
     },
     persampahan: {
       aksesPengangkutanSampah: mapWasteCollectionFromApi(
@@ -3450,22 +3620,22 @@ const buildDraftFromSubmission = (submission) => {
       pengelolaanSampah: mapWasteDisposalMethodFromApi(
         waste.wasteDisposalMethod
       ),
-      photos: [],
+      photos: mapExistingPhotos(waste.photos, "Foto Persampahan"),
     },
     jalan: {
       jenisJalan: mapRoadTypeFromApi(road.roadType),
       konstruksiJalan: mapRoadConstructionFromApi(road.roadConstruction),
       konstruksiLainnya: road.roadConstructionOther || "",
-      photos: [],
+      photos: mapExistingPhotos(road.photos, "Foto Jalan"),
     },
     energi: {
       sumberListrik: mapElectricitySourceFromApi(energy.electricitySource),
       sumberListrikLainnya: energy.electricitySourceOther || "",
       kapasitasListrik: toText(energy.plnCapacity),
-      photos: [],
+      photos: mapExistingPhotos(energy.photos, "Foto Energi"),
     },
     kemiskinan: {
-      photos: [],
+      photos: kemiskinanPhotos,
     },
   };
 };
@@ -3479,10 +3649,12 @@ const loadSubmissionForEdit = async (submissionId) => {
     }
 
     const submission = response.submission;
+    const fallbackPath = appStore.isMasyarakat ? "/home" : "/housing-data";
     editSubmissionId.value = submission.id;
     editSubmissionStatus.value = submission.status || "";
     editSubmissionNotes.value =
       submission.reviewNotes || submission.verificationNotes || "";
+    resetPhotoRemovals();
 
     if (submission.status === "approved") {
       showPhotoToast(
@@ -3490,7 +3662,7 @@ const loadSubmissionForEdit = async (submissionId) => {
         "warning"
       );
       editSubmissionId.value = null;
-      router.push("/home");
+      router.push(fallbackPath);
       return;
     }
 
@@ -3581,6 +3753,9 @@ function registerUploadRef(section, source, el) {
 }
 
 function openImagePicker(section, source = "gallery") {
+  if (!canUploadPhotos.value) {
+    return;
+  }
   const sectionRefs = uploadRefs[section] || {};
   const input = sectionRefs[source];
   if (!input) {
@@ -3739,8 +3914,16 @@ function removeImage(section, index) {
   const sectionData = formData[section];
   if (!sectionData?.photos?.length) return;
   const [removed] = sectionData.photos.splice(index, 1);
-  if (removed?.url) {
+  if (removed?.url && removed?.file instanceof File) {
     URL.revokeObjectURL(removed.url);
+  }
+  if (removed?.id) {
+    const removalKey = photoRemovalTargets[section];
+    if (removalKey && Array.isArray(photoRemovals[removalKey])) {
+      if (!photoRemovals[removalKey].includes(removed.id)) {
+        photoRemovals[removalKey].push(removed.id);
+      }
+    }
   }
   imageErrors[section] = "";
 }
@@ -3749,7 +3932,7 @@ function releaseSectionPhotos(section) {
   const sectionData = formData[section];
   if (!sectionData?.photos?.length) return;
   sectionData.photos.forEach((photo) => {
-    if (photo?.url) {
+    if (photo?.url && photo?.file instanceof File) {
       URL.revokeObjectURL(photo.url);
     }
   });
@@ -3762,6 +3945,22 @@ const appendPhotoFiles = (formPayload, fieldName, photos) => {
       formPayload.append(fieldName, photo.file, photo.file.name);
     }
   });
+};
+
+const hasNewPhotos = () => {
+  const sections = [
+    formData.rumah.photos,
+    formData.bangunan.photos,
+    formData.kesehatan.photos,
+    formData.sanitasi.photos,
+    formData.persampahan.photos,
+    formData.jalan.photos,
+    formData.energi.photos,
+    formData.kemiskinan.photos,
+  ];
+  return sections.some((photos) =>
+    photos?.some((photo) => photo?.file instanceof File)
+  );
 };
 
 function formatFileSize(bytes) {
@@ -3819,12 +4018,195 @@ const photoSectionLabels = {
   jalan: "Dokumentasi Jalan",
   energi: "Dokumentasi Energi",
 };
+const photoRemovalTargets = {
+  rumah: "houseData",
+  bangunan: "houseData",
+  kemiskinan: "houseData",
+  kesehatan: "waterAccess",
+  sanitasi: "sanitationAccess",
+  persampahan: "wasteManagement",
+  jalan: "roadAccess",
+  energi: "energyAccess",
+};
 
 const shouldRequirePhotos = (section) => {
+  if (isEditMode.value) {
+    return false;
+  }
   if (section === "kemiskinan") {
     return Boolean(formData.pemilik.kriteriaMiskin);
   }
   return true;
+};
+
+const buildPhotoRemovalPayload = () => {
+  const payload = {};
+  Object.entries(photoRemovals).forEach(([key, ids]) => {
+    if (Array.isArray(ids) && ids.length) {
+      payload[key] = Array.from(new Set(ids));
+    }
+  });
+  return Object.keys(payload).length ? payload : null;
+};
+
+const buildUpdatePayload = () => {
+  const photoRemovalPayload = buildPhotoRemovalPayload();
+  return {
+  formRespondent: {
+    name: formData.pengisi.nama,
+    email: formData.pengisi.email,
+    position: mapRelationshipToOwner(formData.pengisi.jabatan),
+    positionOther:
+      formData.pengisi.jabatan === "Lainnya"
+        ? formData.pengisi.jabatanLainnya
+        : null,
+    phone: formData.pemilik.noTelp,
+  },
+  householdOwner: {
+    ownerName: formData.pemilik.nama,
+    ownerPhone: formData.pemilik.noTelp,
+    headOfFamilyName: formData.pemilik.namaKepalaKeluarga,
+    headOfFamilyPhone: formData.pemilik.noTelpKepalaKeluarga,
+    headOfFamilyAge: parseInt(formData.pemilik.usia),
+    familyCardNumber: formData.pemilik.noKK,
+    totalFamilyMembers: parseInt(formData.pemilik.jumlahKK),
+    houseNumber: formData.pemilik.alamat,
+    rt: formData.pemilik.rt,
+    rw: formData.pemilik.rw,
+    postalCode: formData.pemilik.postalCode,
+    provinceId: formData.pemilik.province?.id || null,
+    regencyId: formData.pemilik.regency?.id || null,
+    districtId: formData.pemilik.district?.id || null,
+    villageId: formData.pemilik.village?.id || null,
+    latitude: formData.pemilik.latitude || null,
+    longitude: formData.pemilik.longitude || null,
+    educationLevel: mapEducationLevel(formData.pemilik.pendidikan),
+    educationLevelOther:
+      formData.pemilik.pendidikan === "Lainnya"
+        ? formData.pemilik.pendidikan
+        : null,
+    occupation: formData.pemilik.pekerjaan,
+    monthlyIncome: parseFloat(formData.pemilik.penghasilan),
+    landOwnershipStatus: mapLandOwnership(
+      formData.pemilik.statusKepemilikanTanah
+    ),
+    houseOwnershipStatus: mapHouseOwnership(
+      formData.pemilik.statusKepemilikanRumah
+    ),
+    hasReceivedHousingAssistance:
+      formData.pemilik.bantuanPerumahanStatus === "Ya",
+    housingAssistanceYear:
+      formData.pemilik.bantuanPerumahanStatus === "Ya"
+        ? parseInt(formData.pemilik.bantuanPerumahanTahun) || null
+        : null,
+    isRegisteredAsPoor: Boolean(formData.pemilik.kriteriaMiskin),
+    poorRegistrationAttachment:
+      formData.pemilik.kriteriaMiskin === "Lainnya"
+        ? formData.pemilik.kriteriaMiskinLainnya || "Lainnya"
+        : formData.pemilik.kriteriaMiskin || null,
+  },
+  houseData: {
+    buildingArea: parseFloat(formData.rumah.luasBangunan),
+    landArea: parseFloat(formData.rumah.luasTanah),
+    hasBuildingPermit: formData.rumah.memilikiIMB === "Ya",
+    houseType: mapHouseType(formData.rumah.jenisRumah),
+    totalOccupants: parseInt(formData.rumah.jumlahPenghuni),
+    floorMaterial: mapFloorMaterial(formData.bangunan.lantai),
+    wallMaterial: mapWallMaterial(formData.bangunan.dinding),
+    wallMaterialOther:
+      formData.bangunan.dinding === "Lainnya"
+        ? formData.bangunan.dinding
+        : null,
+    roofMaterial: mapRoofMaterial(formData.bangunan.atap),
+    roofMaterialOther:
+      formData.bangunan.atap === "Lainnya" ? formData.bangunan.atap : null,
+  },
+  waterAccess: {
+    sanitationWaterSource: mapWaterSource(formData.kesehatan.sumberAirMCK),
+    sanitationWaterSourceOther:
+      formData.kesehatan.sumberAirMCK === "Sumber Air Lainnya"
+        ? formData.kesehatan.sumberAirMCK
+        : null,
+    sanitationWaterDepth:
+      formData.kesehatan.sumberAirMCK === "Sumur Bor"
+        ? parseInt(formData.kesehatan.kedalamanSumurBor)
+        : null,
+    sanitationWaterLocation: mapWaterLocation(formData.kesehatan.lokasiSumberAir),
+    drinkingWaterSource: mapWaterSource(formData.kesehatan.sumberAirMinum),
+    drinkingWaterSourceOther:
+      formData.kesehatan.sumberAirMinum === "Sumber Air Lainnya"
+        ? formData.kesehatan.sumberAirMinum
+        : null,
+    drinkingWaterDepth:
+      formData.kesehatan.sumberAirMinum === "Sumur Bor"
+        ? parseInt(formData.kesehatan.kedalamanSumurBorMinum)
+        : null,
+  },
+  sanitationAccess: {
+    toiletOwnership: mapToiletOwnership(formData.sanitasi.kepemilikanJamban),
+    toiletCount:
+      formData.sanitasi.kepemilikanJamban !== "Tidak Memiliki Jamban"
+        ? parseInt(formData.sanitasi.jumlahJamban)
+        : 0,
+    toiletType: mapToiletType(formData.sanitasi.jenisCloset),
+    septicTankType: mapSepticTankType(formData.sanitasi.jenisTangkiSeptic),
+    septicTankYear:
+      formData.sanitasi.jenisTangkiSeptic !== "Tidak Memiliki Tanki"
+        ? parseInt(formData.sanitasi.tahunPembuatanTangki)
+        : null,
+    hasSepticPumping: formData.sanitasi.pernahPenyedotan === "Ya",
+    septicPumpingYear:
+      formData.sanitasi.pernahPenyedotan === "Ya"
+        ? parseInt(formData.sanitasi.tahunPenyedotan)
+        : null,
+    septicPumpingService: mapSepticPumpingService(
+      formData.sanitasi.jasaSedotTinja
+    ),
+    wastewaterDisposal: mapWastewaterDisposal(
+      formData.sanitasi.pengaliranAirLimbah
+    ),
+  },
+  wasteManagement: {
+    hasWasteCollection: mapWasteCollection(
+      formData.persampahan.aksesPengangkutanSampah
+    ),
+    wasteCollectionManager: mapWasteCollectionManager(
+      formData.persampahan.pengelolaPengangkutanSampah
+    ),
+    wasteCollectionManagerOther:
+      formData.persampahan.pengelolaPengangkutanSampah === "Lainnya"
+        ? formData.persampahan.pengelolaLainnya
+        : null,
+    wasteDisposalMethod: mapWasteDisposalMethod(
+      formData.persampahan.pengelolaanSampah
+    ),
+    wasteDisposalLocation:
+      formData.persampahan.pengelolaanSampah === "Dibuang di Tempat Lainnya"
+        ? formData.persampahan.pengelolaanSampah
+        : null,
+  },
+  roadAccess: {
+    roadType: mapRoadType(formData.jalan.jenisJalan),
+    roadConstruction: mapRoadConstruction(formData.jalan.konstruksiJalan),
+    roadConstructionOther:
+      formData.jalan.konstruksiJalan === "Konstruksi Lainnya"
+        ? formData.jalan.konstruksiLainnya
+        : null,
+  },
+  energyAccess: {
+    electricitySource: mapElectricitySource(formData.energi.sumberListrik),
+    electricitySourceOther:
+      formData.energi.sumberListrik === "Lainnya"
+        ? formData.energi.sumberListrikLainnya
+        : null,
+    plnCapacity:
+      formData.energi.sumberListrik === "PLN Sendiri" ||
+      formData.energi.sumberListrik === "PLN Menumpang"
+        ? formData.energi.kapasitasListrik
+        : null,
+  },
+  ...(photoRemovalPayload ? { photoRemovals: photoRemovalPayload } : {}),
+  };
 };
 
 // Methods
@@ -3880,6 +4262,78 @@ const submitForm = async () => {
   }
 
   try {
+    if (isEditMode.value) {
+      if (!editSubmissionId.value) {
+        showPhotoToast("Data pengajuan tidak ditemukan.", "error");
+        return;
+      }
+
+      const updatePayload = buildUpdatePayload();
+      const hasPhotos = hasNewPhotos();
+      const requestPayload = hasPhotos
+        ? (() => {
+            const formPayload = new FormData();
+            formPayload.append("payload", JSON.stringify(updatePayload));
+            appendPhotoFiles(formPayload, "houseDataPhotos", formData.rumah.photos);
+            appendPhotoFiles(
+              formPayload,
+              "poorRegistrationPhotos",
+              formData.kemiskinan.photos
+            );
+            appendPhotoFiles(
+              formPayload,
+              "houseStructurePhotos",
+              formData.bangunan.photos
+            );
+            appendPhotoFiles(
+              formPayload,
+              "waterAccessPhotos",
+              formData.kesehatan.photos
+            );
+            appendPhotoFiles(
+              formPayload,
+              "sanitationAccessPhotos",
+              formData.sanitasi.photos
+            );
+            appendPhotoFiles(
+              formPayload,
+              "wasteManagementPhotos",
+              formData.persampahan.photos
+            );
+            appendPhotoFiles(formPayload, "roadAccessPhotos", formData.jalan.photos);
+            appendPhotoFiles(
+              formPayload,
+              "energyAccessPhotos",
+              formData.energi.photos
+            );
+            return formPayload;
+          })()
+        : updatePayload;
+
+      const result = appStore.isMasyarakat
+        ? await housingStore.updateOwnSubmission(
+            editSubmissionId.value,
+            requestPayload
+          )
+        : await housingStore.updateSubmission(
+            editSubmissionId.value,
+            requestPayload
+          );
+
+      if (result.success) {
+        mapDataStore.signalRefresh();
+        showPhotoToast("Perubahan berhasil disimpan.", "success");
+        const targetPath = appStore.isMasyarakat ? "/home" : "/housing-data";
+        router.push(targetPath);
+      } else {
+        showPhotoToast(
+          `Terjadi kesalahan: ${result.error || "Gagal menyimpan perubahan."}`,
+          "error"
+        );
+      }
+      return;
+    }
+
     // Transform form data to match database schema structure
     const apiFormData = {
       // Form Respondent Data (from pengisi section)
@@ -4072,13 +4526,18 @@ const submitForm = async () => {
       },
     };
 
-    const formPayload = new FormData();
-    formPayload.append("payload", JSON.stringify(apiFormData));
-    appendPhotoFiles(formPayload, "houseDataPhotos", formData.rumah.photos);
-    appendPhotoFiles(
-      formPayload,
-      "houseStructurePhotos",
-      formData.bangunan.photos
+      const formPayload = new FormData();
+      formPayload.append("payload", JSON.stringify(apiFormData));
+      appendPhotoFiles(formPayload, "houseDataPhotos", formData.rumah.photos);
+      appendPhotoFiles(
+        formPayload,
+        "poorRegistrationPhotos",
+        formData.kemiskinan.photos
+      );
+      appendPhotoFiles(
+        formPayload,
+        "houseStructurePhotos",
+        formData.bangunan.photos
     );
     appendPhotoFiles(
       formPayload,
@@ -4280,9 +4739,10 @@ const mapWasteCollectionManager = (value) => {
     Pemda: "pemda",
     Pemdes: "pemdes",
     "LSM/Kelompok Masyarakat": "lsm_kelompok_masyarakat",
-    Lainnya: "swasta",
+    Lainnya: "lainnya",
+    Swasta: "swasta",
   };
-  return mapping[value] || "swasta";
+  return mapping[value] || "lainnya";
 };
 
 const mapWasteDisposalMethod = (value) => {
@@ -4517,17 +4977,19 @@ const mapWasteCollectionFromApi = (value) => {
   return value ? "Ya" : "Tidak";
 };
 
-const mapWasteCollectionManagerFromApi = (value) =>
-  mapFromApiValue(
-    value,
-    {
-      Pemda: "pemda",
-      Pemdes: "pemdes",
-      "LSM/Kelompok Masyarakat": "lsm_kelompok_masyarakat",
-      Lainnya: "swasta",
-    },
-    ""
-  );
+const mapWasteCollectionManagerFromApi = (value) => {
+  if (value === null || value === undefined) return "";
+  const normalized = String(value).toLowerCase();
+  if (normalized === "pemda") return "Pemda";
+  if (normalized === "pemdes") return "Pemdes";
+  if (normalized === "lsm_kelompok_masyarakat") {
+    return "LSM/Kelompok Masyarakat";
+  }
+  if (normalized === "swasta" || normalized === "lainnya") {
+    return "Lainnya";
+  }
+  return "";
+};
 
 const mapWasteDisposalMethodFromApi = (value) =>
   mapFromApiValue(
@@ -4617,6 +5079,7 @@ const resetForm = () => {
     imageErrors[section] = "";
     imageProcessing[section] = false;
   });
+  resetPhotoRemovals();
   photoToastOpen.value = false;
   photoToastMessage.value = "";
   photoToastColor.value = "error";

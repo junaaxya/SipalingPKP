@@ -444,6 +444,20 @@
                         Tolak
                       </v-tooltip>
                     </v-btn>
+
+                    <v-btn
+                      v-if="canHardDelete"
+                      icon="mdi-delete"
+                      size="small"
+                      variant="text"
+                      color="error"
+                      @click="openDeleteDialog(item)"
+                    >
+                      <v-icon>mdi-delete</v-icon>
+                      <v-tooltip activator="parent" location="top">
+                        Hapus Permanen
+                      </v-tooltip>
+                    </v-btn>
                   </div>
                 </template>
 
@@ -1408,6 +1422,40 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
+
+      <!-- Delete Dialog -->
+      <v-dialog v-model="deleteDialog.show" max-width="520">
+        <v-card>
+          <v-card-title class="text-h6 font-weight-bold">
+            Hapus Data Permanen
+          </v-card-title>
+          <v-card-text>
+            <div class="mb-2">
+              Anda akan menghapus data survei infrastruktur secara permanen.
+            </div>
+            <div class="text-body-2 text-medium-emphasis">
+              Tindakan ini akan menghapus data terkait dan titik lokasi di peta.
+            </div>
+            <div v-if="deleteDialog.item" class="mt-3 text-body-2">
+              <strong>Desa/Kelurahan:</strong>
+              {{ deleteDialog.item.villageName || "-" }}
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn variant="outlined" @click="closeDeleteDialog">
+              Batal
+            </v-btn>
+            <v-btn
+              color="error"
+              :loading="deleteDialog.loading"
+              @click="confirmDelete"
+            >
+              Hapus Permanen
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </v-container>
   </div>
 </template>
@@ -1457,6 +1505,11 @@ const snackbar = ref({
   show: false,
   message: "",
   color: "error",
+});
+const deleteDialog = reactive({
+  show: false,
+  item: null,
+  loading: false,
 });
 const infrastructureExportCategories = getExportCategories("facility");
 const exportCategoryIds = ref(
@@ -1555,6 +1608,7 @@ const showSnackbar = (message, color = "error") => {
 const canExportInfrastructure = computed(() =>
   appStore.hasPermission("export_infrastructure")
 );
+const canHardDelete = computed(() => appStore.isSuperAdmin);
 const canCreateInfrastructure = computed(
   () =>
     !appStore.isVerifikator &&
@@ -2588,6 +2642,38 @@ const submitReview = async () => {
     showSnackbar(error?.message || "Gagal memproses survei.", "error");
   } finally {
     isLoading.value = false;
+  }
+};
+
+const openDeleteDialog = (submission) => {
+  deleteDialog.item = submission;
+  deleteDialog.show = true;
+};
+
+const closeDeleteDialog = () => {
+  deleteDialog.show = false;
+  deleteDialog.item = null;
+  deleteDialog.loading = false;
+};
+
+const confirmDelete = async () => {
+  if (!deleteDialog.item?.id || deleteDialog.loading) return;
+  deleteDialog.loading = true;
+  try {
+    const response = await facilityAPI.deleteSurvey(deleteDialog.item.id);
+    if (response.success) {
+      showSnackbar("Data survei berhasil dihapus permanen.", "success");
+      closeDeleteDialog();
+      await loadData();
+      await mapStore.fetchInfrastruktur();
+      mapStore.signalRefresh();
+    } else {
+      showSnackbar(response.message || "Gagal menghapus data.", "error");
+    }
+  } catch (error) {
+    showSnackbar(error?.message || "Gagal menghapus data.", "error");
+  } finally {
+    deleteDialog.loading = false;
   }
 };
 

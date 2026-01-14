@@ -27,10 +27,10 @@
               class="mx-auto mb-4"
             />
             <h2 class="text-h4 font-weight-bold text-primary">
-              Reset Password
+              Atur Ulang Kata Sandi
             </h2>
             <p class="text-body-1 text-medium-emphasis mt-2">
-              Masukkan password baru untuk akun Anda
+              Masukkan kata sandi baru untuk akun Anda
             </p>
           </v-card-title>
 
@@ -63,7 +63,7 @@
               variant="tonal"
               class="mb-4"
             >
-              Token reset tidak ditemukan. Silakan minta ulang melalui halaman lupa password.
+              Token pengaturan ulang tidak ditemukan. Silakan minta ulang melalui halaman lupa kata sandi.
             </v-alert>
 
             <v-form
@@ -76,7 +76,7 @@
                 v-model="newPassword"
                 :rules="passwordRules"
                 :type="showPassword ? 'text' : 'password'"
-                label="Password Baru"
+                label="Kata Sandi Baru"
                 variant="outlined"
                 prepend-inner-icon="mdi-lock"
                 :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
@@ -89,7 +89,7 @@
                 v-model="confirmPassword"
                 :rules="confirmPasswordRules"
                 :type="showConfirmPassword ? 'text' : 'password'"
-                label="Konfirmasi Password"
+                label="Konfirmasi Kata Sandi"
                 variant="outlined"
                 prepend-inner-icon="mdi-lock-check"
                 :append-inner-icon="showConfirmPassword ? 'mdi-eye' : 'mdi-eye-off'"
@@ -107,7 +107,7 @@
                 :disabled="!valid"
                 class="mb-4"
               >
-                Simpan Password Baru
+                Simpan Kata Sandi Baru
               </v-btn>
             </v-form>
 
@@ -116,7 +116,7 @@
                 to="/auth/forgot-password"
                 class="text-decoration-none text-primary font-weight-medium"
               >
-                Kembali ke Lupa Password
+                Kembali ke Lupa Kata Sandi
               </router-link>
             </div>
           </v-card-text>
@@ -147,18 +147,18 @@ const errorMessage = ref('')
 const infoMessage = ref('')
 
 const passwordRules = [
-  v => !!v || 'Password wajib diisi',
-  v => v.length >= 8 || 'Password minimal 8 karakter',
-  v => v.length <= 128 || 'Password maksimal 128 karakter',
-  v => /(?=.*[a-z])/.test(v) || 'Password harus memiliki huruf kecil',
-  v => /(?=.*[A-Z])/.test(v) || 'Password harus memiliki huruf besar',
-  v => /(?=.*\d)/.test(v) || 'Password harus memiliki angka',
-  v => /(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/.test(v) || 'Password harus memiliki simbol'
+  v => !!v || 'Kata sandi wajib diisi',
+  v => v.length >= 8 || 'Kata sandi minimal 8 karakter',
+  v => v.length <= 128 || 'Kata sandi maksimal 128 karakter',
+  v => /(?=.*[a-z])/.test(v) || 'Kata sandi harus memiliki huruf kecil',
+  v => /(?=.*[A-Z])/.test(v) || 'Kata sandi harus memiliki huruf besar',
+  v => /(?=.*\d)/.test(v) || 'Kata sandi harus memiliki angka',
+  v => /(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/.test(v) || 'Kata sandi harus memiliki simbol'
 ]
 
 const confirmPasswordRules = [
-  v => !!v || 'Konfirmasi password wajib diisi',
-  v => v === newPassword.value || 'Konfirmasi password tidak cocok'
+  v => !!v || 'Konfirmasi kata sandi wajib diisi',
+  v => v === newPassword.value || 'Konfirmasi kata sandi tidak cocok'
 ]
 
 const handleResetPassword = async () => {
@@ -175,15 +175,15 @@ const handleResetPassword = async () => {
     })
 
     if (response.success) {
-      infoMessage.value = response.message || 'Password berhasil diperbarui.'
+      infoMessage.value = response.message || 'Kata sandi berhasil diperbarui.'
       setTimeout(() => {
         router.push('/auth/signin')
       }, 1000)
     } else {
-      errorMessage.value = response.message || 'Gagal mereset password.'
+      errorMessage.value = response.message || 'Gagal mengatur ulang kata sandi.'
     }
   } catch (error) {
-    errorMessage.value = error.message || 'Gagal mereset password.'
+    errorMessage.value = error.message || 'Gagal mengatur ulang kata sandi.'
   } finally {
     loading.value = false
   }

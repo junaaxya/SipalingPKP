@@ -18,23 +18,24 @@
         <v-card
           elevation="8"
           rounded="xl"
+          class="auth-card"
         >
-          <v-card-title class="text-center pa-8">
+          <v-card-title class="text-center auth-card-title">
             <v-img
               src="/favicon.ico"
               alt="Logo"
-              max-width="60"
-              class="mx-auto mb-4"
+              max-width="150"
+              class="mx-auto mb-4 auth-logo"
             />
-            <h2 class="text-h4 font-weight-bold text-primary">
-              Create Account
+            <h2 class="text-h4 font-weight-bold text-primary auth-heading">
+              Buat Akun Baru
             </h2>
-            <p class="text-body-1 text-medium-emphasis mt-2">
-              Sign up to get started
+            <p class="text-body-1 text-medium-emphasis mt-2 auth-subtitle">
+              Daftar untuk mulai menggunakan layanan
             </p>
           </v-card-title>
 
-          <v-card-text class="pa-8 pt-0">
+          <v-card-text class="auth-card-text">
             <!-- Error Alert -->
             <v-alert
               v-if="errorMessage"
@@ -55,7 +56,7 @@
               <v-text-field
                 v-model="fullName"
                 :rules="nameRules"
-                label="Full Name"
+                label="Nama Lengkap"
                 variant="outlined"
                 prepend-inner-icon="mdi-account"
                 class="mb-4"
@@ -77,7 +78,7 @@
                 v-model="password"
                 :rules="passwordRules"
                 :type="showPassword ? 'text' : 'password'"
-                label="Password"
+                label="Kata Sandi"
                 variant="outlined"
                 prepend-inner-icon="mdi-lock"
                 :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
@@ -90,7 +91,7 @@
                 v-model="confirmPassword"
                 :rules="confirmPasswordRules"
                 :type="showConfirmPassword ? 'text' : 'password'"
-                label="Confirm Password"
+                label="Konfirmasi Kata Sandi"
                 variant="outlined"
                 prepend-inner-icon="mdi-lock-check"
                 :append-inner-icon="showConfirmPassword ? 'mdi-eye' : 'mdi-eye-off'"
@@ -102,7 +103,7 @@
               <v-text-field
                 v-model="phone"
                 :rules="phoneRules"
-                label="Phone Number"
+                label="Nomor Telepon"
                 variant="outlined"
                 prepend-inner-icon="mdi-phone"
                 class="mb-4"
@@ -147,16 +148,18 @@
               >
                 <template #label>
                   <span class="text-body-2">
-                    I agree to the
+                    Saya menyetujui
                     <a
                       href="#"
                       class="text-primary text-decoration-none"
-                    >Terms of Service</a>
-                    and
+                      @click.prevent="openTerms"
+                    >Ketentuan Layanan</a>
+                    dan
                     <a
                       href="#"
                       class="text-primary text-decoration-none"
-                    >Privacy Policy</a>
+                      @click.prevent="openPrivacy"
+                    >Kebijakan Privasi</a>
                   </span>
                 </template>
               </v-checkbox>
@@ -170,17 +173,17 @@
                 :disabled="!valid"
                 class="mb-4"
               >
-                Create Account
+                Buat Akun
               </v-btn>
 
               <div class="text-center">
                 <span class="text-body-2 text-medium-emphasis">
-                  Already have an account?
+                  Sudah memiliki akun?
                   <router-link
                     to="/auth/signin"
                     class="text-decoration-none text-primary font-weight-medium"
                   >
-                    Sign In
+                    Masuk
                   </router-link>
                 </span>
               </div>
@@ -262,6 +265,184 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <v-dialog
+    v-model="termsDialog"
+    max-width="720"
+    scrollable
+  >
+    <v-card rounded="xl">
+      <v-card-title class="policy-title">
+        <div>
+          <div class="text-overline text-primary">Ketentuan Layanan</div>
+          <div class="text-h6 font-weight-bold policy-title-text">
+            STANDAR OPERASIONAL PROSEDUR DAN KETENTUAN PENGGUNAAN SISTEM INFORMASI SI PALING PKP
+          </div>
+        </div>
+      </v-card-title>
+      <v-divider />
+      <v-card-text class="policy-content">
+        <section class="policy-section">
+          <h3 class="policy-section-title">PASAL 1: DEFINISI DAN RUANG LINGKUP</h3>
+          <ol class="policy-list text-body-2">
+            <li>
+              Sistem Informasi SI PALING PKP (selanjutnya disebut "Sistem") adalah platform resmi
+              penyelenggaraan data Perumahan dan Kawasan Pemukiman.
+            </li>
+            <li>
+              Penyelenggara adalah instansi pemerintah terkait yang memiliki otoritas penuh atas
+              pengelolaan data di wilayah Provinsi Bangka Belitung.
+            </li>
+            <li>
+              Pengguna adalah aparatur sipil, petugas lapangan, atau masyarakat yang telah melalui
+              proses verifikasi identitas secara elektronik.
+            </li>
+          </ol>
+        </section>
+
+        <v-divider class="my-4" />
+
+        <section class="policy-section">
+          <h3 class="policy-section-title">PASAL 2: KEABSAHAN DATA DAN TANGGUNG JAWAB</h3>
+          <ol class="policy-list text-body-2">
+            <li>
+              Pengguna wajib menjamin bahwa seluruh data yang diinput, termasuk namun tidak terbatas
+              pada Nomor Induk Kependudukan (NIK), Kartu Keluarga (KK), dan dokumentasi fisik
+              bangunan, adalah data asli dan akurat sesuai kondisi faktual di lapangan.
+            </li>
+            <li>
+              Manipulasi data geospasial (koordinat GPS) atau penggunaan identitas palsu merupakan
+              pelanggaran hukum serius yang dapat diproses sesuai UU ITE No. 19 Tahun 2016.
+            </li>
+          </ol>
+        </section>
+
+        <v-divider class="my-4" />
+
+        <section class="policy-section">
+          <h3 class="policy-section-title">PASAL 3: HAK AKSES DAN KEAMANAN AKUN</h3>
+          <ol class="policy-list text-body-2">
+            <li>
+              Akses ke fitur-fitur strategis seperti Verifikasi Data dan Penghapusan Data diatur
+              secara ketat berdasarkan peran (Role-Based Access Control).
+            </li>
+            <li>Pengguna bertanggung jawab penuh atas segala aktivitas yang dilakukan menggunakan akun miliknya.</li>
+          </ol>
+        </section>
+
+        <v-divider class="my-4" />
+
+        <section class="policy-section">
+          <h3 class="policy-section-title">PASAL 4: MEKANISME PENGHAPUSAN DATA (HARD DELETE)</h3>
+          <ol class="policy-list text-body-2">
+            <li>
+              Penyelenggara melalui Super Admin memiliki kewenangan absolut untuk melakukan
+              penghapusan data secara permanen (Hard Delete) apabila ditemukan duplikasi data atau
+              data yang tidak valid.
+            </li>
+            <li>
+              Pengguna memahami bahwa tindakan Hard Delete akan menghapus seluruh catatan transaksi,
+              riwayat survei, serta titik koordinat pada peta lokasi secara permanen dari basis data
+              sistem dan tidak dapat dipulihkan kembali.
+            </li>
+          </ol>
+        </section>
+      </v-card-text>
+      <v-card-actions class="px-6 pb-6">
+        <v-spacer />
+        <v-btn color="primary" variant="outlined" @click="termsDialog = false">
+          Tutup
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog
+    v-model="privacyDialog"
+    max-width="720"
+    scrollable
+  >
+    <v-card rounded="xl">
+      <v-card-title class="policy-title">
+        <div>
+          <div class="text-overline text-primary">Kebijakan Privasi</div>
+          <div class="text-h6 font-weight-bold policy-title-text">
+            KEBIJAKAN PELINDUNGAN DATA PRIBADI PENGGUNA SI PALING PKP
+          </div>
+        </div>
+      </v-card-title>
+      <v-divider />
+      <v-card-text class="policy-content">
+        <section class="policy-section">
+          <h3 class="policy-section-title">PASAL 1: DASAR HUKUM</h3>
+          <p class="text-body-2">
+            Kebijakan ini disusun berdasarkan UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi
+            (PDP) dan peraturan perundang-undangan terkait lainnya guna menjamin hak-hak subjek data.
+          </p>
+        </section>
+
+        <v-divider class="my-4" />
+
+        <section class="policy-section">
+          <h3 class="policy-section-title">PASAL 2: PEROLEHAN DAN PENGUMPULAN DATA</h3>
+          <ol class="policy-list text-body-2">
+            <li>Data Identitas: Nama Lengkap, NIK, Nomor KK, Nomor Telepon, dan Alamat Domisili.</li>
+            <li>
+              Data Geospasial: Titik koordinat lokasi bangunan (Latitude & Longitude) serta data
+              spasial administrasi desa/kelurahan.
+            </li>
+            <li>Data Visual: Foto dokumentasi kondisi rumah, infrastruktur, dan sarana prasarana pemukiman.</li>
+          </ol>
+        </section>
+
+        <v-divider class="my-4" />
+
+        <section class="policy-section">
+          <h3 class="policy-section-title">PASAL 3: TUJUAN PENGOLAHAN DATA</h3>
+          <ol class="policy-list text-body-2">
+            <li>Penentuan sasaran penerima bantuan Rumah Tidak Layak Huni (RTLH) secara tepat sasaran.</li>
+            <li>Perencanaan dan pengembangan infrastruktur pemukiman berbasis data akurat.</li>
+            <li>Penyusunan basis data terpadu untuk kebijakan publik di sektor perumahan.</li>
+          </ol>
+        </section>
+
+        <v-divider class="my-4" />
+
+        <section class="policy-section">
+          <h3 class="policy-section-title">PASAL 4: KERAHASIAAN DAN PENYEBARLUASAN DATA</h3>
+          <ol class="policy-list text-body-2">
+            <li>
+              Penyelenggara menjamin bahwa data pribadi tidak akan disalahgunakan atau diperjualbelikan
+              kepada pihak ketiga untuk kepentingan komersial.
+            </li>
+            <li>
+              Pertukaran data antar instansi pemerintah (Dinas Sosial, Bappeda, dsb.) dilakukan melalui
+              jalur koneksi aman demi sinkronisasi program pembangunan.
+            </li>
+          </ol>
+        </section>
+
+        <v-divider class="my-4" />
+
+        <section class="policy-section">
+          <h3 class="policy-section-title">PASAL 5: HAK SUBJEK DATA</h3>
+          <ol class="policy-list text-body-2">
+            <li>
+              Pengguna berhak meminta informasi mengenai status datanya, meminta pemutakhiran data jika
+              terdapat ketidaksesuaian, atau mengajukan permohonan penghapusan data melalui prosedur
+              resmi kepada Administrator Sistem.
+            </li>
+          </ol>
+        </section>
+      </v-card-text>
+      <v-card-actions class="px-6 pb-6">
+        <v-spacer />
+        <v-btn color="primary" variant="outlined" @click="privacyDialog = false">
+          Tutup
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup>
@@ -284,6 +465,8 @@ const showConfirmPassword = ref(false)
 const valid = ref(false)
 const errorMessage = ref('')
 const otpDialog = ref(false)
+const termsDialog = ref(false)
+const privacyDialog = ref(false)
 const otpDigits = ref(Array(6).fill(''))
 const otpInputs = ref([])
 const otpUserId = ref('')
@@ -299,43 +482,53 @@ const signUpIdempotencyEmail = ref('')
 
 // Form rules
 const nameRules = [
-  v => !!v || 'Full name is required',
-  v => v.length >= 2 || 'Name must be at least 2 characters',
-  v => v.length <= 100 || 'Name must be less than 100 characters',
-  v => /^[a-zA-Z\s]+$/.test(v) || 'Name can only contain letters and spaces'
+  v => !!v || 'Nama lengkap wajib diisi',
+  v => v.length >= 2 || 'Nama minimal 2 karakter',
+  v => v.length <= 100 || 'Nama maksimal 100 karakter',
+  v => /^[a-zA-Z\s]+$/.test(v) || 'Nama hanya boleh berisi huruf dan spasi'
 ]
 
 const emailRules = [
-  v => !!v || 'Email is required',
-  v => /.+@.+\..+/.test(v) || 'Email must be valid',
-  v => v.length >= 5 || 'Email must be at least 5 characters',
-  v => v.length <= 255 || 'Email must be less than 255 characters'
+  v => !!v || 'Email wajib diisi',
+  v => /.+@.+\..+/.test(v) || 'Format email tidak valid',
+  v => v.length >= 5 || 'Email minimal 5 karakter',
+  v => v.length <= 255 || 'Email maksimal 255 karakter'
 ]
 
 const passwordRules = [
-  v => !!v || 'Password is required',
-  v => v.length >= 8 || 'Password must be at least 8 characters',
-  v => v.length <= 128 || 'Password must be less than 128 characters',
-  v => /(?=.*[a-z])/.test(v) || 'Password must contain at least one lowercase letter',
-  v => /(?=.*[A-Z])/.test(v) || 'Password must contain at least one uppercase letter',
-  v => /(?=.*\d)/.test(v) || 'Password must contain at least one digit',
-  v => /(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/.test(v) || 'Password must contain at least one special character'
+  v => !!v || 'Kata sandi wajib diisi',
+  v => v.length >= 8 || 'Kata sandi minimal 8 karakter',
+  v => v.length <= 128 || 'Kata sandi maksimal 128 karakter',
+  v => /(?=.*[a-z])/.test(v) || 'Kata sandi harus memiliki huruf kecil',
+  v => /(?=.*[A-Z])/.test(v) || 'Kata sandi harus memiliki huruf besar',
+  v => /(?=.*\d)/.test(v) || 'Kata sandi harus memiliki angka',
+  v => /(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/.test(v) || 'Kata sandi harus memiliki simbol'
 ]
 
 const confirmPasswordRules = [
-  v => !!v || 'Please confirm your password',
-  v => v === password.value || 'Passwords do not match'
+  v => !!v || 'Konfirmasi kata sandi wajib diisi',
+  v => v === password.value || 'Konfirmasi kata sandi tidak cocok'
 ]
 
 const phoneRules = [
-  v => !!v || 'Phone number is required',
-  v => v.length >= 10 || 'Phone number must be at least 10 characters',
-  v => v.length <= 20 || 'Phone number must be less than 20 characters'
+  v => !!v || 'Nomor telepon wajib diisi',
+  v => v.length >= 10 || 'Nomor telepon minimal 10 karakter',
+  v => v.length <= 20 || 'Nomor telepon maksimal 20 karakter'
 ]
 
 const termsRules = [
-  v => !!v || 'You must agree to the terms'
+  v => !!v || 'Anda harus menyetujui ketentuan'
 ]
+
+const openTerms = () => {
+  privacyDialog.value = false
+  termsDialog.value = true
+}
+
+const openPrivacy = () => {
+  termsDialog.value = false
+  privacyDialog.value = true
+}
 
 const otpCode = computed(() => otpDigits.value.join(''))
 const otpCountdownLabel = computed(() => {
@@ -530,6 +723,95 @@ watch(isWhatsappAvailable, (available) => {
 <style scoped>
 .fill-height {
   min-height: 100vh;
+}
+
+.auth-logo {
+  width: clamp(96px, 26vw, 150px);
+  height: clamp(96px, 26vw, 150px);
+}
+
+.auth-card-title {
+  padding: 28px 24px 12px;
+}
+
+.auth-card-text {
+  padding: 0 24px 24px;
+}
+
+.auth-heading {
+  font-size: clamp(1.4rem, 4.2vw, 2rem) !important;
+  line-height: 1.2;
+}
+
+.auth-subtitle {
+  font-size: clamp(0.95rem, 3.4vw, 1.1rem) !important;
+}
+
+.policy-content {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-top: 12px;
+  padding-bottom: 4px;
+}
+
+.policy-list {
+  padding-left: 18px;
+  margin: 0;
+}
+
+.policy-list li + li {
+  margin-top: 6px;
+}
+
+.policy-title {
+  padding: 20px 24px 8px;
+  white-space: normal;
+  align-items: flex-start;
+}
+
+.policy-title-text {
+  font-size: clamp(1rem, 3.6vw, 1.25rem);
+  line-height: 1.3;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.policy-section {
+  padding: 0 4px;
+}
+
+.policy-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+}
+
+@media (max-width: 600px) {
+  .auth-card-title {
+    padding: 20px 16px 8px;
+  }
+
+  .auth-card-text {
+    padding: 0 16px 20px;
+  }
+
+  .policy-title {
+    padding: 16px 16px 4px;
+  }
+
+  .policy-title-text {
+    font-size: clamp(0.95rem, 4vw, 1.1rem);
+  }
+
+  .policy-section-title {
+    font-size: 0.9rem;
+  }
+
+  .otp-inputs {
+    gap: 6px;
+  }
 }
 
 .otp-inputs {

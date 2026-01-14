@@ -6,7 +6,7 @@
     >
       <v-card-title class="pa-6">
         <h2 class="text-h5 font-weight-bold">
-          Users Management
+          Manajemen Pengguna
         </h2>
         <v-spacer />
         <v-btn
@@ -53,7 +53,7 @@
           <v-col cols="12" md="3">
             <v-select
               v-model="roleFilter"
-              label="Filter Role"
+              label="Filter Peran"
               :items="roleFilterOptions"
               item-title="title"
               item-value="value"
@@ -212,7 +212,7 @@
               <v-col cols="12" md="6" v-if="!isEditMode">
                 <v-text-field
                   v-model="addUserForm.password"
-                  label="Password"
+                  label="Kata Sandi"
                   :rules="[rules.required, rules.password]"
                   variant="outlined"
                   :type="showPassword ? 'text' : 'password'"
@@ -225,7 +225,7 @@
               <v-col cols="12" md="6">
                 <v-select
                   v-model="addUserForm.role"
-                  label="Role"
+                  label="Peran"
                   :items="roleOptions"
                   item-title="title"
                   item-value="value"
@@ -385,7 +385,7 @@ const headers = [
   { title: 'Avatar', key: 'avatar', sortable: false },
   { title: 'Nama', key: 'name' },
   { title: 'Email', key: 'email' },
-  { title: 'Role', key: 'role' },
+  { title: 'Peran', key: 'role' },
   { title: 'Wilayah', key: 'location' },
   { title: 'Status', key: 'status' },
   { title: 'Aksi', key: 'actions', sortable: false }
@@ -905,7 +905,7 @@ const editUser = async (user) => {
   const { roleKey } = resolveRole(rawUser)
   const formRole = toFormRole(roleKey)
   if (!formRole) {
-    showSnackbar('Role pengguna tidak didukung untuk diedit.', 'error')
+    showSnackbar('Peran pengguna tidak didukung untuk diedit.', 'error')
     return
   }
 

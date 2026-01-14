@@ -276,6 +276,130 @@
         </v-card-text>
       </v-card>
 
+      <v-row v-if="!isMasyarakat" class="mb-4">
+        <v-col cols="12">
+          <v-card elevation="2" rounded="xl">
+            <v-card-title class="d-flex align-center">
+              <v-icon color="primary" class="mr-2">mdi-filter</v-icon>
+              Filter Wilayah & Tahun
+            </v-card-title>
+            <v-card-text>
+              <v-row dense>
+                <v-col v-if="showProvinceFilter" cols="12" sm="6" md="3">
+                  <v-select
+                    v-model="dashboardFilters.provinceId"
+                    :items="provinceOptions"
+                    item-title="name"
+                    item-value="id"
+                    label="Provinsi"
+                    density="comfortable"
+                    variant="outlined"
+                    :loading="dashboardFilterLoading"
+                    clearable
+                  />
+                </v-col>
+                <v-col cols="12" sm="6" md="3">
+                  <v-select
+                    v-model="dashboardFilters.regencyId"
+                    :items="regencyOptions"
+                    item-title="name"
+                    item-value="id"
+                    label="Kabupaten / Kota"
+                    density="comfortable"
+                    variant="outlined"
+                    :loading="dashboardFilterLoading"
+                    :disabled="
+                      appStore.isAdminKabupaten || appStore.isAdminDesa
+                    "
+                    :clearable="showProvinceFilter"
+                  />
+                </v-col>
+                <v-col cols="12" sm="6" md="3">
+                  <v-select
+                    v-model="dashboardFilters.districtId"
+                    :items="districtOptions"
+                    item-title="name"
+                    item-value="id"
+                    label="Kecamatan"
+                    density="comfortable"
+                    variant="outlined"
+                    :loading="dashboardFilterLoading"
+                    :disabled="
+                      appStore.isAdminDesa || !dashboardFilters.regencyId
+                    "
+                    clearable
+                  />
+                </v-col>
+                <v-col cols="12" sm="6" md="3">
+                  <v-select
+                    v-model="dashboardFilters.villageId"
+                    :items="villageOptions"
+                    item-title="name"
+                    item-value="id"
+                    label="Desa / Kelurahan"
+                    density="comfortable"
+                    variant="outlined"
+                    :loading="dashboardFilterLoading"
+                    :disabled="
+                      appStore.isAdminDesa || !dashboardFilters.districtId
+                    "
+                    clearable
+                  />
+                </v-col>
+                <v-col cols="12" sm="6" md="3">
+                  <v-select
+                    v-model="dashboardFilters.surveyYear"
+                    :items="yearOptions"
+                    label="Tahun Survei"
+                    density="comfortable"
+                    variant="outlined"
+                  />
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- Location Filters Info -->
+      <v-row v-if="currentLocationFilters.length > 0" class="mb-4">
+        <v-col cols="12">
+          <v-alert type="info" variant="tonal" class="mb-0">
+            <template #prepend>
+              <v-icon>mdi-map-marker</v-icon>
+            </template>
+            <div class="d-flex align-center">
+              <span class="mr-2">Statistik difilter berdasarkan lokasi:</span>
+              <v-progress-circular
+                v-if="locationFiltersLoading"
+                indeterminate
+                size="16"
+                width="2"
+                class="mr-2"
+              />
+              <v-chip
+                v-for="filter in currentLocationFilters"
+                :key="filter"
+                size="small"
+                color="primary"
+                variant="outlined"
+                class="mr-1"
+              >
+                {{ filter }}
+              </v-chip>
+              <span
+                v-if="
+                  !locationFiltersLoading && currentLocationFilters.length === 0
+                "
+                class="text-caption text-medium-emphasis"
+              >
+                Tidak ada filter lokasi
+              </span>
+            </div>
+          </v-alert>
+        </v-col>
+      </v-row>
+
       <v-row v-if="isAdminDesa" class="mb-6">
         <v-col cols="12" md="8">
           <v-card elevation="2" rounded="xl">
@@ -411,130 +535,6 @@
               </div>
             </v-card-text>
           </v-card>
-        </v-col>
-      </v-row>
-
-      <v-row v-if="!isMasyarakat" class="mb-4">
-        <v-col cols="12">
-          <v-card elevation="2" rounded="xl">
-            <v-card-title class="d-flex align-center">
-              <v-icon color="primary" class="mr-2">mdi-filter</v-icon>
-              Filter Wilayah & Tahun
-            </v-card-title>
-            <v-card-text>
-              <v-row dense>
-                <v-col v-if="showProvinceFilter" cols="12" sm="6" md="3">
-                  <v-select
-                    v-model="dashboardFilters.provinceId"
-                    :items="provinceOptions"
-                    item-title="name"
-                    item-value="id"
-                    label="Provinsi"
-                    density="comfortable"
-                    variant="outlined"
-                    :loading="dashboardFilterLoading"
-                    clearable
-                  />
-                </v-col>
-                <v-col cols="12" sm="6" md="3">
-                  <v-select
-                    v-model="dashboardFilters.regencyId"
-                    :items="regencyOptions"
-                    item-title="name"
-                    item-value="id"
-                    label="Kabupaten / Kota"
-                    density="comfortable"
-                    variant="outlined"
-                    :loading="dashboardFilterLoading"
-                    :disabled="
-                      appStore.isAdminKabupaten || appStore.isAdminDesa
-                    "
-                    :clearable="showProvinceFilter"
-                  />
-                </v-col>
-                <v-col cols="12" sm="6" md="3">
-                  <v-select
-                    v-model="dashboardFilters.districtId"
-                    :items="districtOptions"
-                    item-title="name"
-                    item-value="id"
-                    label="Kecamatan"
-                    density="comfortable"
-                    variant="outlined"
-                    :loading="dashboardFilterLoading"
-                    :disabled="
-                      appStore.isAdminDesa || !dashboardFilters.regencyId
-                    "
-                    clearable
-                  />
-                </v-col>
-                <v-col cols="12" sm="6" md="3">
-                  <v-select
-                    v-model="dashboardFilters.villageId"
-                    :items="villageOptions"
-                    item-title="name"
-                    item-value="id"
-                    label="Desa / Kelurahan"
-                    density="comfortable"
-                    variant="outlined"
-                    :loading="dashboardFilterLoading"
-                    :disabled="
-                      appStore.isAdminDesa || !dashboardFilters.districtId
-                    "
-                    clearable
-                  />
-                </v-col>
-                <v-col cols="12" sm="6" md="3">
-                  <v-select
-                    v-model="dashboardFilters.surveyYear"
-                    :items="yearOptions"
-                    label="Tahun Survei"
-                    density="comfortable"
-                    variant="outlined"
-                  />
-                </v-col>
-              </v-row>
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
-
-      <!-- Location Filters Info -->
-      <v-row v-if="currentLocationFilters.length > 0" class="mb-4">
-        <v-col cols="12">
-          <v-alert type="info" variant="tonal" class="mb-0">
-            <template #prepend>
-              <v-icon>mdi-map-marker</v-icon>
-            </template>
-            <div class="d-flex align-center">
-              <span class="mr-2">Statistik difilter berdasarkan lokasi:</span>
-              <v-progress-circular
-                v-if="locationFiltersLoading"
-                indeterminate
-                size="16"
-                width="2"
-                class="mr-2"
-              />
-              <v-chip
-                v-for="filter in currentLocationFilters"
-                :key="filter"
-                size="small"
-                color="primary"
-                variant="outlined"
-                class="mr-1"
-              >
-                {{ filter }}
-              </v-chip>
-              <span
-                v-if="
-                  !locationFiltersLoading && currentLocationFilters.length === 0
-                "
-                class="text-caption text-medium-emphasis"
-              >
-                Tidak ada filter lokasi
-              </span>
-            </div>
-          </v-alert>
         </v-col>
       </v-row>
 
@@ -1253,6 +1253,7 @@ import { definePage } from "unplugin-vue-router/runtime";
 import { useRouter } from "vue-router";
 import { useAppStore } from "@/stores/app";
 import { useHousingStore } from "@/stores/housing";
+import { useMapDataStore } from "@/stores/mapData";
 import {
   housingAPI,
   facilityAPI,
@@ -1338,6 +1339,7 @@ definePage({
 const router = useRouter();
 const appStore = useAppStore();
 const housingStore = useHousingStore();
+const mapDataStore = useMapDataStore();
 
 // Reactive state
 const isLoading = ref(false);
@@ -3045,6 +3047,13 @@ const loadMapData = async () => {
 };
 
 watch(
+  () => mapDataStore.refreshToken,
+  async () => {
+    await loadMapData();
+  }
+);
+
+watch(
   () => dashboardFilters.value.provinceId,
   async (value, previous) => {
     if (!dashboardFiltersReady.value || !showProvinceFilter.value) {
@@ -4406,7 +4415,7 @@ const openVerificationQueue = (submission) => {
 
 const handleFixSubmission = (submission) => {
   if (!submission?.id) return;
-  router.push({ path: "/form", query: { editId: submission.id } });
+  router.push({ path: "/form", query: { edit: submission.id } });
 };
 
 const handleStartSurvey = () => {

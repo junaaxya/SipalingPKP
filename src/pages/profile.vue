@@ -307,12 +307,23 @@ const formatPhoneNumber = (value) => {
 }
 
 const isValidIndonesianPhone = (value) => {
-  const raw = String(value || '').trim()
-  if (!raw) return true
-  const rawPattern = /^(?:\\+?62|0)\\s*8[\\d\\s()-]{7,12}$/
-  if (rawPattern.test(raw)) return true
-  const digits = normalizePhoneDigits(raw)
-  return /^628\\d{7,12}$/.test(digits)
+  const rawDigits = sanitizeDigits(value)
+  if (!rawDigits) return true
+  let digits = rawDigits
+  if (digits.startsWith('0')) {
+    digits = `62${digits.slice(1)}`
+  } else if (digits.startsWith('8')) {
+    digits = `62${digits}`
+  }
+  if (!digits.startsWith('62')) return false
+  let subscriber = digits.slice(2)
+  if (subscriber.startsWith('0')) {
+    subscriber = subscriber.slice(1)
+    digits = `62${subscriber}`
+  }
+  if (!subscriber.startsWith('8')) return false
+  const numberBody = subscriber.slice(1)
+  return numberBody.length >= 7 && numberBody.length <= 12
 }
 
 const phoneRules = [

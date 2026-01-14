@@ -18,23 +18,24 @@
         <v-card
           elevation="8"
           rounded="xl"
+          class="auth-card"
         >
-          <v-card-title class="text-center pa-8">
+          <v-card-title class="text-center auth-card-title">
             <v-img
               src="/favicon.ico"
               alt="Logo"
-              max-width="60"
-              class="mx-auto mb-4"
+              max-width="150"
+              class="mx-auto mb-4 auth-logo"
             />
-            <h2 class="text-h4 font-weight-bold text-primary">
-              Lupa Password
+            <h2 class="text-h4 font-weight-bold text-primary auth-heading">
+              Lupa Kata Sandi
             </h2>
-            <p class="text-body-1 text-medium-emphasis mt-2">
-              Pilih metode reset password yang paling nyaman untuk Anda
+            <p class="text-body-1 text-medium-emphasis mt-2 auth-subtitle">
+              Pilih metode pengaturan ulang kata sandi yang paling nyaman untuk Anda
             </p>
           </v-card-title>
 
-          <v-card-text class="pa-8 pt-0">
+          <v-card-text class="auth-card-text">
             <v-alert
               v-if="errorMessage"
               type="error"
@@ -76,12 +77,12 @@
 
               <v-radio-group
                 v-model="resetMethod"
-                label="Metode reset"
+                label="Metode pengaturan ulang"
                 inline
                 class="mb-4"
               >
                 <v-radio
-                  label="Link reset"
+                  label="Tautan pengaturan ulang"
                   value="link"
                 />
                 <v-radio
@@ -111,7 +112,7 @@
                 variant="tonal"
                 class="mb-4"
               >
-                Jika akun terdaftar, instruksi reset akan dikirim sesuai pilihan Anda.
+                Jika akun terdaftar, instruksi pengaturan ulang akan dikirim sesuai pilihan Anda.
               </v-alert>
 
               <v-btn
@@ -123,17 +124,17 @@
                 :disabled="!requestValid"
                 class="mb-4"
               >
-                Kirim Instruksi Reset
+                Kirim Instruksi Pengaturan Ulang
               </v-btn>
 
               <div class="text-center">
                 <span class="text-body-2 text-medium-emphasis">
-                  Sudah ingat password?
+                  Sudah ingat kata sandi?
                   <router-link
                     to="/auth/signin"
                     class="text-decoration-none text-primary font-weight-medium"
                   >
-                    Sign In
+                    Masuk
                   </router-link>
                 </span>
               </div>
@@ -171,7 +172,7 @@
               </v-radio-group>
 
               <div class="text-body-2 text-medium-emphasis mb-3">
-                Masukkan kode OTP 6 digit yang dikirim ke channel pilihan Anda.
+                Masukkan kode OTP 6 digit yang dikirim ke kanal pilihan Anda.
               </div>
 
               <div class="otp-inputs mb-4">
@@ -199,7 +200,7 @@
                 v-model="newPassword"
                 :rules="passwordRules"
                 :type="showPassword ? 'text' : 'password'"
-                label="Password Baru"
+                label="Kata Sandi Baru"
                 variant="outlined"
                 prepend-inner-icon="mdi-lock"
                 :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
@@ -212,7 +213,7 @@
                 v-model="confirmPassword"
                 :rules="confirmPasswordRules"
                 :type="showConfirmPassword ? 'text' : 'password'"
-                label="Konfirmasi Password"
+                label="Konfirmasi Kata Sandi"
                 variant="outlined"
                 prepend-inner-icon="mdi-lock-check"
                 :append-inner-icon="showConfirmPassword ? 'mdi-eye' : 'mdi-eye-off'"
@@ -230,7 +231,7 @@
                 :disabled="!resetValid || otpCode.length !== 6"
                 class="mb-3"
               >
-                Reset Password
+                Atur Ulang Kata Sandi
               </v-btn>
 
               <v-btn
@@ -249,7 +250,7 @@
                 block
                 @click="handleBackToRequest"
               >
-                Ubah Metode Reset
+                Ubah Metode Pengaturan Ulang
               </v-btn>
             </v-form>
           </v-card-text>
@@ -291,18 +292,18 @@ const emailRules = [
 ]
 
 const passwordRules = [
-  v => !!v || 'Password wajib diisi',
-  v => v.length >= 8 || 'Password minimal 8 karakter',
-  v => v.length <= 128 || 'Password maksimal 128 karakter',
-  v => /(?=.*[a-z])/.test(v) || 'Password harus memiliki huruf kecil',
-  v => /(?=.*[A-Z])/.test(v) || 'Password harus memiliki huruf besar',
-  v => /(?=.*\d)/.test(v) || 'Password harus memiliki angka',
-  v => /(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/.test(v) || 'Password harus memiliki simbol'
+  v => !!v || 'Kata sandi wajib diisi',
+  v => v.length >= 8 || 'Kata sandi minimal 8 karakter',
+  v => v.length <= 128 || 'Kata sandi maksimal 128 karakter',
+  v => /(?=.*[a-z])/.test(v) || 'Kata sandi harus memiliki huruf kecil',
+  v => /(?=.*[A-Z])/.test(v) || 'Kata sandi harus memiliki huruf besar',
+  v => /(?=.*\d)/.test(v) || 'Kata sandi harus memiliki angka',
+  v => /(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/.test(v) || 'Kata sandi harus memiliki simbol'
 ]
 
 const confirmPasswordRules = [
-  v => !!v || 'Konfirmasi password wajib diisi',
-  v => v === newPassword.value || 'Konfirmasi password tidak cocok'
+  v => !!v || 'Konfirmasi kata sandi wajib diisi',
+  v => v === newPassword.value || 'Konfirmasi kata sandi tidak cocok'
 ]
 
 const otpCode = computed(() => otpDigits.value.join(''))
@@ -393,7 +394,7 @@ const handleForgotPassword = async () => {
     })
 
     if (response.success) {
-      infoMessage.value = response.message || 'Instruksi reset telah dikirim.'
+      infoMessage.value = response.message || 'Instruksi pengaturan ulang telah dikirim.'
       if (resetMethod.value === 'otp') {
         step.value = 'otp'
         const cooldown = response.data?.cooldownSeconds || response.data?.retryAfter || 0
@@ -401,10 +402,10 @@ const handleForgotPassword = async () => {
         resetOtpInputs()
       }
     } else {
-      errorMessage.value = response.message || 'Gagal mengirim instruksi reset.'
+      errorMessage.value = response.message || 'Gagal mengirim instruksi pengaturan ulang.'
     }
   } catch (error) {
-    errorMessage.value = error.message || 'Gagal mengirim instruksi reset.'
+    errorMessage.value = error.message || 'Gagal mengirim instruksi pengaturan ulang.'
   } finally {
     loading.value = false
   }
@@ -452,7 +453,7 @@ const handleResetPassword = async () => {
     })
 
     if (response.success) {
-      infoMessage.value = response.message || 'Password berhasil diperbarui.'
+      infoMessage.value = response.message || 'Kata sandi berhasil diperbarui.'
       stopOtpCountdown()
       step.value = 'request'
       resetMethod.value = 'link'
@@ -460,10 +461,10 @@ const handleResetPassword = async () => {
       newPassword.value = ''
       confirmPassword.value = ''
     } else {
-      errorMessage.value = response.message || 'Gagal mereset password.'
+      errorMessage.value = response.message || 'Gagal mengatur ulang kata sandi.'
     }
   } catch (error) {
-    errorMessage.value = error.message || 'Gagal mereset password.'
+    errorMessage.value = error.message || 'Gagal mengatur ulang kata sandi.'
   } finally {
     resetLoading.value = false
   }
@@ -487,6 +488,46 @@ onBeforeUnmount(() => {
 <style scoped>
 .fill-height {
   min-height: 100vh;
+}
+
+.auth-logo {
+  width: clamp(96px, 26vw, 150px);
+  height: clamp(96px, 26vw, 150px);
+}
+
+.auth-card-title {
+  padding: 28px 24px 12px;
+  white-space: normal;
+  flex-direction: column;
+}
+
+.auth-card-text {
+  padding: 0 24px 24px;
+}
+
+.auth-heading {
+  font-size: clamp(1.4rem, 4.2vw, 2rem) !important;
+  line-height: 1.2;
+}
+
+.auth-subtitle {
+  font-size: clamp(0.95rem, 3.4vw, 1.1rem) !important;
+  white-space: normal;
+  word-break: break-word;
+}
+
+@media (max-width: 600px) {
+  .auth-card-title {
+    padding: 20px 16px 8px;
+  }
+
+  .auth-card-text {
+    padding: 0 16px 20px;
+  }
+
+  .otp-inputs {
+    gap: 6px;
+  }
 }
 
 .otp-inputs {

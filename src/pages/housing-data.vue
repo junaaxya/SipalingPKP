@@ -6,6 +6,17 @@
     </v-overlay>
 
     <v-container fluid class="px-2 px-sm-6 py-4">
+      <v-snackbar
+        v-model="snackbar.show"
+        :color="snackbar.color"
+        location="top right"
+        timeout="4000"
+      >
+        {{ snackbar.message }}
+        <template #actions>
+          <v-btn variant="text" @click="snackbar.show = false">Tutup</v-btn>
+        </template>
+      </v-snackbar>
       <!-- Header Section -->
       <v-row class="mb-4">
         <v-col cols="12">
@@ -498,6 +509,20 @@
                       <v-icon>mdi-close-circle</v-icon>
                       <v-tooltip activator="parent" location="top">
                         Tolak
+                      </v-tooltip>
+                    </v-btn>
+
+                    <v-btn
+                      v-if="canHardDelete"
+                      icon="mdi-delete"
+                      size="small"
+                      variant="text"
+                      color="error"
+                      @click="openDeleteDialog(item)"
+                    >
+                      <v-icon>mdi-delete</v-icon>
+                      <v-tooltip activator="parent" location="top">
+                        Hapus Permanen
                       </v-tooltip>
                     </v-btn>
                   </div>
@@ -1006,6 +1031,36 @@
                       </v-card>
                     </v-col>
                   </v-row>
+                  <v-row v-if="housePhotoGroups.kriteriaPhotos.length > 0" class="mt-4">
+                    <v-col cols="12">
+                      <v-card variant="outlined">
+                        <v-card-title class="text-subtitle-1">
+                          Berkas Kriteria Miskin
+                        </v-card-title>
+                        <v-card-text>
+                          <v-row>
+                            <v-col
+                              v-for="(photo, index) in housePhotoGroups.kriteriaPhotos"
+                              :key="`kriteria-${index}`"
+                              cols="12"
+                              sm="6"
+                              md="4"
+                            >
+                              <v-img
+                                :src="getPhotoUrl(photo)"
+                                height="200"
+                                cover
+                                class="rounded-lg"
+                              />
+                              <div class="text-caption mt-1">
+                                {{ getPhotoLabel(photo, "Berkas Kriteria Miskin") }}
+                              </div>
+                            </v-col>
+                          </v-row>
+                        </v-card-text>
+                      </v-card>
+                    </v-col>
+                  </v-row>
                 </v-container>
               </v-tabs-window-item>
 
@@ -1384,10 +1439,7 @@
 
                   <!-- Photo Gallery for Rumah -->
                   <v-row
-                    v-if="
-                      selectedSubmission.houseData?.photos &&
-                      selectedSubmission.houseData.photos.length > 0
-                    "
+                    v-if="housePhotoGroups.rumahPhotos.length > 0"
                     class="mt-4"
                   >
                     <v-col cols="12">
@@ -1398,8 +1450,7 @@
                         <v-card-text>
                           <v-row>
                             <v-col
-                              v-for="(photo, index) in selectedSubmission
-                                .houseData.photos"
+                              v-for="(photo, index) in housePhotoGroups.rumahPhotos"
                               :key="index"
                               cols="12"
                               sm="6"
@@ -1501,10 +1552,7 @@
 
                   <!-- Photo Gallery for Bangunan -->
                   <v-row
-                    v-if="
-                      selectedSubmission.houseData?.photos &&
-                      selectedSubmission.houseData.photos.length > 0
-                    "
+                    v-if="housePhotoGroups.bangunanPhotos.length > 0"
                     class="mt-4"
                   >
                     <v-col cols="12">
@@ -1515,8 +1563,7 @@
                         <v-card-text>
                           <v-row>
                             <v-col
-                              v-for="(photo, index) in selectedSubmission
-                                .houseData.photos"
+                              v-for="(photo, index) in housePhotoGroups.bangunanPhotos"
                               :key="index"
                               cols="12"
                               sm="6"
@@ -2736,6 +2783,39 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
+
+      <!-- Delete Dialog -->
+      <v-dialog v-model="deleteDialog.show" max-width="520">
+        <v-card>
+          <v-card-title class="text-h6 font-weight-bold">
+            Hapus Data Permanen
+          </v-card-title>
+          <v-card-text>
+            <div class="mb-2">
+              Anda akan menghapus data survei rumah masyarakat secara permanen.
+            </div>
+            <div class="text-body-2 text-medium-emphasis">
+              Tindakan ini akan menghapus data terkait dan titik lokasi di peta.
+            </div>
+            <div v-if="deleteDialog.item" class="mt-3 text-body-2">
+              <strong>Nama Pemilik:</strong> {{ deleteDialog.item.ownerName || '-' }}
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn variant="outlined" @click="closeDeleteDialog">
+              Batal
+            </v-btn>
+            <v-btn
+              color="error"
+              :loading="deleteDialog.loading"
+              @click="confirmDelete"
+            >
+              Hapus Permanen
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </v-container>
   </div>
 </template>
@@ -2743,6 +2823,7 @@
 <script setup>
 import { ref, computed, reactive, onMounted, watch } from "vue";
 import { definePage } from "unplugin-vue-router/runtime";
+import { useRouter } from "vue-router";
 import { useHousingStore } from "@/stores/housing";
 import { useAppStore } from "@/stores/app";
 import { useMapDataStore } from "@/stores/mapData";
@@ -2764,6 +2845,7 @@ definePage({
 const housingStore = useHousingStore();
 const appStore = useAppStore();
 const mapStore = useMapDataStore();
+const router = useRouter();
 
 // Reactive state
 const isLoading = ref(false);
@@ -2786,6 +2868,16 @@ const exportDialogOpen = ref(false);
 const exportScope = ref("all");
 const exportLoading = ref(false);
 const exportError = ref("");
+const snackbar = ref({
+  show: false,
+  message: "",
+  color: "error",
+});
+const deleteDialog = reactive({
+  show: false,
+  item: null,
+  loading: false,
+});
 const housingExportCategories = getExportCategories("housing");
 const exportCategoryIds = ref(
   housingExportCategories.map((category) => category.id)
@@ -2931,8 +3023,17 @@ const headers = [
 ];
 const itemsPerPageOptions = [10, 20, 50, 100];
 
+const showSnackbar = (message, color = "error") => {
+  snackbar.value = {
+    show: true,
+    message,
+    color,
+  };
+};
+
 // Computed properties
 const submissions = computed(() => housingStore.submissions || []);
+const canHardDelete = computed(() => appStore.isSuperAdmin);
 const pagination = computed(
   () =>
     housingStore.pagination || {
@@ -2990,6 +3091,39 @@ const getPhotoLabel = (photo, fallback) => {
   if (photo?.caption) return photo.caption;
   return fallback;
 };
+
+const isKriteriaMiskinPhoto = (photo) => {
+  const label = String(photo?.caption || photo?.name || "").toLowerCase();
+  return label.includes("kriteria") || label.includes("kemiskinan");
+};
+
+const splitHousePhotos = (photos = []) => {
+  const rumahPhotos = [];
+  const bangunanPhotos = [];
+  const kriteriaPhotos = [];
+
+  photos.forEach((photo) => {
+    if (isKriteriaMiskinPhoto(photo)) {
+      kriteriaPhotos.push(photo);
+      return;
+    }
+
+    const caption = String(photo?.caption || "").toLowerCase();
+    if (caption.includes("bangunan")) {
+      bangunanPhotos.push(photo);
+      return;
+    }
+
+    rumahPhotos.push(photo);
+  });
+
+  return { rumahPhotos, bangunanPhotos, kriteriaPhotos };
+};
+
+const housePhotoGroups = computed(() => {
+  const photos = selectedSubmission.value?.houseData?.photos || [];
+  return splitHousePhotos(photos);
+});
 
 const detailPhotos = computed(() => {
   const submission = selectedSubmission.value;
@@ -4102,19 +4236,7 @@ const hydrateEditForm = async (submission) => {
 
 const openEditDialog = async (submission) => {
   if (!submission?.id) return;
-  isLoading.value = true;
-  showEditDialog.value = true;
-  try {
-    resetEditForm();
-    const result = await housingStore.getSubmission(submission.id);
-    const fullSubmission = result?.success ? result.submission : submission;
-    selectedSubmission.value = fullSubmission;
-    await hydrateEditForm(fullSubmission);
-  } catch (error) {
-    console.error("Failed to load submission for edit:", error);
-  } finally {
-    isLoading.value = false;
-  }
+  router.push({ path: "/form", query: { edit: submission.id } });
 };
 
 const closeEditDialog = () => {
@@ -4308,6 +4430,38 @@ const submitReview = async () => {
     console.error("Error submitting review:", error);
   } finally {
     isLoading.value = false;
+  }
+};
+
+const openDeleteDialog = (submission) => {
+  deleteDialog.item = submission;
+  deleteDialog.show = true;
+};
+
+const closeDeleteDialog = () => {
+  deleteDialog.show = false;
+  deleteDialog.item = null;
+  deleteDialog.loading = false;
+};
+
+const confirmDelete = async () => {
+  if (!deleteDialog.item?.id || deleteDialog.loading) return;
+  deleteDialog.loading = true;
+  try {
+    const response = await housingAPI.deleteSubmission(deleteDialog.item.id);
+    if (response.success) {
+      showSnackbar("Data survei berhasil dihapus permanen.", "success");
+      closeDeleteDialog();
+      await loadData();
+      await mapStore.fetchHousing();
+      mapStore.signalRefresh();
+    } else {
+      showSnackbar(response.message || "Gagal menghapus data.", "error");
+    }
+  } catch (error) {
+    showSnackbar(error?.message || "Gagal menghapus data.", "error");
+  } finally {
+    deleteDialog.loading = false;
   }
 };
 
