@@ -139,16 +139,6 @@
           <p class="text-body-2 text-medium-emphasis mb-3">
             Kode OTP 6 digit dikirim ke {{ otpTargetLabel }}.
           </p>
-          <v-radio-group
-            v-if="otpHasWhatsapp"
-            v-model="otpChannel"
-            inline
-            class="mb-3"
-            label="Kirim ulang melalui"
-          >
-            <v-radio label="WhatsApp" value="whatsapp" />
-            <v-radio label="Email" value="email" />
-          </v-radio-group>
           <v-alert
             v-if="otpErrorMessage"
             type="error"
@@ -224,7 +214,6 @@ const otpDigits = ref(Array(6).fill(""));
 const otpInputs = ref([]);
 const otpUserId = ref("");
 const otpChannel = ref("email");
-const otpAvailableChannels = ref(["email"]);
 const otpCountdown = ref(0);
 const otpTimer = ref(null);
 const otpErrorMessage = ref("");
@@ -260,15 +249,8 @@ const maskEmailForUi = (value) => {
 };
 
 const otpTargetLabel = computed(() => {
-  if (otpChannel.value === "whatsapp") {
-    return "WhatsApp terdaftar";
-  }
   return maskEmailForUi(email.value);
 });
-
-const otpHasWhatsapp = computed(() =>
-  otpAvailableChannels.value.includes("whatsapp")
-);
 
 const focusOtpInput = (index) => {
   const inputComponent = otpInputs.value?.[index];
@@ -374,10 +356,7 @@ const handleSignIn = async () => {
       result.details?.userId
     ) {
       otpUserId.value = result.details.userId;
-      otpChannel.value = result.details.otpChannel || "email";
-      otpAvailableChannels.value = result.details.availableChannels || [
-        "email",
-      ];
+      otpChannel.value = "email";
       otpDialog.value = true;
       otpErrorMessage.value = "";
       startOtpCountdown(
@@ -425,9 +404,6 @@ const handleResendOtp = async () => {
 
   if (result.success) {
     startOtpCountdown(result.cooldownSeconds || 60);
-    if (result.availableChannels) {
-      otpAvailableChannels.value = result.availableChannels;
-    }
     resetOtpInputs();
   } else {
     if (result.retryAfter) {

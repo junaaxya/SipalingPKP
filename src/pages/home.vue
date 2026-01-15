@@ -1265,6 +1265,8 @@ import {
 import { useMapLayersStore } from "@/stores/mapLayers";
 import { useMapUiStore } from "@/stores/mapUi";
 import * as L from "leaflet";
+import "leaflet.markercluster";
+import "leaflet.vectorgrid";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -1377,11 +1379,33 @@ const mapLayersStore = useMapLayersStore();
 const mapUiStore = useMapUiStore();
 const searchHighlightLayer = L.layerGroup();
 const geoJsonLayerCache = new Map();
+const createClusterGroup = () =>
+  L.markerClusterGroup({
+    showCoverageOnHover: false,
+    chunkedLoading: true,
+    maxClusterRadius: 50,
+    spiderfyOnMaxZoom: true,
+    zoomToBoundsOnClick: true,
+    pane: "pane-points",
+    clusterPane: "pane-points",
+  });
+
 const markerLayers = {
-  housing: L.layerGroup(),
-  "housing-development": L.layerGroup(),
-  infrastructure: L.layerGroup(),
+  housing: createClusterGroup(),
+  "housing-development": createClusterGroup(),
+  infrastructure: createClusterGroup(),
 };
+const vectorTileLayers = {
+  housing: null,
+  "housing-development": null,
+  infrastructure: null,
+};
+const vectorTileLayerNames = {
+  housing: "housing",
+  "housing-development": "housing_development",
+  infrastructure: "infrastructure",
+};
+let selectedBaseLayer = "Street";
 const isMasyarakat = computed(() => appStore.isMasyarakat);
 const isAdminDesa = computed(() => appStore.isAdminDesa);
 const isAdminKabupaten = computed(() => appStore.isAdminKabupaten);
@@ -2044,6 +2068,262 @@ const getDashboardFilterParams = () => {
   return { ...params, ...enforced };
 };
 
+const getApiBaseUrl = () => {
+  const base = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+  return base.replace(/\/$/, "");
+};
+
+const buildTileQueryParams = (type) => {
+  const params = getDashboardFilterParams();
+  const query = new URLSearchParams({
+    ...params,
+    status: "approved",
+  });
+  if (type !== "infrastructure") {
+    query.delete("surveyYear");
+  }
+  return query.toString();
+};
+
+const buildTileUrl = (type) => {
+  const base = getApiBaseUrl();
+  const query = buildTileQueryParams(type);
+  return `${base}/map/tiles/${type}/{z}/{x}/{y}.pbf${query ? `?${query}` : ""}`;
+};
+
+const buildVectorTileFetchOptions = () => {
+  const token = localStorage.getItem("auth-token");
+  if (!token) {
+    return {};
+  }
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+};
+
+const resolveLivableStateFromProps = (properties) => {
+  const raw = properties?.is_livable ?? properties?.isLivable;
+  if (raw === true || raw === "true" || raw === 1 || raw === "1") {
+    return true;
+  }
+  if (raw === false || raw === "false" || raw === 0 || raw === "0") {
+    return false;
+  }
+  return null;
+};
+
+const resolveVectorFeatureProperties = (event) =>
+  event?.layer?.properties ||
+  event?.properties ||
+  event?.layer?.feature?.properties ||
+  event?.feature?.properties ||
+  null;
+
+const resolveVectorFeatureId = (type, properties) => {
+  if (!properties) return null;
+  const directId = properties.id ?? properties.feature_id;
+  if (directId !== undefined && directId !== null) {
+    return directId;
+  }
+  if (type === "housing") {
+    return (
+      properties.submission_id ||
+      properties.submissionId ||
+      properties.form_submission_id
+    );
+  }
+  if (type === "housing-development") {
+    return properties.development_id || properties.developmentId;
+  }
+  return properties.survey_id || properties.surveyId;
+};
+
+const buildVectorTileStyles = (type) => {
+  const layerName = vectorTileLayerNames[type];
+  if (type === "housing") {
+    return {
+      [layerName]: (properties) => {
+        const state = resolveLivableStateFromProps(properties);
+        const fillColor =
+          state === true ? "#2E7D32" : state === false ? "#D32F2F" : "#1976D2";
+        return {
+          radius: 5,
+          fillColor,
+          color: "#0f172a",
+          weight: 1.25,
+          opacity: 1,
+          fillOpacity: 0.95,
+        };
+      },
+    };
+  }
+  if (type === "housing-development") {
+    return {
+      [layerName]: {
+        radius: 5,
+        fillColor: "#F59E0B",
+        color: "#0f172a",
+        weight: 1.25,
+        opacity: 1,
+        fillOpacity: 0.95,
+      },
+    };
+  }
+  return {
+    [layerName]: {
+      radius: 5,
+      fillColor: "#0284C7",
+      color: "#0f172a",
+      weight: 1.25,
+      opacity: 1,
+      fillOpacity: 0.95,
+    },
+  };
+};
+
+const buildVectorPopupContent = (type, payload) => {
+  if (type === "housing") {
+    const submission = payload?.submission || payload;
+    const owner = submission?.householdOwner || submission?.household_owner;
+    const location = owner?.village || owner?.village?.name || "-";
+    return `
+      <div style="font-family: sans-serif; font-size: 12px; min-width: 180px;">
+        <h3 style="margin: 0 0 8px 0; font-size: 14px; color: #1976D2; border-bottom: 1px solid #eee; padding-bottom: 4px;">
+          Rumah Masyarakat
+        </h3>
+        <div style="margin-bottom: 4px;"><strong>Pemilik:</strong> ${owner?.ownerName || owner?.owner_name || "-"}</div>
+        <div style="margin-bottom: 4px;"><strong>Alamat:</strong> ${owner?.houseNumber || owner?.house_number || "-"} RT ${owner?.rt || "-"} / RW ${owner?.rw || "-"}</div>
+        <div style="margin-bottom: 4px;"><strong>Kelurahan:</strong> ${location}</div>
+        <div><strong>Status:</strong> ${submission?.status || "-"}</div>
+      </div>
+    `;
+  }
+
+  if (type === "housing-development") {
+    const development = payload?.development || payload;
+    return `
+      <div style="font-family: sans-serif; font-size: 12px; min-width: 180px;">
+        <h3 style="margin: 0 0 8px 0; font-size: 14px; color: #4CAF50; border-bottom: 1px solid #eee; padding-bottom: 4px;">
+          Perumahan
+        </h3>
+        <div style="margin-bottom: 4px;"><strong>Nama:</strong> ${development?.developmentName || development?.development_name || "-"}</div>
+        <div style="margin-bottom: 4px;"><strong>Pengembang:</strong> ${development?.developerName || development?.developer_name || "-"}</div>
+        <div style="margin-bottom: 4px;"><strong>Jenis:</strong> ${development?.housingType || development?.housing_type || "-"}</div>
+        <div><strong>Status:</strong> ${development?.status || "-"}</div>
+      </div>
+    `;
+  }
+
+  const survey = payload?.survey || payload;
+  return `
+    <div style="font-family: sans-serif; font-size: 12px; min-width: 180px;">
+      <h3 style="margin: 0 0 8px 0; font-size: 14px; color: #00ACC1; border-bottom: 1px solid #eee; padding-bottom: 4px;">
+        Infrastruktur
+      </h3>
+      <div style="margin-bottom: 4px;"><strong>Tahun:</strong> ${survey?.surveyYear || survey?.survey_year || "-"}</div>
+      <div><strong>Status:</strong> ${survey?.status || "-"}</div>
+    </div>
+  `;
+};
+
+const attachVectorTileInteractions = (layer, type) => {
+  layer.on("click", async (event) => {
+    if (!mapInstance.value || !event?.latlng) return;
+    const properties = resolveVectorFeatureProperties(event);
+    const featureId = resolveVectorFeatureId(type, properties);
+    const popup = L.popup({ maxWidth: 260 })
+      .setLatLng(event.latlng)
+      .setContent("Memuat detail...");
+    popup.openOn(mapInstance.value);
+
+    if (!featureId) {
+      popup.setContent("Detail tidak tersedia.");
+      return;
+    }
+
+    try {
+      let response = null;
+      if (type === "housing") {
+        response = await housingAPI.getSubmission(featureId);
+      } else if (type === "housing-development") {
+        response = await housingDevelopmentAPI.getDevelopment(featureId);
+      } else {
+        response = await facilityAPI.getSurvey(featureId);
+      }
+      if (!response?.success) {
+        popup.setContent("Gagal memuat detail.");
+        return;
+      }
+      popup.setContent(buildVectorPopupContent(type, response.data));
+    } catch (error) {
+      popup.setContent("Gagal memuat detail.");
+    }
+  });
+};
+
+const createVectorTileLayer = (type) => {
+  const layerName = vectorTileLayerNames[type];
+  const layer = L.vectorGrid.protobuf(buildTileUrl(type), {
+    vectorTileLayerStyles: buildVectorTileStyles(type),
+    interactive: true,
+    maxZoom: 19,
+    pane: MAP_PANES.points,
+    getFeatureId: (feature) => `${type}-${feature.properties.id}`,
+    fetchOptions: buildVectorTileFetchOptions(),
+  });
+  layer.__tileUrl = buildTileUrl(type);
+  layer.__layerName = layerName;
+  attachVectorTileInteractions(layer, type);
+  return layer;
+};
+
+const removeVectorTileLayer = (type) => {
+  const layer = vectorTileLayers[type];
+  if (!layer || !mapInstance.value) return;
+  mapInstance.value.removeLayer(layer);
+  layer.off();
+  vectorTileLayers[type] = null;
+};
+
+const syncVectorTileLayers = () => {
+  if (!mapInstance.value) return;
+  const activeFilters = new Set(
+    mapFilters.value.filter((filter) => filter.enabled).map((filter) => filter.type)
+  );
+
+  Object.keys(vectorTileLayers).forEach((type) => {
+    if (!activeFilters.has(type)) {
+      removeVectorTileLayer(type);
+      return;
+    }
+
+    const nextUrl = buildTileUrl(type);
+    const existing = vectorTileLayers[type];
+    if (existing) {
+      existing.options.fetchOptions = buildVectorTileFetchOptions();
+    }
+    if (!existing || existing.__tileUrl !== nextUrl) {
+      removeVectorTileLayer(type);
+      const nextLayer = createVectorTileLayer(type);
+      vectorTileLayers[type] = nextLayer;
+      nextLayer.addTo(mapInstance.value);
+      return;
+    }
+
+    if (!mapInstance.value.hasLayer(existing)) {
+      existing.addTo(mapInstance.value);
+    }
+  });
+};
+
+const clearVectorTileLayers = () => {
+  Object.keys(vectorTileLayers).forEach((type) => {
+    removeVectorTileLayer(type);
+  });
+};
+
 const villageStatusSummary = computed(() => [
   {
     key: "submitted",
@@ -2636,6 +2916,19 @@ const parseCoordinates = (coordString) => {
   return null;
 };
 
+const getCoordinatesFromFeature = (item) => {
+  const coords = item?.geometry?.coordinates;
+  if (!Array.isArray(coords) || coords.length < 2) {
+    return null;
+  }
+  const lng = Number(coords[0]);
+  const lat = Number(coords[1]);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return null;
+  }
+  return { lat, lng };
+};
+
 const toLatLng = (coords) => {
   if (!coords) {
     return null;
@@ -2653,11 +2946,37 @@ const toLatLng = (coords) => {
 
 // Get coordinates for housing data (mock implementation)
 const getCoordinatesForHousing = (item) => {
+  const featureCoords = getCoordinatesFromFeature(item);
+  if (featureCoords) {
+    return featureCoords;
+  }
+
   if (item.householdOwner?.latitude && item.householdOwner?.longitude) {
     return {
       lat: item.householdOwner.latitude,
       lng: item.householdOwner.longitude,
     };
+  }
+
+  return null;
+};
+
+const getCoordinatesForDevelopment = (item) => {
+  const featureCoords = getCoordinatesFromFeature(item);
+  if (featureCoords) {
+    return featureCoords;
+  }
+
+  if (item?.coordinates?.lat !== undefined && item?.coordinates?.lng !== undefined) {
+    return item.coordinates;
+  }
+
+  const lat = item?.latitude ?? item?.lat;
+  const lng = item?.longitude ?? item?.lng;
+  const parsedLat = Number(lat);
+  const parsedLng = Number(lng);
+  if (Number.isFinite(parsedLat) && Number.isFinite(parsedLng)) {
+    return { lat: parsedLat, lng: parsedLng };
   }
 
   return null;
@@ -2713,6 +3032,11 @@ const matchesLocationParams = (location, params) => {
 const getInfrastructureCoordinates = (item) => {
   if (!item) {
     return null;
+  }
+
+  const featureCoords = getCoordinatesFromFeature(item);
+  if (featureCoords) {
+    return featureCoords;
   }
 
   const readPair = (latValue, lngValue) => {
@@ -2802,7 +3126,12 @@ const createMarkers = (
   };
 
   const resolveLivableState = (item) => {
-    const raw = item?.isLivable ?? item?.is_livable;
+    const properties = item?.properties || {};
+    const raw =
+      properties.isLivable ??
+      properties.is_livable ??
+      item?.isLivable ??
+      item?.is_livable;
     if (raw === true || raw === "true" || raw === 1 || raw === "1") {
       return true;
     }
@@ -2826,15 +3155,25 @@ const createMarkers = (
     return markerColors.housing.unknown;
   };
 
+  const buildDetailButton = (href) => `
+    <div style="margin-top: 8px;">
+      <a href="${href}" style="display: inline-block; background: #1E40AF; color: #ffffff; text-decoration: none; padding: 6px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+        Lihat Detail
+      </a>
+    </div>
+  `;
+
   // Helper membuat titik ringan (Canvas)
   const createOptimizedMarker = (latLng, color) => {
     return L.circleMarker(latLng, {
       radius: 6,
       fillColor: color,
-      color: "#ffffff",
-      weight: 1,
+      color: "#0f172a",
+      weight: 1.25,
       opacity: 1,
-      fillOpacity: 0.85,
+      fillOpacity: 0.9,
+      pane: MAP_PANES.points,
+      interactive: true,
       renderer: mapInstance.value.getRenderer(mapInstance.value)
     });
   };
@@ -2847,17 +3186,38 @@ const createMarkers = (
 
       if (latLng) {
         const housingColor = getHousingMarkerColor(item);
+        const properties = item?.properties || {};
+        const ownerName =
+          properties.ownerName || item.householdOwner?.ownerName || "Tidak ada";
+        const address =
+          properties.address || item.householdOwner?.houseNumber || "-";
+        const rt =
+          properties.rt !== null && properties.rt !== undefined
+            ? properties.rt
+            : item.householdOwner?.rt || "-";
+        const rw =
+          properties.rw !== null && properties.rw !== undefined
+            ? properties.rw
+            : item.householdOwner?.rw || "-";
+        const villageName =
+          properties.village || item.householdOwner?.village?.name || "-";
+        const statusValue = properties.status || item.status || "-";
+        const housingId = properties.id || item.id || "";
+        const detailHref = housingId
+          ? `/housing-data?focusId=${housingId}`
+          : "/housing-data";
         const marker = createOptimizedMarker(latLng, housingColor);
         marker.bindPopup(`
           <div style="font-family: sans-serif; font-size: 12px; min-width: 160px;">
             <h3 style="margin: 0 0 8px 0; font-size: 14px; color: ${housingColor}; border-bottom: 1px solid #eee; padding-bottom: 4px;">
-              🏠 Rumah Masyarakat
+              Rumah Masyarakat
             </h3>
-            <div style="margin-bottom: 4px;"><strong>Pemilik:</strong> ${item.householdOwner?.ownerName || "Tidak ada"}</div>
-            <div style="margin-bottom: 4px;"><strong>Alamat:</strong> ${item.householdOwner?.houseNumber || "-"}, RT ${item.householdOwner?.rt || "-"} / RW ${item.householdOwner?.rw || "-"}</div>
-            <div style="margin-bottom: 4px;"><strong>Kelurahan:</strong> ${item.householdOwner?.village?.name || "-"}</div>
+            <div style="margin-bottom: 4px;"><strong>Pemilik:</strong> ${ownerName}</div>
+            <div style="margin-bottom: 4px;"><strong>Alamat:</strong> ${address}, RT ${rt} / RW ${rw}</div>
+            <div style="margin-bottom: 4px;"><strong>Kelurahan:</strong> ${villageName}</div>
             <div style="margin-bottom: 4px;"><strong>Kelayakan:</strong> ${getLivableLabel(item)}</div>
-            <div><strong>Status:</strong> ${item.status || "-"}</div>
+            <div><strong>Status:</strong> ${statusValue}</div>
+            ${buildDetailButton(detailHref)}
           </div>
         `);
         markerLayers.housing.addLayer(marker);
@@ -2868,22 +3228,41 @@ const createMarkers = (
   // 2. Render Perumahan Pengembang (SUDAH FIX)
   if (mapFilters.value.find((filter) => filter.type === "housing-development")?.enabled) {
     housingDevelopmentData.forEach((item) => {
-      // Koordinat sudah dinormalisasi di loadMapData
-      const latLng = toLatLng(item.coordinates);
+      const coordinates = getCoordinatesForDevelopment(item);
+      const latLng = toLatLng(coordinates);
 
       if (latLng) {
+        const properties = item?.properties || {};
+        const developmentName =
+          properties.developmentName || item.developmentName || "-";
+        const developerName =
+          properties.developerName || item.developerName || "-";
+        const housingType = properties.housingType || item.housingType || "-";
+        const plannedUnitCount =
+          properties.plannedUnitCount || item.jumlahRumahRencana || "0";
+        const locationLabel =
+          [properties.village, properties.district]
+            .filter(Boolean)
+            .join(", ") || item.location?.village || "-";
+        const statusValue = properties.status || item.status || "-";
+        const developmentId = properties.id || item.id || "";
+        const detailHref = developmentId
+          ? `/housing-development-data?focusId=${developmentId}`
+          : "/housing-development-data";
         const marker = createOptimizedMarker(latLng, markerColors["housing-development"]);
         // Tampilkan data yang sudah dimapping
         marker.bindPopup(`
           <div style="font-family: sans-serif; font-size: 12px; min-width: 160px;">
             <h3 style="margin: 0 0 8px 0; font-size: 14px; color: ${markerColors["housing-development"]}; border-bottom: 1px solid #eee; padding-bottom: 4px;">
-              🏢 Perumahan
+              Perumahan
             </h3>
-            <div style="margin-bottom: 4px;"><strong>Nama:</strong> ${item.developmentName || "-"}</div>
-            <div style="margin-bottom: 4px;"><strong>Pengembang:</strong> ${item.developerName || "-"}</div>
-            <div style="margin-bottom: 4px;"><strong>Jenis:</strong> ${item.housingType || "-"}</div>
-            <div style="margin-bottom: 4px;"><strong>Rencana Unit:</strong> ${item.jumlahRumahRencana || "0"} Unit</div>
-            <div style="margin-bottom: 4px;"><strong>Lokasi:</strong> ${item.location?.village || "-"}, ${item.location?.district || "-"}</div>
+            <div style="margin-bottom: 4px;"><strong>Nama:</strong> ${developmentName}</div>
+            <div style="margin-bottom: 4px;"><strong>Pengembang:</strong> ${developerName}</div>
+            <div style="margin-bottom: 4px;"><strong>Jenis:</strong> ${housingType}</div>
+            <div style="margin-bottom: 4px;"><strong>Rencana Unit:</strong> ${plannedUnitCount} Unit</div>
+            <div style="margin-bottom: 4px;"><strong>Lokasi:</strong> ${locationLabel}</div>
+            <div><strong>Status:</strong> ${statusValue}</div>
+            ${buildDetailButton(detailHref)}
           </div>
         `);
         markerLayers["housing-development"].addLayer(marker);
@@ -2899,20 +3278,33 @@ const createMarkers = (
 
       if (latLng) {
         const marker = createOptimizedMarker(latLng, markerColors.infrastructure);
-        
-        // Ambil data yang sudah dimapping di loadMapData
-        const villageName = item.villageName || item.location?.village?.name || "Tidak ada";
-        const submittedAt = item.submittedAt ? new Date(item.submittedAt).toLocaleDateString("id-ID") : "-";
+        const properties = item?.properties || {};
+        const villageName =
+          properties.village ||
+          item.villageName ||
+          item.location?.village?.name ||
+          "Tidak ada";
+        const facilityName = properties.name || villageName || "-";
+        const submittedAt = item.submittedAt
+          ? new Date(item.submittedAt).toLocaleDateString("id-ID")
+          : "-";
+        const statusValue = properties.status || item.status || "-";
+        const surveyId = properties.id || item.id || "";
+        const detailHref = surveyId
+          ? `/infrastructure-data?focusId=${surveyId}`
+          : "/infrastructure-data";
 
         marker.bindPopup(`
           <div style="font-family: sans-serif; font-size: 12px; min-width: 160px;">
             <h3 style="margin: 0 0 8px 0; font-size: 14px; color: ${markerColors.infrastructure}; border-bottom: 1px solid #eee; padding-bottom: 4px;">
-              🏗️ Infrastruktur
+              Infrastruktur
             </h3>
+            <div style="margin-bottom: 4px;"><strong>Nama:</strong> ${facilityName}</div>
             <div style="margin-bottom: 4px;"><strong>Desa/Kel:</strong> ${villageName}</div>
-            <div style="margin-bottom: 4px;"><strong>Tahun:</strong> ${item.surveyYear || "-"}</div>
-            <div style="margin-bottom: 4px;"><strong>Status:</strong> ${item.status || "-"}</div>
+            <div style="margin-bottom: 4px;"><strong>Tahun:</strong> ${properties.surveyYear || item.surveyYear || "-"}</div>
+            <div style="margin-bottom: 4px;"><strong>Status:</strong> ${statusValue}</div>
             <div><strong>Tgl Input:</strong> ${submittedAt}</div>
+            ${buildDetailButton(detailHref)}
           </div>
         `);
         markerLayers.infrastructure.addLayer(marker);
@@ -2940,6 +3332,10 @@ const createMarkers = (
 
 const loadMapData = async () => {
   if (isMasyarakat.value) {
+    markerLayers.housing.clearLayers();
+    markerLayers["housing-development"].clearLayers();
+    markerLayers.infrastructure.clearLayers();
+    clearVectorTileLayers();
     return;
   }
 
@@ -2948,99 +3344,51 @@ const loadMapData = async () => {
     markerLayers.housing.clearLayers();
     markerLayers["housing-development"].clearLayers();
     markerLayers.infrastructure.clearLayers();
+    clearVectorTileLayers();
     return;
   }
 
   try {
-    const locationParams = getDashboardFilterParams();
-    
-    // Gunakan limit besar agar semua titik terlihat
-    const mapQueryParams = {
-      page: 1,
-      limit: 10000, 
-      status: 'approved', 
-      ...locationParams
-    };
-
-    console.time("LoadMapData");
-
-    // 1. Request Paralel (Cepat)
-    const [housingRes, devRes, infraRes] = await Promise.all([
-      housingAPI.getSubmissions(mapQueryParams).catch(e => ({ success: false })),
-      housingDevelopmentAPI.getDevelopments(mapQueryParams).catch(e => ({ success: false })),
-      facilityAPI.getSurveys(mapQueryParams).catch(e => ({ success: false }))
-    ]);
-
-    // 2. Data Rumah Masyarakat
-    let housingData = [];
-    if (housingRes?.success) {
-      housingData = housingRes.data?.submissions?.rows || housingRes.data?.submissions || [];
-    }
-
-    // 3. Data Perumahan (FIX: Mapping nama field yang benar)
-    let housingDevelopmentData = [];
-    if (devRes?.success) {
-      const rows = devRes.data?.developments?.rows || devRes.data?.developments || [];
-      
-      housingDevelopmentData = rows.map(item => ({
-        id: item.id,
-        developmentName: item.developmentName,
-        developerName: item.developerName,
-        housingType: item.housingType,
-        // FIX: Ambil dari 'plannedUnitCount' (nama field di database/API)
-        jumlahRumahRencana: item.plannedUnitCount, 
-        coordinates: { 
-          lat: parseFloat(item.latitude), 
-          lng: parseFloat(item.longitude) 
-        },
-        location: {
-            village: item.village?.name,
-            district: item.district?.name,
-            regency: item.regency?.name
-        }
-      }));
-    }
-
-    // 4. Data Infrastruktur (Tambahkan mapping agar aman)
-    let infrastructureData = [];
-    if (infraRes?.success) {
-      const rows = infraRes.data?.surveys?.rows || infraRes.data?.surveys || [];
-      const features = infraRes.data?.geojson?.features || [];
-      const featureById = new Map(
-        features
-          .filter((feature) => feature && (feature.id || feature.properties?.id))
-          .map((feature) => [
-            String(feature.properties?.id ?? feature.id),
-            feature,
-          ])
-      );
-
-      // Kita map juga agar field villageName pasti ada
-      infrastructureData = rows.map(item => ({
-        ...item, // Salin semua properti asli (termasuk latitude/longitude/surveyYear)
-        coordinates: (() => {
-          const feature = featureById.get(String(item.id));
-          const coords = feature?.geometry?.coordinates;
-          if (Array.isArray(coords) && coords.length >= 2) {
-            const lng = parseFloat(coords[0]);
-            const lat = parseFloat(coords[1]);
-            if (Number.isFinite(lat) && Number.isFinite(lng)) {
-              return { lat, lng };
-            }
-          }
-          return item.coordinates;
-        })(),
-        // Pastikan nama desa terambil dari relasi database
-        villageName: item.village?.name || item.profil?.namaDesa 
-      }));
-    }
-
-    console.timeEnd("LoadMapData");
-
     await nextTick();
     initializeMap();
+    clearVectorTileLayers();
+
+    const filterParams = getDashboardFilterParams();
+    const housingEnabled = mapFilters.value.some(
+      (filter) => filter.type === "housing" && filter.enabled
+    );
+    const developmentEnabled = mapFilters.value.some(
+      (filter) => filter.type === "housing-development" && filter.enabled
+    );
+    const infrastructureEnabled = mapFilters.value.some(
+      (filter) => filter.type === "infrastructure" && filter.enabled
+    );
+
+    const housingParams = { ...filterParams };
+    const developmentParams = { ...filterParams };
+    delete housingParams.surveyYear;
+    delete developmentParams.surveyYear;
+
+    const tasks = [];
+    if (housingEnabled) {
+      tasks.push(mapDataStore.fetchHousing(housingParams));
+    }
+    if (developmentEnabled) {
+      tasks.push(mapDataStore.fetchHousingDevelopment(developmentParams));
+    }
+    if (infrastructureEnabled) {
+      tasks.push(mapDataStore.fetchInfrastruktur(filterParams));
+    }
+
+    await Promise.all(tasks);
+
+    const housingData = mapDataStore.geojson.housing?.features || [];
+    const housingDevelopmentData =
+      mapDataStore.geojson["housing-development"]?.features || [];
+    const infrastructureData =
+      mapDataStore.geojson.infrastruktur?.features || [];
+
     createMarkers(housingData, housingDevelopmentData, infrastructureData);
-    
   } catch (error) {
     console.error("Error fatal saat memuat peta:", error);
   }
@@ -3181,10 +3529,35 @@ const initializeMap = () => {
   initMapPanes(mapInstance.value);
   mapInstance.value.on("moveend zoomend", handleStickySearchCenter);
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: "&copy; OpenStreetMap contributors",
-  }).addTo(mapInstance.value);
+  const streetLayer = L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap contributors",
+    }
+  );
+  const satelliteLayer = L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {
+      maxZoom: 19,
+      attribution: "Tiles &copy; Esri",
+    }
+  );
+  const baseLayers = {
+    Street: streetLayer,
+    Satellite: satelliteLayer,
+  };
+  const initialLayer =
+    selectedBaseLayer === "Satellite" ? satelliteLayer : streetLayer;
+  initialLayer.addTo(mapInstance.value);
+  L.control.layers(baseLayers, null, { position: "topright" }).addTo(
+    mapInstance.value
+  );
+  mapInstance.value.on("baselayerchange", (event) => {
+    if (event && event.name) {
+      selectedBaseLayer = event.name;
+    }
+  });
 
   scaleControl = L.control
     .scale({
@@ -3200,6 +3573,12 @@ const initializeMap = () => {
   searchHighlightLayer.addTo(mapInstance.value);
 
   syncGeoJsonLayers();
+
+  requestAnimationFrame(() => {
+    if (mapInstance.value) {
+      mapInstance.value.invalidateSize({ animate: false });
+    }
+  });
 };
 
 const webMercatorToLatLng = (x, y) => {
@@ -4910,6 +5289,7 @@ onBeforeUnmount(() => {
     searchDebounceTimer = null;
   }
   geoJsonLayerCache.clear();
+  clearVectorTileLayers();
   if (mapInstance.value) {
     mapInstance.value.remove();
     mapInstance.value = null;

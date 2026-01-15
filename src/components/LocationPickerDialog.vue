@@ -116,6 +116,7 @@ const lastAccuracy = ref(null);
 let mapInstance = null;
 let marker = null;
 let accuracyCircle = null;
+let selectedBaseLayer = "Street";
 
 const parseNumber = (value) => {
   const parsed =
@@ -217,9 +218,33 @@ const initMap = async () => {
     zoomControl: true,
   });
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; OpenStreetMap contributors",
-  }).addTo(mapInstance);
+  const streetLayer = L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+      attribution: "&copy; OpenStreetMap contributors",
+    }
+  );
+  const satelliteLayer = L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {
+      attribution: "Tiles &copy; Esri",
+    }
+  );
+  const baseLayers = {
+    Street: streetLayer,
+    Satellite: satelliteLayer,
+  };
+  const initialLayer =
+    selectedBaseLayer === "Satellite" ? satelliteLayer : streetLayer;
+  initialLayer.addTo(mapInstance);
+  L.control.layers(baseLayers, null, { position: "topright" }).addTo(
+    mapInstance
+  );
+  mapInstance.on("baselayerchange", (event) => {
+    if (event && event.name) {
+      selectedBaseLayer = event.name;
+    }
+  });
 
   marker = L.marker([lat, lng], { draggable: true }).addTo(mapInstance);
   marker.on("dragend", () => {

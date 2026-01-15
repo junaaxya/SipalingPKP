@@ -91,22 +91,6 @@
                 />
               </v-radio-group>
 
-              <v-radio-group
-                v-model="resetChannel"
-                label="Kirim melalui"
-                inline
-                class="mb-4"
-              >
-                <v-radio
-                  label="Email"
-                  value="email"
-                />
-                <v-radio
-                  label="WhatsApp"
-                  value="whatsapp"
-                />
-              </v-radio-group>
-
               <v-alert
                 type="info"
                 variant="tonal"
@@ -155,24 +139,8 @@
                 readonly
               />
 
-              <v-radio-group
-                v-model="resetChannel"
-                label="Kirim ulang OTP melalui"
-                inline
-                class="mb-2"
-              >
-                <v-radio
-                  label="Email"
-                  value="email"
-                />
-                <v-radio
-                  label="WhatsApp"
-                  value="whatsapp"
-                />
-              </v-radio-group>
-
               <div class="text-body-2 text-medium-emphasis mb-3">
-                Masukkan kode OTP 6 digit yang dikirim ke kanal pilihan Anda.
+                Masukkan kode OTP 6 digit yang dikirim ke email Anda.
               </div>
 
               <div class="otp-inputs mb-4">
@@ -266,7 +234,6 @@ import { authAPI } from '@/services'
 
 const email = ref('')
 const resetMethod = ref('link')
-const resetChannel = ref('email')
 const requestValid = ref(false)
 const resetValid = ref(false)
 const loading = ref(false)
@@ -390,7 +357,7 @@ const handleForgotPassword = async () => {
     const response = await authAPI.requestPasswordReset({
       email: email.value,
       method: resetMethod.value,
-      channel: resetChannel.value
+      channel: 'email'
     })
 
     if (response.success) {
@@ -421,7 +388,7 @@ const handleResendOtp = async () => {
     const response = await authAPI.requestPasswordReset({
       email: email.value,
       method: 'otp',
-      channel: resetChannel.value
+      channel: 'email'
     })
 
     if (response.success) {

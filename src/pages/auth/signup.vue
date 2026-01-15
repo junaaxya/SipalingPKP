@@ -103,30 +103,11 @@
               <v-text-field
                 v-model="phone"
                 :rules="phoneRules"
-                label="Nomor Telepon"
+                label="Nomor Telepon (Opsional)"
                 variant="outlined"
                 prepend-inner-icon="mdi-phone"
                 class="mb-4"
-                required
               />
-
-              <v-radio-group
-                v-model="otpChannel"
-                label="Kirim OTP melalui"
-                inline
-                class="mb-4"
-                @update:modelValue="otpChannelTouched = true"
-              >
-                <v-radio
-                  label="WhatsApp"
-                  value="whatsapp"
-                  :disabled="!isWhatsappAvailable"
-                />
-                <v-radio
-                  label="Email"
-                  value="email"
-                />
-              </v-radio-group>
 
               <div class="text-caption text-medium-emphasis mb-4">
                 OTP akan dikirim ke {{ otpTargetLabel }}.
@@ -446,7 +427,7 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, nextTick, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 
@@ -471,7 +452,6 @@ const otpDigits = ref(Array(6).fill(''))
 const otpInputs = ref([])
 const otpUserId = ref('')
 const otpChannel = ref('email')
-const otpChannelTouched = ref(false)
 const otpCountdown = ref(0)
 const otpTimer = ref(null)
 const otpErrorMessage = ref('')
@@ -511,9 +491,8 @@ const confirmPasswordRules = [
 ]
 
 const phoneRules = [
-  v => !!v || 'Nomor telepon wajib diisi',
-  v => v.length >= 10 || 'Nomor telepon minimal 10 karakter',
-  v => v.length <= 20 || 'Nomor telepon maksimal 20 karakter'
+  v => !v || v.length >= 10 || 'Nomor telepon minimal 10 karakter',
+  v => !v || v.length <= 20 || 'Nomor telepon maksimal 20 karakter'
 ]
 
 const termsRules = [
@@ -545,23 +524,8 @@ const maskEmailForUi = (value) => {
   return `${maskedName}@${domain}`
 }
 
-const maskPhoneForUi = (value) => {
-  if (!value) return 'WhatsApp'
-  const digits = value.replace(/\D/g, '')
-  if (digits.length <= 4) return digits
-  return `${digits.slice(0, 2)}****${digits.slice(-2)}`
-}
-
 const otpTargetLabel = computed(() => {
-  if (otpChannel.value === 'whatsapp') {
-    return `WhatsApp ${maskPhoneForUi(phone.value)}`
-  }
   return maskEmailForUi(email.value)
-})
-
-const isWhatsappAvailable = computed(() => {
-  const digits = phone.value.replace(/\D/g, '')
-  return digits.length >= 9
 })
 
 const createIdempotencyKey = () => {
@@ -639,17 +603,17 @@ const handleSignUp = async () => {
     signUpIdempotencyEmail.value = email.value
   }
   const idempotencyKey = signUpIdempotencyKey.value
+  const normalizedPhone = phone.value ? phone.value.trim() : ''
   const result = await appStore.register({
     email: email.value,
     password: password.value,
     fullName: fullName.value,
-    phone: phone.value,
-    otpChannel: otpChannel.value,
+    phone: normalizedPhone || null,
   }, { idempotencyKey })
   
   if (result.success) {
     otpUserId.value = result.userId
-    otpChannel.value = result.otpChannel || 'email'
+    otpChannel.value = 'email'
     otpDialog.value = true
     otpErrorMessage.value = ''
     startOtpCountdown(result.cooldownSeconds || 60)
@@ -709,15 +673,6 @@ onBeforeUnmount(() => {
   }
 })
 
-watch(isWhatsappAvailable, (available) => {
-  if (!otpChannelTouched.value) {
-    otpChannel.value = available ? 'whatsapp' : 'email'
-    return
-  }
-  if (!available && otpChannel.value === 'whatsapp') {
-    otpChannel.value = 'email'
-  }
-})
 </script>
 
 <style scoped>
