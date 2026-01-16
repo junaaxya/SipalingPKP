@@ -337,7 +337,7 @@
               </div>
             </v-card-title>
 
-            <div class="data-table-wrapper">
+            <div ref="tableWrapperRef" class="data-table-wrapper">
               <v-data-table-server
                 :headers="headers"
                 :items="submissions"
@@ -395,12 +395,24 @@
                 <!-- Owner Name Column -->
                 <template #item.ownerName="{ item }">
                   <div>
-                    <div class="font-weight-medium">
-                      {{ item.householdOwner?.ownerName || "N/A" }}
-                    </div>
-                    <div class="text-caption text-medium-emphasis">
-                      {{ item.householdOwner?.headOfFamilyName || "N/A" }}
-                    </div>
+                    <div
+                      class="font-weight-medium"
+                      v-html="
+                        highlightText(
+                          item.householdOwner?.ownerName || 'N/A',
+                          searchQuery
+                        )
+                      "
+                    ></div>
+                    <div
+                      class="text-caption text-medium-emphasis"
+                      v-html="
+                        highlightText(
+                          item.householdOwner?.headOfFamilyName || 'N/A',
+                          searchQuery
+                        )
+                      "
+                    ></div>
                   </div>
                 </template>
 
@@ -421,9 +433,15 @@
                       RT {{ item.householdOwner?.rt || "N/A" }} / RW
                       {{ item.householdOwner?.rw || "N/A" }}
                     </div>
-                    <div class="text-caption text-medium-emphasis">
-                      {{ item.householdOwner?.village?.name || "N/A" }}
-                    </div>
+                    <div
+                      class="text-caption text-medium-emphasis"
+                      v-html="
+                        highlightText(
+                          item.householdOwner?.village?.name || 'N/A',
+                          searchQuery
+                        )
+                      "
+                    ></div>
                   </div>
                 </template>
 
@@ -2821,7 +2839,7 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, onMounted, watch } from "vue";
+import { ref, computed, reactive, onMounted, watch, nextTick } from "vue";
 import { definePage } from "unplugin-vue-router/runtime";
 import { useRouter } from "vue-router";
 import { useHousingStore } from "@/stores/housing";
@@ -2850,6 +2868,7 @@ const router = useRouter();
 // Reactive state
 const isLoading = ref(false);
 const searchQuery = ref("");
+const tableWrapperRef = ref(null);
 const showDetailDialog = ref(false);
 const showReviewDialog = ref(false);
 const showEditDialog = ref(false);
@@ -3474,6 +3493,7 @@ const loadData = async () => {
     const queryParams = {
       ...currentFilters,
       ...locationParams,
+      search: searchQuery.value.trim(),
     };
 
     // Remove housingStatus from params if exists (already mapped to isLivable in applyFilters)
@@ -4465,11 +4485,37 @@ const confirmDelete = async () => {
   }
 };
 
+const highlightText = (text, query) => {
+  const normalizedQuery = String(query || "").trim();
+  if (!normalizedQuery || !text) return text;
+  const escapedQuery = normalizedQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escapedQuery})`, "gi");
+  return String(text).replace(
+    regex,
+    '<mark class="bg-yellow-lighten-3 font-weight-bold">$1</mark>'
+  );
+};
+
+const scrollToSearchResult = async () => {
+  await nextTick();
+  const wrapper = tableWrapperRef.value;
+  if (!wrapper) return;
+  const normalizedQuery = String(searchQuery.value || "").trim();
+  const match = normalizedQuery
+    ? wrapper.querySelector("mark.bg-yellow-lighten-3")
+    : null;
+  if (match) {
+    match.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  wrapper.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
 // Debounced search
-const debouncedSearch = debounce(() => {
-  // Implement search functionality here
-  // For now, just refresh data with location parameters
-  loadData();
+const debouncedSearch = debounce(async () => {
+  pagination.value.currentPage = 1;
+  await loadData();
+  await scrollToSearchResult();
 }, 500);
 
 // Utility functions

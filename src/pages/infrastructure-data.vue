@@ -313,7 +313,7 @@
               </div>
             </v-card-title>
 
-            <div class="data-table-wrapper">
+            <div ref="tableWrapperRef" class="data-table-wrapper">
               <v-data-table-server
                 :headers="headers"
                 :items="submissions"
@@ -347,9 +347,12 @@
                 <!-- Village Name Column -->
                 <template #item.villageName="{ item }">
                   <div>
-                    <div class="font-weight-medium">
-                      {{ item.villageName || "N/A" }}
-                    </div>
+                    <div
+                      class="font-weight-medium"
+                      v-html="
+                        highlightText(item.villageName || 'N/A', searchQuery)
+                      "
+                    ></div>
                   </div>
                 </template>
 
@@ -1461,7 +1464,7 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, onMounted, watch } from "vue";
+import { ref, computed, reactive, onMounted, watch, nextTick } from "vue";
 import { definePage } from "unplugin-vue-router/runtime";
 import { useRouter } from "vue-router";
 import { exportAPI, facilityAPI, locationAPI } from "@/services";
@@ -1488,6 +1491,7 @@ const router = useRouter();
 // Reactive state
 const isLoading = ref(false);
 const searchQuery = ref("");
+const tableWrapperRef = ref(null);
 const showDetailDialog = ref(false);
 const showReviewDialog = ref(false);
 const selectedSubmission = ref(null);
@@ -2014,11 +2018,7 @@ const mapSurveyDetail = (survey) => ({
 const loadData = async () => {
   isLoading.value = true;
   try {
-    const query = searchQuery.value.trim();
-    const shouldClientSearch = Boolean(query);
-    const params = shouldClientSearch
-      ? buildQueryParams({ page: 1, limit: 1000 })
-      : buildQueryParams();
+    const params = buildQueryParams({ search: searchQuery.value.trim() });
 
     await loadStatistics(params);
     const response = await facilityAPI.getSurveys(params);
@@ -2027,53 +2027,25 @@ const loadData = async () => {
     }
     const result = response?.data || {};
     const surveys = result.surveys || [];
-    let mapped = surveys.map(mapSurveyListItem);
+    submissions.value = surveys.map(mapSurveyListItem);
 
-    if (shouldClientSearch) {
-      const normalized = query.toLowerCase();
-      mapped = mapped.filter((item) =>
-        (item.villageName || "").toLowerCase().includes(normalized)
-      );
-    }
-
-    if (shouldClientSearch) {
-      const totalItems = mapped.length;
-      const totalPages = Math.max(
-        1,
-        Math.ceil(totalItems / pagination.value.itemsPerPage)
-      );
-      const currentPage = Math.min(pagination.value.currentPage, totalPages);
-      const startIndex = (currentPage - 1) * pagination.value.itemsPerPage;
-      const endIndex = startIndex + pagination.value.itemsPerPage;
-      submissions.value = mapped.slice(startIndex, endIndex);
-      pagination.value = {
-        currentPage,
-        totalPages,
-        totalItems,
-        itemsPerPage: pagination.value.itemsPerPage,
-        hasNextPage: endIndex < totalItems,
-        hasPrevPage: startIndex > 0,
-      };
-    } else {
-      submissions.value = mapped;
-      const paginationData = result.pagination || {};
-      pagination.value = {
-        currentPage:
-          paginationData.currentPage ||
-          paginationData.page ||
-          pagination.value.currentPage,
-        totalPages: paginationData.totalPages || paginationData.pages || 0,
-        totalItems: paginationData.totalItems || paginationData.total || 0,
-        itemsPerPage:
-          paginationData.itemsPerPage ||
-          paginationData.limit ||
-          pagination.value.itemsPerPage,
-        hasNextPage:
-          paginationData.hasNextPage ?? paginationData.hasNext ?? false,
-        hasPrevPage:
-          paginationData.hasPrevPage ?? paginationData.hasPrev ?? false,
-      };
-    }
+    const paginationData = result.pagination || {};
+    pagination.value = {
+      currentPage:
+        paginationData.currentPage ||
+        paginationData.page ||
+        pagination.value.currentPage,
+      totalPages: paginationData.totalPages || paginationData.pages || 0,
+      totalItems: paginationData.totalItems || paginationData.total || 0,
+      itemsPerPage:
+        paginationData.itemsPerPage ||
+        paginationData.limit ||
+        pagination.value.itemsPerPage,
+      hasNextPage:
+        paginationData.hasNextPage ?? paginationData.hasNext ?? false,
+      hasPrevPage:
+        paginationData.hasPrevPage ?? paginationData.hasPrev ?? false,
+    };
   } catch (error) {
     console.error("Error loading data:", error);
     submissions.value = [];
@@ -2090,9 +2062,36 @@ const loadData = async () => {
   }
 };
 
-const debouncedSearch = debounce(() => {
+const highlightText = (text, query) => {
+  const normalizedQuery = String(query || "").trim();
+  if (!normalizedQuery || !text) return text;
+  const escapedQuery = normalizedQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escapedQuery})`, "gi");
+  return String(text).replace(
+    regex,
+    '<mark class="bg-yellow-lighten-3 font-weight-bold">$1</mark>'
+  );
+};
+
+const scrollToSearchResult = async () => {
+  await nextTick();
+  const wrapper = tableWrapperRef.value;
+  if (!wrapper) return;
+  const normalizedQuery = String(searchQuery.value || "").trim();
+  const match = normalizedQuery
+    ? wrapper.querySelector("mark.bg-yellow-lighten-3")
+    : null;
+  if (match) {
+    match.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  wrapper.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+const debouncedSearch = debounce(async () => {
   pagination.value.currentPage = 1;
-  loadData();
+  await loadData();
+  await scrollToSearchResult();
 }, 500);
 
 const applyFilters = () => {
