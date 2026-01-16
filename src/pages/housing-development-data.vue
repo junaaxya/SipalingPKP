@@ -359,6 +359,7 @@
                 class="elevation-0 data-table"
                 density="compact"
                 mobile-breakpoint="960"
+                :row-props="getRowProps"
                 @update:page="handlePageChange"
                 @update:items-per-page="handleItemsPerPageChange"
               >
@@ -890,7 +891,7 @@
 <script setup>
 import { ref, computed, reactive, onMounted, watch, nextTick } from 'vue'
 import { definePage } from 'unplugin-vue-router/runtime'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { exportAPI, housingDevelopmentAPI, locationAPI } from '@/services'
 import { useAppStore } from '@/stores/app'
 import { useMapDataStore } from '@/stores/mapData'
@@ -911,10 +912,12 @@ definePage({
 const appStore = useAppStore()
 const mapStore = useMapDataStore()
 const router = useRouter()
+const route = useRoute()
 
 // Reactive state
 const isLoading = ref(false)
 const searchQuery = ref('')
+const focusedRowId = ref(null)
 const tableWrapperRef = ref(null)
 const showDetailDialog = ref(false)
 const showReviewDialog = ref(false)
@@ -1013,6 +1016,24 @@ const showSnackbar = (message, color = 'error') => {
     color
   }
 }
+
+const getFocusIdFromRoute = () => {
+  const rawValue = route.query.focusId
+  if (Array.isArray(rawValue)) {
+    return rawValue[0] ? String(rawValue[0]).trim() : null
+  }
+  if (rawValue === null || rawValue === undefined) return null
+  const normalized = String(rawValue).trim()
+  return normalized.length ? normalized : null
+}
+
+const getRowProps = ({ item }) => ({
+  class:
+    item?.id && item.id === focusedRowId.value
+      ? 'data-table-row--focused'
+      : undefined,
+  'data-row-id': item?.id || undefined
+})
 
 // Computed properties
 const resolveStatus = (status, verificationStatus = null) => {
@@ -1383,6 +1404,33 @@ const loadData = async () => {
   }
 }
 
+const applyFocusFromRoute = async () => {
+  const focusId = getFocusIdFromRoute()
+  if (!focusId) return false
+
+  focusedRowId.value = focusId
+  let focusQuery = ''
+
+  try {
+    const response = await housingDevelopmentAPI.getDevelopment(focusId)
+    const development = response?.data?.development
+    focusQuery =
+      development?.developmentName
+      || development?.developerName
+      || ''
+  } catch (error) {
+    console.error('Error loading focus development:', error)
+  }
+
+  if (focusQuery) {
+    searchQuery.value = focusQuery
+  }
+  pagination.value.currentPage = 1
+  await loadData()
+  await scrollToSearchResult()
+  return true
+}
+
 const highlightText = (text, query) => {
   const normalizedQuery = String(query || '').trim()
   if (!normalizedQuery || !text) return text
@@ -1398,6 +1446,15 @@ const scrollToSearchResult = async () => {
   await nextTick()
   const wrapper = tableWrapperRef.value
   if (!wrapper) return
+  if (focusedRowId.value) {
+    const focusedRow = wrapper.querySelector(
+      `[data-row-id="${focusedRowId.value}"]`
+    )
+    if (focusedRow) {
+      focusedRow.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
+  }
   const normalizedQuery = String(searchQuery.value || '').trim()
   const match = normalizedQuery
     ? wrapper.querySelector('mark.bg-yellow-lighten-3')
@@ -2058,7 +2115,10 @@ onMounted(async () => {
   try {
     await fetchFilterProvinces()
     await loadLocationFilters()
-    loadData()
+    const handledFocus = await applyFocusFromRoute()
+    if (!handledFocus) {
+      await loadData()
+    }
   } catch (error) {
     console.error('Error in onMounted:', error)
   }
@@ -2083,6 +2143,10 @@ watch(() => filters.value.status, () => {
 
 .data-table {
   min-width: 720px;
+}
+
+.data-table-row--focused {
+  background-color: rgba(255, 235, 59, 0.18);
 }
 
 @media (max-width: 600px) {

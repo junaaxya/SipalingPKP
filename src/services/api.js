@@ -79,4 +79,8 @@ export const locationService = {
     }
     throw lastError;
   },
+  searchData: async (params = {}, options = {}) => {
+    const { signal } = options || {};
+    return await api.get("/locations/search-data", { params, signal });
+  },
 };

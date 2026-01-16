@@ -593,7 +593,7 @@
               <!-- Filter Grid -->
               <v-row dense class="mb-4">
                 <!-- Filter Lokasi -->
-                <v-col cols="12" sm="6" md="4">
+                <v-col cols="12" sm="6" md="3">
                   <v-card
                     variant="outlined"
                     class="filter-card pa-4"
@@ -630,7 +630,7 @@
                 </v-col>
 
                 <!-- Layer GIS -->
-                <v-col cols="12" sm="6" md="4">
+                <v-col cols="12" sm="6" md="3">
                   <v-card
                     variant="outlined"
                     class="filter-card pa-4"
@@ -808,7 +808,7 @@
                 </v-col>
 
                 <!-- Pencarian Cepat -->
-                <v-col cols="12" sm="12" md="4">
+                <v-col cols="12" sm="6" md="3">
                   <v-card
                     variant="outlined"
                     class="filter-card pa-4"
@@ -834,6 +834,7 @@
                       variant="outlined"
                       density="comfortable"
                       placeholder="Cari desa, kecamatan, kabupaten..."
+                      :menu-props="{ maxHeight: 320 }"
                       :loading="searchLoading"
                       :error="Boolean(searchErrorMessage)"
                       :no-data-text="
@@ -882,6 +883,93 @@
                                 : searchQuery
                                 ? "Lokasi tidak ditemukan"
                                 : "Ketik nama lokasi"
+                            }}
+                          </p>
+                        </div>
+                      </template>
+                    </v-autocomplete>
+                  </v-card>
+                </v-col>
+
+                <v-col cols="12" sm="6" md="3">
+                  <v-card
+                    variant="outlined"
+                    class="filter-card pa-4"
+                    rounded="lg"
+                  >
+                    <div class="filter-header mb-3">
+                      <v-icon size="20" color="primary" class="mr-2"
+                        >mdi-database-search</v-icon
+                      >
+                      <span class="text-body-2 font-weight-medium"
+                        >Pencarian Data</span
+                      >
+                    </div>
+
+                    <v-autocomplete
+                      v-model="dataSearchSelection"
+                      v-model:search="dataSearchQuery"
+                      v-model:menu="dataSearchMenu"
+                      :items="dataSearchResults"
+                      item-title="name"
+                      item-value="id"
+                      return-object
+                      variant="outlined"
+                      density="comfortable"
+                      placeholder="Cari pemilik, infrastruktur, perumahan..."
+                      :menu-props="{ maxHeight: 320 }"
+                      :loading="dataSearchLoading"
+                      :no-data-text="
+                        dataSearchQuery ? 'Tidak ada hasil' : 'Ketik nama data'
+                      "
+                      clearable
+                      hide-details
+                      @click:clear="handleDataSearchClear"
+                      @update:menu="handleDataSearchMenuUpdate"
+                      @update:model-value="handleDataSearchSelect"
+                      @keydown.enter.prevent="handleDataSearchEnter"
+                    >
+                      <template #prepend-inner>
+                        <v-icon size="20" color="grey">mdi-magnify</v-icon>
+                      </template>
+
+                      <template #item="{ props, item }">
+                        <v-list-item v-bind="props" class="px-4">
+                          <template #prepend>
+                            <v-avatar size="32" color="primary" variant="tonal">
+                              <v-icon size="18">
+                                {{ getDataSearchIcon(item?.raw?.type) }}
+                              </v-icon>
+                            </v-avatar>
+                          </template>
+
+                          <v-list-item-title
+                            class="text-body-2 font-weight-medium"
+                            v-html="highlightDataSearchText(item?.raw?.name)"
+                          />
+
+                          <v-list-item-subtitle class="text-caption">
+                            {{ formatDataSearchSubtitle(item?.raw) }}
+                          </v-list-item-subtitle>
+                        </v-list-item>
+                      </template>
+
+                      <template #no-data>
+                        <div class="pa-4 text-center">
+                          <v-icon
+                            size="40"
+                            color="grey-lighten-1"
+                            class="mb-2"
+                          >
+                            mdi-database-search-outline
+                          </v-icon>
+                          <p class="text-body-2 text-medium-emphasis mb-0">
+                            {{
+                              dataSearchLoading
+                                ? "Mencari data..."
+                                : dataSearchQuery
+                                ? "Data tidak ditemukan"
+                                : "Ketik nama data"
                             }}
                           </p>
                         </div>
@@ -1267,6 +1355,7 @@ import { useMapUiStore } from "@/stores/mapUi";
 import * as L from "leaflet";
 import "leaflet.markercluster";
 import "leaflet.vectorgrid";
+import { debounce } from "lodash-es";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -1378,6 +1467,7 @@ const mapInstance = ref(null);
 const mapLayersStore = useMapLayersStore();
 const mapUiStore = useMapUiStore();
 const searchHighlightLayer = L.layerGroup();
+const dataSearchHighlightLayer = L.layerGroup();
 const geoJsonLayerCache = new Map();
 const createClusterGroup = () =>
   L.markerClusterGroup({
@@ -1394,6 +1484,14 @@ const markerLayers = {
   housing: createClusterGroup(),
   "housing-development": createClusterGroup(),
   infrastructure: createClusterGroup(),
+};
+const markerIndex = {
+  housing: new Map(),
+  "housing-development": new Map(),
+  infrastructure: new Map(),
+};
+const clearMarkerIndex = () => {
+  Object.values(markerIndex).forEach((map) => map.clear());
 };
 const vectorTileLayers = {
   housing: null,
@@ -1486,6 +1584,9 @@ let lastSearchContext = null;
 let lastSearchFeature = null;
 let searchPinMarker = null;
 let searchPinHalo = null;
+let dataSearchPopup = null;
+let dataSearchPinMarker = null;
+let dataSearchPinHalo = null;
 let stickySearchCenterLatLng = null;
 let isStickySearchRecentering = false;
 
@@ -1669,6 +1770,13 @@ const layerSearch = ref("");
 const searchSelection = ref(mapUiStore.lastSearchSelection);
 const searchQuery = ref(mapUiStore.lastSearchQuery || "");
 const searchMenu = ref(false);
+const dataSearchSelection = ref(null);
+const dataSearchQuery = ref(mapUiStore.dataSearchQuery || "");
+const dataSearchMenu = ref(false);
+let allowDataSearchClear = false;
+let restoringDataSearchQuery = false;
+const lastDataSearchSelectionName = ref("");
+let suppressDataSearchMenu = false;
 const searchErrorSnackbar = ref(false);
 const exportErrorSnackbar = ref(false);
 const exportInfoSnackbar = ref(false);
@@ -1676,6 +1784,7 @@ const exportErrorMessage = ref("");
 const exportInfoMessage = ref("");
 const exportLoading = ref(false);
 const searchDebounceMs = 300;
+const dataSearchDebounceMs = 500;
 const MAX_SEARCH_SUGGESTIONS = 50;
 
 const VISIBLE_GIS_CATEGORIES = new Set(["tata_ruang", "bencana"]);
@@ -1745,11 +1854,23 @@ const filteredLayerEntries = computed(() => {
 const searchItems = computed(() => mapUiStore.searchIndex);
 const searchLoading = computed(() => mapUiStore.searchIndexLoading);
 const searchErrorMessage = computed(() => mapUiStore.searchIndexError);
+const dataSearchResults = computed(() => mapUiStore.dataSearchResults || []);
+const dataSearchLoading = computed(() => mapUiStore.isDataSearching);
 
 const searchCategoryIcons = {
   desa: "mdi-home-city-outline",
   kecamatan: "mdi-map-marker-radius",
   kabupaten: "mdi-city",
+};
+const dataSearchTypeIcons = {
+  housing: "mdi-home-search",
+  infrastructure: "mdi-office-building",
+  "housing-development": "mdi-home-city",
+};
+const dataSearchTypeLabels = {
+  housing: "Rumah Masyarakat",
+  infrastructure: "Infrastruktur",
+  "housing-development": "Perumahan",
 };
 
 const searchZoomLevels = {
@@ -1768,6 +1889,9 @@ const getActiveGisLayerFilters = () =>
 const ensureSearchIndex = async () => {
   await mapUiStore.loadSearchIndex();
 };
+const debouncedDataSearch = debounce((value, filters) => {
+  mapUiStore.searchDataItems(value, filters);
+}, dataSearchDebounceMs);
 
 const normalizeSearchText = (value) =>
   String(value || "")
@@ -1791,6 +1915,8 @@ const buildSearchHaystack = (item) => {
 
 const getSearchIcon = (category) =>
   searchCategoryIcons[category] || "mdi-map-marker";
+const getDataSearchIcon = (type) =>
+  dataSearchTypeIcons[type] || "mdi-map-marker";
 
 const formatSearchSubtitle = (item) => {
   if (!item) {
@@ -1807,10 +1933,46 @@ const formatSearchSubtitle = (item) => {
 
   return parts.join(" - ");
 };
+const formatDataSearchSubtitle = (item) => {
+  if (!item) {
+    return "";
+  }
+
+  const parts = [];
+  const typeLabel = dataSearchTypeLabels[item.type];
+  if (typeLabel) {
+    parts.push(typeLabel);
+  }
+  if (item.subtitle) {
+    parts.push(item.subtitle);
+  }
+  return parts.join(" - ");
+};
 
 const highlightSearchText = (value) => {
   const text = String(value || "");
   const queryRaw = String(searchQuery.value || "").trim();
+  if (!queryRaw) {
+    return escapeHtml(text);
+  }
+
+  const textLower = text.toLowerCase();
+  const queryLower = queryRaw.toLowerCase();
+  const index = textLower.indexOf(queryLower);
+  if (index < 0) {
+    return escapeHtml(text);
+  }
+
+  const before = text.slice(0, index);
+  const match = text.slice(index, index + queryRaw.length);
+  const after = text.slice(index + queryRaw.length);
+  return `${escapeHtml(before)}<strong>${escapeHtml(
+    match
+  )}</strong>${escapeHtml(after)}`;
+};
+const highlightDataSearchText = (value) => {
+  const text = String(value || "");
+  const queryRaw = String(dataSearchQuery.value || "").trim();
   if (!queryRaw) {
     return escapeHtml(text);
   }
@@ -3114,6 +3276,7 @@ const createMarkers = (
   markerLayers.housing.clearLayers();
   markerLayers["housing-development"].clearLayers();
   markerLayers.infrastructure.clearLayers();
+  clearMarkerIndex();
 
   const markerColors = {
     housing: {
@@ -3157,7 +3320,7 @@ const createMarkers = (
 
   const buildDetailButton = (href) => `
     <div style="margin-top: 8px;">
-      <a href="${href}" style="display: inline-block; background: #1E40AF; color: #ffffff; text-decoration: none; padding: 6px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+      <a href="${href}" data-detail-href="${href}" class="map-detail-link" style="display: inline-block; background: #1E40AF; color: #ffffff; text-decoration: none; padding: 6px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">
         Lihat Detail
       </a>
     </div>
@@ -3221,6 +3384,9 @@ const createMarkers = (
           </div>
         `);
         markerLayers.housing.addLayer(marker);
+        if (housingId) {
+          markerIndex.housing.set(String(housingId), marker);
+        }
       }
     });
   }
@@ -3266,6 +3432,9 @@ const createMarkers = (
           </div>
         `);
         markerLayers["housing-development"].addLayer(marker);
+        if (developmentId) {
+          markerIndex["housing-development"].set(String(developmentId), marker);
+        }
       }
     });
   }
@@ -3308,6 +3477,9 @@ const createMarkers = (
           </div>
         `);
         markerLayers.infrastructure.addLayer(marker);
+        if (surveyId) {
+          markerIndex.infrastructure.set(String(surveyId), marker);
+        }
       }
     });
   }
@@ -3335,6 +3507,7 @@ const loadMapData = async () => {
     markerLayers.housing.clearLayers();
     markerLayers["housing-development"].clearLayers();
     markerLayers.infrastructure.clearLayers();
+    clearMarkerIndex();
     clearVectorTileLayers();
     return;
   }
@@ -3344,6 +3517,7 @@ const loadMapData = async () => {
     markerLayers.housing.clearLayers();
     markerLayers["housing-development"].clearLayers();
     markerLayers.infrastructure.clearLayers();
+    clearMarkerIndex();
     clearVectorTileLayers();
     return;
   }
@@ -3459,6 +3633,13 @@ watch(
       await loadStatistics();
       await loadLocationFilters();
       await loadMapData();
+      if (String(dataSearchQuery.value || "").trim().length >= 2) {
+        debouncedDataSearch.cancel();
+        mapUiStore.searchDataItems(
+          dataSearchQuery.value,
+          getDashboardFilterParams()
+        );
+      }
     }, dashboardFilterDebounceMs);
   },
   { deep: true }
@@ -3514,6 +3695,26 @@ const initMapPanes = (map) => {
   });
 };
 
+const attachPopupDetailHandler = (popup) => {
+  const popupEl = popup?.getElement?.();
+  if (!popupEl) {
+    return;
+  }
+  const detailLink = popupEl.querySelector(".map-detail-link");
+  if (!detailLink || detailLink.dataset.bound === "true") {
+    return;
+  }
+  detailLink.dataset.bound = "true";
+  detailLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const href = detailLink.getAttribute("data-detail-href");
+    if (href) {
+      router.push(href);
+    }
+  });
+};
+
 // Initialize Leaflet map
 const initializeMap = () => {
   if (mapInstance.value || !mapRef.value) {
@@ -3528,6 +3729,9 @@ const initializeMap = () => {
 
   initMapPanes(mapInstance.value);
   mapInstance.value.on("moveend zoomend", handleStickySearchCenter);
+  mapInstance.value.on("popupopen", (event) => {
+    attachPopupDetailHandler(event.popup);
+  });
 
   const streetLayer = L.tileLayer(
     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -3571,6 +3775,7 @@ const initializeMap = () => {
   markerLayers["housing-development"].addTo(mapInstance.value);
   markerLayers.infrastructure.addTo(mapInstance.value);
   searchHighlightLayer.addTo(mapInstance.value);
+  dataSearchHighlightLayer.addTo(mapInstance.value);
 
   syncGeoJsonLayers();
 
@@ -3903,6 +4108,19 @@ const clearSearchPopup = () => {
   searchPopup = null;
 };
 
+const clearDataSearchHighlight = () => {
+  dataSearchHighlightLayer.clearLayers();
+  dataSearchPinMarker = null;
+  dataSearchPinHalo = null;
+};
+
+const clearDataSearchPopup = () => {
+  if (dataSearchPopup && mapInstance.value) {
+    mapInstance.value.closePopup(dataSearchPopup);
+  }
+  dataSearchPopup = null;
+};
+
 const setStickySearchCenter = (latlng) => {
   stickySearchCenterLatLng = latlng || null;
 };
@@ -4011,6 +4229,70 @@ const addSearchHighlight = (latlng, category) => {
   }
 
   return searchPinMarker;
+};
+
+const addDataSearchHighlight = (latlng) => {
+  if (!mapInstance.value || !latlng) {
+    return null;
+  }
+
+  const pulseIcon = L.divIcon({
+    className: "search-marker",
+    html: '<div class="search-pulse"></div><div class="search-dot"></div>',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+  });
+
+  const marker = L.marker(latlng, { icon: pulseIcon, pane: MAP_PANES.search });
+  const radius = 150;
+
+  if (!dataSearchPinMarker) {
+    dataSearchPinMarker = marker;
+    dataSearchHighlightLayer.addLayer(dataSearchPinMarker);
+  } else {
+    dataSearchPinMarker.setLatLng(latlng);
+    dataSearchPinMarker.setIcon(pulseIcon);
+  }
+
+  if (!dataSearchPinHalo) {
+    dataSearchPinHalo = L.circle(latlng, {
+      radius,
+      color: "#1976D2",
+      weight: 2,
+      opacity: 0.6,
+      fillOpacity: 0.08,
+      pane: MAP_PANES.search,
+    });
+    dataSearchHighlightLayer.addLayer(dataSearchPinHalo);
+  } else {
+    dataSearchPinHalo.setLatLng(latlng);
+    dataSearchPinHalo.setRadius(radius);
+  }
+
+  return dataSearchPinMarker;
+};
+
+const buildDataSearchPopupContent = (item) => {
+  if (!item) {
+    return "";
+  }
+  const title = dataSearchTypeLabels[item.type] || "Data";
+  const name = escapeHtml(item.name || "-");
+  const subtitle = item.subtitle ? escapeHtml(item.subtitle) : "";
+
+  return `
+    <div style="font-family: sans-serif; font-size: 12px; min-width: 160px;">
+      <h3 style="margin: 0 0 8px 0; font-size: 14px;">${escapeHtml(
+        title
+      )}</h3>
+      <div style="margin-bottom: 4px;"><strong>Nama:</strong> ${name}</div>
+      ${
+        subtitle
+          ? `<div><strong>Lokasi:</strong> ${subtitle}</div>`
+          : ""
+      }
+    </div>
+  `;
 };
 
 const boundaryLayerConfig = {
@@ -4204,6 +4486,21 @@ const resolveSearchItem = (value) => {
   }
   return value;
 };
+const resolveDataSearchItem = (value) => {
+  if (!value) {
+    return null;
+  }
+  if (typeof value === "string") {
+    return (
+      dataSearchResults.value.find((entry) => String(entry.id) === value) ||
+      null
+    );
+  }
+  if (value?.raw) {
+    return value.raw;
+  }
+  return value;
+};
 
 const resolveSearchLatLng = (item) => {
   if (!item) {
@@ -4330,6 +4627,103 @@ const handleSearchEnter = async () => {
 
   searchSelection.value = match;
   await handleSearchSelect(match);
+};
+
+const handleDataSearchSelect = async (value) => {
+  const item = resolveDataSearchItem(value);
+  if (!item || !mapInstance.value) {
+    return;
+  }
+
+  dataSearchQuery.value = item.name || "";
+  dataSearchMenu.value = false;
+  suppressDataSearchMenu = true;
+  lastDataSearchSelectionName.value = item.name || "";
+
+  const latitude = Number(item.lat ?? item.latitude);
+  const longitude = Number(item.lng ?? item.longitude);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return;
+  }
+
+  const latlng = L.latLng(latitude, longitude);
+  clearDataSearchHighlight();
+  clearDataSearchPopup();
+
+  mapInstance.value.flyTo(latlng, 18, { animate: true, duration: 1.5 });
+
+  const typeKey =
+    item.type === "housing-development"
+      ? "housing-development"
+      : item.type === "housing"
+      ? "housing"
+      : "infrastructure";
+  const marker = markerIndex[typeKey]?.get(String(item.id));
+  const clusterGroup = markerLayers[typeKey];
+
+  if (marker && clusterGroup?.zoomToShowLayer) {
+    clusterGroup.zoomToShowLayer(marker, () => {
+      marker.openPopup();
+      dataSearchPopup = marker.getPopup();
+    });
+    addDataSearchHighlight(latlng);
+    return;
+  }
+
+  if (marker) {
+    marker.openPopup();
+    dataSearchPopup = marker.getPopup();
+    addDataSearchHighlight(latlng);
+    return;
+  }
+
+  const fallbackMarker = addDataSearchHighlight(latlng);
+  const popupContent = buildDataSearchPopupContent(item);
+  if (fallbackMarker && popupContent) {
+    fallbackMarker.unbindPopup();
+    fallbackMarker.bindPopup(popupContent, {
+      closeButton: true,
+      autoClose: false,
+      closeOnClick: false,
+      className: "search-popup",
+    });
+    fallbackMarker.openPopup();
+    dataSearchPopup = fallbackMarker.getPopup();
+  }
+};
+
+const handleDataSearchEnter = async () => {
+  const query = normalizeSearchText(dataSearchQuery.value);
+  if (!query || !dataSearchResults.value.length) {
+    return;
+  }
+
+  const match = dataSearchResults.value[0];
+  if (!match) {
+    return;
+  }
+
+  dataSearchSelection.value = match;
+  await handleDataSearchSelect(match);
+};
+
+const handleDataSearchClear = () => {
+  allowDataSearchClear = true;
+  suppressDataSearchMenu = false;
+  lastDataSearchSelectionName.value = "";
+  dataSearchSelection.value = null;
+  clearDataSearchHighlight();
+  clearDataSearchPopup();
+  debouncedDataSearch.cancel();
+  mapUiStore.searchDataItems("");
+};
+
+const handleDataSearchMenuUpdate = (value) => {
+  if (suppressDataSearchMenu && value) {
+    dataSearchMenu.value = false;
+    return;
+  }
+  dataSearchMenu.value = value;
 };
 
 const exportTypeMap = {
@@ -4495,6 +4889,49 @@ watch(searchQuery, (value) => {
   }, searchDebounceMs);
 });
 
+watch(dataSearchQuery, (value) => {
+  const normalized = String(value || "").trim();
+  if (!normalized) {
+    if (!allowDataSearchClear) {
+      const resolved = resolveDataSearchItem(dataSearchSelection.value);
+      const restored = resolved?.name ? String(resolved.name).trim() : "";
+      if (restored) {
+        if (!restoringDataSearchQuery) {
+          restoringDataSearchQuery = true;
+          dataSearchQuery.value = restored;
+          nextTick(() => {
+            restoringDataSearchQuery = false;
+          });
+        }
+        return;
+      }
+    }
+    allowDataSearchClear = false;
+    debouncedDataSearch.cancel();
+    mapUiStore.searchDataItems("");
+    dataSearchSelection.value = null;
+    return;
+  }
+  if (restoringDataSearchQuery) {
+    restoringDataSearchQuery = false;
+    return;
+  }
+
+  const lastSelectionName = String(lastDataSearchSelectionName.value || "").trim();
+  if (lastSelectionName && normalized !== lastSelectionName) {
+    suppressDataSearchMenu = false;
+  }
+
+  if (normalized.length < 2) {
+    debouncedDataSearch.cancel();
+    mapUiStore.searchDataItems("");
+    return;
+  }
+
+  const filters = getDashboardFilterParams();
+  debouncedDataSearch(normalized, filters);
+});
+
 watch(searchSelection, (value) => {
   const resolved = resolveSearchItem(value);
   mapUiStore.setSearchSelection(resolved);
@@ -4505,6 +4942,14 @@ watch(searchSelection, (value) => {
     setStickySearchCenter(null);
     lastSearchFeature = null;
     lastSearchContext = null;
+  }
+});
+
+watch(dataSearchSelection, (value) => {
+  const resolved = resolveDataSearchItem(value);
+  if (!resolved) {
+    clearDataSearchHighlight();
+    clearDataSearchPopup();
   }
 });
 
@@ -5284,10 +5729,13 @@ onBeforeUnmount(() => {
     buildingChart = null;
   }
   clearSearchHighlight();
+  clearDataSearchHighlight();
+  clearDataSearchPopup();
   if (searchDebounceTimer) {
     clearTimeout(searchDebounceTimer);
     searchDebounceTimer = null;
   }
+  debouncedDataSearch.cancel();
   geoJsonLayerCache.clear();
   clearVectorTileLayers();
   if (mapInstance.value) {

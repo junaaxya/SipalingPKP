@@ -10,6 +10,7 @@ const CATEGORY_LABELS = {
 const SEARCH_INDEX_CACHE_KEY = 'sipaling-search-index-v2'
 const SEARCH_INDEX_CACHE_TTL = 24 * 60 * 60 * 1000
 const LOG_ENDPOINT = import.meta.env.VITE_CLIENT_LOG_ENDPOINT
+let dataSearchAbortController = null
 
 const normalizeCategory = (value) => {
   const raw = String(value || '').toLowerCase()
@@ -187,6 +188,9 @@ export const useMapUiStore = defineStore('mapUi', {
     searchIndexError: null,
     lastSearchQuery: '',
     lastSearchSelection: null,
+    dataSearchQuery: '',
+    dataSearchResults: [],
+    isDataSearching: false,
     isPrinting: false,
     mapResizeToken: 0
   }),
@@ -241,6 +245,49 @@ export const useMapUiStore = defineStore('mapUi', {
     },
     setSearchSelection(selection) {
       this.lastSearchSelection = selection
+    },
+    async searchDataItems(query, extraParams = {}) {
+      const normalizedQuery = typeof query === 'string' ? query.trim() : ''
+      this.dataSearchQuery = normalizedQuery
+
+      if (dataSearchAbortController) {
+        dataSearchAbortController.abort()
+        dataSearchAbortController = null
+      }
+
+      if (!normalizedQuery) {
+        this.dataSearchResults = []
+        this.isDataSearching = false
+        return
+      }
+
+      const controller = new AbortController()
+      dataSearchAbortController = controller
+      this.isDataSearching = true
+
+      try {
+        const params = { q: normalizedQuery, limit: 20 }
+        Object.entries(extraParams || {}).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== '') {
+            params[key] = value
+          }
+        })
+        const response = await locationService.searchData(params, {
+          signal: controller.signal
+        })
+        const items = extractDataArray(response)
+        this.dataSearchResults = Array.isArray(items) ? items : []
+      } catch (error) {
+        if (controller.signal.aborted || error?.code === 'ERR_CANCELED') {
+          return
+        }
+        this.dataSearchResults = []
+        console.error('Failed to search data items:', error)
+      } finally {
+        if (dataSearchAbortController === controller) {
+          this.isDataSearching = false
+        }
+      }
     },
     setPrinting(isPrinting) {
       this.isPrinting = Boolean(isPrinting)
