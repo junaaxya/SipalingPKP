@@ -323,7 +323,7 @@
                               size="x-small"
                               variant="text"
                               color="error"
-                              @click="removeExistingDevelopmentPhoto(housing, photoIndex)"
+                              @click="requestRemoveExistingDevelopmentPhoto(housing, photoIndex)"
                             />
                           </div>
                           <div class="text-caption text-medium-emphasis">
@@ -485,6 +485,25 @@
       title="Pilih Lokasi Perumahan"
       @confirm="handleLocationPicked"
     />
+    <v-dialog v-model="confirmRemoveDialog" max-width="420">
+      <v-card>
+        <v-card-title class="text-subtitle-1">
+          Hapus Foto Perumahan?
+        </v-card-title>
+        <v-card-text>
+          Foto "{{ pendingRemoval.photoName }}" akan dihapus dari data perumahan.
+          Lanjutkan?
+        </v-card-text>
+        <v-card-actions class="justify-end">
+          <v-btn variant="outlined" @click="cancelRemoveExistingDevelopmentPhoto">
+            Batal
+          </v-btn>
+          <v-btn color="error" variant="flat" @click="confirmRemoveExistingDevelopmentPhoto">
+            Hapus
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-dialog
       v-model="manualLocationDialogOpen"
       max-width="720"
@@ -695,6 +714,12 @@ const locationPickerOpen = ref(false)
 const locationPickerLat = ref(null)
 const locationPickerLng = ref(null)
 const activeHousingId = ref(null)
+const confirmRemoveDialog = ref(false)
+const pendingRemoval = ref({
+  housing: null,
+  index: null,
+  photoName: ''
+})
 const manualLocationDialogOpen = ref(false)
 const manualLocationError = ref('')
 const manualLocation = ref({
@@ -844,6 +869,33 @@ const removeExistingDevelopmentPhoto = (housing, index) => {
     }
   }
   housing.existingPhotos.splice(index, 1)
+}
+
+const requestRemoveExistingDevelopmentPhoto = (housing, index) => {
+  const target = housing?.existingPhotos?.[index]
+  if (!target) return
+  pendingRemoval.value = {
+    housing,
+    index,
+    photoName: target.name || 'Foto'
+  }
+  confirmRemoveDialog.value = true
+}
+
+const confirmRemoveExistingDevelopmentPhoto = () => {
+  if (pendingRemoval.value?.housing && pendingRemoval.value?.index !== null) {
+    removeExistingDevelopmentPhoto(
+      pendingRemoval.value.housing,
+      pendingRemoval.value.index
+    )
+  }
+  pendingRemoval.value = { housing: null, index: null, photoName: '' }
+  confirmRemoveDialog.value = false
+}
+
+const cancelRemoveExistingDevelopmentPhoto = () => {
+  pendingRemoval.value = { housing: null, index: null, photoName: '' }
+  confirmRemoveDialog.value = false
 }
 
 const releaseDevelopmentPhotos = (housing) => {
