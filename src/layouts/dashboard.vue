@@ -467,6 +467,7 @@ const navigationItems = computed(() => {
       "home",
       "form-admin",
       "infrastructure-form",
+      "infrastructure-data",
       "housing-data",
     ]);
     return operationalNavigationItems.value
@@ -546,7 +547,6 @@ const getBlockedRoutesByRole = () => {
   }
   if (appStore.isAdminDesa) {
     return new Set([
-      "/infrastructure-data",
       "/housing-development-form",
       "/housing-development-data",
       "/users",
@@ -568,15 +568,6 @@ const resolveNotificationTarget = (item) => {
   if (!item?.link) return "";
   try {
     const url = new URL(item.link, window.location.origin);
-    if (appStore.isAdminDesa && url.pathname === "/infrastructure-data") {
-      const surveyId =
-        url.searchParams.get("surveyId") || url.searchParams.get("id");
-      if (surveyId) {
-        url.pathname = "/infrastructure-form";
-        url.searchParams.delete("surveyId");
-        url.searchParams.set("id", surveyId);
-      }
-    }
     const blockedRoutes = getBlockedRoutesByRole();
     if (blockedRoutes.has(url.pathname)) {
       return "/home";

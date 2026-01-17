@@ -135,6 +135,14 @@
         </v-col>
       </v-row>
 
+      <v-row v-if="rejectedCount > 0" class="mb-4">
+        <v-col cols="12">
+          <v-alert type="warning" variant="tonal">
+            Ada {{ rejectedCount }} data infrastruktur ditolak. Silakan perbaiki data Anda.
+          </v-alert>
+        </v-col>
+      </v-row>
+
       <!-- Filters and Actions -->
       <v-row class="mb-4">
         <v-col cols="12">
@@ -343,6 +351,11 @@
                     />
                     {{ getStatusLabel(resolveItemStatus(item)) }}
                   </v-chip>
+                </template>
+
+                <!-- Review Notes Column -->
+                <template #item.reviewNotes="{ item }">
+                  <div v-html="formatReviewNotes(item.reviewNotes)"></div>
                 </template>
 
                 <!-- Village Name Column -->
@@ -854,27 +867,27 @@
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
                                 {{
-                                  selectedSubmission.listrik
-                                    ?.tercakupSeluruhDesa ||
-                                  selectedSubmission.jaringanListrik
-                                    ?.tercakupSeluruhWilayah
+                                  electricityFullCoverage === null
+                                    ? "N/A"
+                                    : electricityFullCoverage
                                     ? "Ya"
                                     : "Tidak"
                                 }}
                               </v-list-item-subtitle>
                             </v-list-item>
-                            <v-divider class="my-3" />
-                            <v-list-item>
+                            <v-divider
+                              v-if="electricityFullCoverage === false"
+                              class="my-3"
+                            />
+                            <v-list-item v-if="electricityFullCoverage === false">
                               <v-list-item-title class="font-weight-bold mb-2">
                                 Wilayah Belum Terjangkau
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
                                 {{
-                                  selectedSubmission.listrik
-                                    ?.wilayahBelumTerjangkau ||
-                                  selectedSubmission.jaringanListrik
-                                    ?.wilayahBelumTerjangkau ||
-                                  "N/A"
+                                  electricityUncoveredCount === null
+                                    ? "N/A"
+                                    : electricityUncoveredCount
                                 }}
                               </v-list-item-subtitle>
                             </v-list-item>
@@ -1498,6 +1511,28 @@ const tableWrapperRef = ref(null);
 const showDetailDialog = ref(false);
 const showReviewDialog = ref(false);
 const selectedSubmission = ref(null);
+const electricityFullCoverage = computed(() => {
+  const submission = selectedSubmission.value;
+  const primary = submission?.listrik?.tercakupSeluruhDesa;
+  if (typeof primary === "boolean") return primary;
+  const fallback = submission?.jaringanListrik?.tercakupSeluruhWilayah;
+  if (typeof fallback === "boolean") return fallback;
+  if (primary !== null && primary !== undefined) return Boolean(primary);
+  if (fallback !== null && fallback !== undefined) return Boolean(fallback);
+  return null;
+});
+const electricityUncoveredCount = computed(() => {
+  const submission = selectedSubmission.value;
+  const primary = submission?.listrik?.wilayahBelumTerjangkau;
+  if (primary !== null && primary !== undefined && primary !== "") {
+    return primary;
+  }
+  const fallback = submission?.jaringanListrik?.wilayahBelumTerjangkau;
+  if (fallback !== null && fallback !== undefined && fallback !== "") {
+    return fallback;
+  }
+  return null;
+});
 const activeTab = ref("profil");
 const reviewFormValid = ref(false);
 const reviewFormRef = ref(null);
@@ -1580,6 +1615,7 @@ const filters = ref({
 const headers = [
   { title: "ID", key: "id", sortable: false, width: "120px" },
   { title: "Status", key: "status", sortable: false, width: "120px" },
+  { title: "Catatan Verifikator", key: "reviewNotes", sortable: false, width: "220px" },
   {
     title: "Nama Desa/Kelurahan",
     key: "villageName",
@@ -1635,10 +1671,7 @@ const canExportInfrastructure = computed(() =>
 );
 const canHardDelete = computed(() => appStore.isSuperAdmin);
 const canCreateInfrastructure = computed(
-  () =>
-    !appStore.isVerifikator &&
-    !appStore.isAdminKabupaten &&
-    appStore.hasPermission("facility:create")
+  () => appStore.isAdminDesa || appStore.isSuperAdmin
 );
 const resolveStatus = (status, verificationStatus = null) => {
   const normalizedStatus = String(status || "").toLowerCase();
@@ -1690,11 +1723,9 @@ const submissionCounts = computed(() => {
   return counts;
 });
 
-const canReview = computed(
-  () =>
-    appStore.hasAnyRole(["verifikator", "super_admin"]) ||
-    appStore.hasAnyPermission(["facility:verify", "facility:approve"])
-);
+const rejectedCount = computed(() => submissionCounts.value.rejected || 0);
+
+const canReview = computed(() => appStore.isSuperAdmin || appStore.isVerifikator);
 
 const isWithinScope = (item) => {
   if (appStore.isSuperAdmin || appStore.isVerifikator || canReview.value) {
@@ -1727,11 +1758,18 @@ const canApproveStatus = (item) =>
   ["submitted", "under_review"].includes(resolveItemStatus(item));
 const canRejectStatus = (item) =>
   ["submitted", "under_review"].includes(resolveItemStatus(item));
-const canEditSubmission = (item) =>
-  canReviewSubmission(item) &&
-  ["submitted", "under_review"].includes(resolveItemStatus(item)) &&
-  (appStore.hasPermission("facility:update") ||
-    appStore.hasAnyRole(["verifikator", "super_admin"]));
+const isCreator = (item) => {
+  const userId = appStore.user?.id
+  if (!userId) return false
+  return item?.createdBy === userId
+};
+const canEditSubmission = (item) => {
+  const status = resolveItemStatus(item);
+  if (status !== "rejected") return false;
+  if (appStore.isSuperAdmin || appStore.isVerifikator) return true;
+  if (!appStore.isAdminDesa) return false;
+  return isCreator(item);
+};
 
 // Computed property to check if there are active filters
 const hasActiveFilters = computed(() => {
@@ -1909,11 +1947,13 @@ const mapSurveyListItem = (survey) => ({
   id: survey.id,
   status: survey.status,
   verificationStatus: survey.verificationStatus,
+  reviewNotes: survey.reviewNotes || "",
   villageName: survey.village?.name || "N/A",
   population: survey.villageInfo?.populationCount ?? null,
   submittedAt: survey.submittedAt || survey.createdAt || null,
   reviewedAt: survey.verifiedAt || null,
   reviewer: getReviewerInfo(survey.verifier),
+  createdBy: survey.createdBy || survey.creator?.id || null,
   location: {
     province: survey.province,
     regency: survey.regency,
@@ -2772,6 +2812,19 @@ const getStatusLabel = (status) => {
     rejected: "Ditolak",
   };
   return labels[status] || status;
+};
+
+const escapeHtml = (value) =>
+  String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const formatReviewNotes = (notes) => {
+  if (!notes) return "-";
+  return escapeHtml(notes).replace(/\n/g, "<br />");
 };
 
 const formatDate = (dateString) => {

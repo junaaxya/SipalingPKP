@@ -73,7 +73,6 @@ router.beforeEach(async (to, from, next) => {
 
   if (appStore.isAdminDesa) {
     const blockedRoutes = new Set([
-      '/infrastructure-data',
       '/housing-development-form',
       '/housing-development-data',
       '/users'
@@ -104,7 +103,11 @@ router.beforeEach(async (to, from, next) => {
       : [requiresPermission]
 
     if (isEditFlow && editPermissionMap[to.path]) {
-      permissions = editPermissionMap[to.path]
+      if (to.path === '/form' && (appStore.isMasyarakat || appStore.isAdminDesa)) {
+        permissions = ['housing:create']
+      } else {
+        permissions = editPermissionMap[to.path]
+      }
     }
 
     if (appStore.isVerifikator && permissions.some((permission) => String(permission).includes(':create'))) {

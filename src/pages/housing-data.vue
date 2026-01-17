@@ -405,6 +405,15 @@
                         )
                       "
                     ></div>
+                    <v-chip
+                      v-if="showAdminDesaBadge(item)"
+                      color="info"
+                      variant="tonal"
+                      size="x-small"
+                      class="mt-1"
+                    >
+                      Dibuat Admin Desa
+                    </v-chip>
                     <div
                       class="text-caption text-medium-emphasis"
                       v-html="
@@ -696,6 +705,14 @@
                         {{
                           getStatusLabel(resolveItemStatus(selectedSubmission))
                         }}
+                      </v-chip>
+                      <v-chip
+                        v-if="showAdminDesaBadge(selectedSubmission)"
+                        color="info"
+                        variant="tonal"
+                        class="mr-2 mb-2"
+                      >
+                        Dibuat Admin Desa
                       </v-chip>
                       <v-chip
                         v-if="selectedSubmission.reviewNotes"
@@ -3266,10 +3283,40 @@ const isWithinScope = (item) => {
 };
 
 const canReviewSubmission = (item) => canReview.value && isWithinScope(item);
-const canEditSubmission = (item) =>
-  canEdit.value &&
-  isWithinScope(item) &&
-  ["submitted", "under_review"].includes(resolveItemStatus(item));
+const isCreator = (item) => {
+  const userId = appStore.user?.id;
+  if (!userId) return false;
+  return item?.createdBy === userId;
+};
+const showAdminDesaBadge = (item) =>
+  appStore.isAdminDesa && isCreator(item);
+const canEditSubmission = (item) => {
+  if (
+    (appStore.isAdminDesa || appStore.isMasyarakat) &&
+    !isCreator(item)
+  ) {
+    return false;
+  }
+  if (
+    appStore.isAdminKabupaten &&
+    !appStore.isSuperAdmin &&
+    !appStore.isVerifikator
+  ) {
+    return false;
+  }
+  const status = resolveItemStatus(item);
+  if (status === "rejected") {
+    return (
+      isCreator(item) &&
+      (appStore.isAdminDesa || appStore.isMasyarakat)
+    );
+  }
+  return (
+    canEdit.value &&
+    isWithinScope(item) &&
+    ["submitted", "under_review"].includes(status)
+  );
+};
 const canApproveStatus = (item) =>
   ["submitted", "under_review"].includes(resolveItemStatus(item));
 const canRejectStatus = (item) =>

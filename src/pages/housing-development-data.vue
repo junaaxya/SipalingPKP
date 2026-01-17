@@ -379,6 +379,11 @@
                 </v-chip>
               </template>
 
+              <!-- Review Notes Column -->
+              <template #item.reviewNotes="{ item }">
+                <div v-html="formatReviewNotes(item.reviewNotes)"></div>
+              </template>
+
               <!-- Development Name Column -->
               <template #item.developmentName="{ item }">
                 <div>
@@ -1032,6 +1037,7 @@ const filters = ref({
 const headers = [
   { title: 'ID', key: 'id', sortable: false, width: '120px' },
   { title: 'Status', key: 'status', sortable: false, width: '120px' },
+  { title: 'Catatan Verifikator', key: 'reviewNotes', sortable: false, width: '220px' },
   { title: 'Nama Perumahan', key: 'developmentName', sortable: false, width: '250px' },
   { title: 'Jenis Perumahan', key: 'housingType', sortable: false, width: '150px' },
   { title: 'Total Unit', key: 'totalUnits', sortable: false, width: '120px' },
@@ -1115,14 +1121,11 @@ const canExportDevelopment = computed(() =>
   appStore.hasPermission('export_development')
 )
 const canCreateDevelopment = computed(() =>
-  !appStore.isVerifikator && appStore.hasPermission('housing_development:create')
+  appStore.isAdminKabupaten || appStore.isSuperAdmin
 )
 const canHardDelete = computed(() => appStore.isSuperAdmin)
 
-const canReview = computed(() =>
-  appStore.hasAnyRole(['verifikator', 'super_admin'])
-  || appStore.hasAnyPermission(['housing_development:verify', 'housing_development:approve'])
-)
+const canReview = computed(() => appStore.isSuperAdmin || appStore.isVerifikator)
 
 const isWithinScope = (item) => {
   if (appStore.isSuperAdmin || appStore.isVerifikator || canReview.value) {
@@ -1153,13 +1156,18 @@ const isWithinScope = (item) => {
 const canReviewSubmission = (item) => canReview.value && isWithinScope(item)
 const canApproveStatus = (item) => ['submitted', 'under_review'].includes(resolveItemStatus(item))
 const canRejectStatus = (item) => ['submitted', 'under_review'].includes(resolveItemStatus(item))
-const canEditSubmission = (item) =>
-  canReviewSubmission(item)
-  && ['submitted', 'under_review'].includes(resolveItemStatus(item))
-  && (
-    appStore.hasPermission('housing_development:update')
-    || appStore.hasAnyRole(['verifikator', 'super_admin'])
-  )
+const isCreator = (item) => {
+  const userId = appStore.user?.id
+  if (!userId) return false
+  return item?.createdBy === userId
+}
+const canEditSubmission = (item) => {
+  const status = resolveItemStatus(item)
+  if (status !== 'rejected') return false
+  if (appStore.isSuperAdmin || appStore.isVerifikator) return true
+  if (!appStore.isAdminKabupaten) return false
+  return isCreator(item)
+}
 
 // Computed property to check if there are active filters
 const hasActiveFilters = computed(() => {
@@ -1410,9 +1418,11 @@ const mapDevelopmentListItem = (development) => ({
   totalUnits: development.plannedUnitCount ?? null,
   status: development.status,
   verificationStatus: development.verificationStatus,
+  reviewNotes: development.reviewNotes || '',
   submittedAt: development.submittedAt || development.createdAt || null,
   reviewedAt: development.verifiedAt || null,
   reviewer: getReviewerInfo(development.verifier),
+  createdBy: development.createdBy || development.creator?.id || null,
   location: {
     province: development.province,
     regency: development.regency,
@@ -2150,6 +2160,19 @@ const getStatusLabel = (status) => {
     rejected: 'Ditolak'
   }
   return labels[status] || status
+}
+
+const escapeHtml = (value) =>
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
+const formatReviewNotes = (notes) => {
+  if (!notes) return '-'
+  return escapeHtml(notes).replace(/\n/g, '<br />')
 }
 
 const formatDate = (dateString) => {

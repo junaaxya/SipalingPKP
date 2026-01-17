@@ -2680,7 +2680,17 @@ const formData = reactive({
 const editSubmissionId = ref(null);
 const editSubmissionStatus = ref("");
 const editSubmissionNotes = ref("");
+const editSubmissionCreatorId = ref(null);
 const isEditMode = computed(() => Boolean(editSubmissionId.value));
+const isOwnEdit = computed(() => {
+  if (!editSubmissionCreatorId.value || !appStore.user?.id) return false;
+  return String(editSubmissionCreatorId.value) === String(appStore.user.id);
+});
+const isOwnEditableStatus = computed(() =>
+  ["draft", "rejected"].includes(
+    String(editSubmissionStatus.value || "").toLowerCase()
+  )
+);
 const canUploadPhotos = computed(() => true);
 const editSubmissionRouteId = computed(() => {
   const raw = route.query?.edit || route.query?.editId || route.query?.id;
@@ -3718,6 +3728,20 @@ const loadSubmissionForEdit = async (submissionId) => {
     editSubmissionStatus.value = submission.status || "";
     editSubmissionNotes.value =
       submission.reviewNotes || submission.verificationNotes || "";
+    editSubmissionCreatorId.value =
+      submission.createdBy || submission.creator?.id || null;
+    if ((appStore.isAdminDesa || appStore.isMasyarakat) && !isOwnEdit.value) {
+      showPhotoToast(
+        "Anda tidak memiliki akses untuk memperbaiki data ini.",
+        "error"
+      );
+      editSubmissionId.value = null;
+      editSubmissionStatus.value = "";
+      editSubmissionNotes.value = "";
+      editSubmissionCreatorId.value = null;
+      router.push(fallbackPath);
+      return;
+    }
     resetPhotoRemovals();
 
     if (submission.status === "approved") {
@@ -3726,6 +3750,7 @@ const loadSubmissionForEdit = async (submissionId) => {
         "warning"
       );
       editSubmissionId.value = null;
+      editSubmissionCreatorId.value = null;
       router.push(fallbackPath);
       return;
     }
@@ -3738,6 +3763,7 @@ const loadSubmissionForEdit = async (submissionId) => {
     console.error("Failed to load submission for edit:", error);
     showPhotoToast(error.message || "Gagal memuat data pengajuan.", "error");
     editSubmissionId.value = null;
+    editSubmissionCreatorId.value = null;
   }
 };
 
@@ -4405,7 +4431,11 @@ const submitForm = async () => {
           })()
         : updatePayload;
 
-      const result = appStore.isMasyarakat
+      const useOwnUpdate =
+        (appStore.isMasyarakat || appStore.isAdminDesa) &&
+        isOwnEdit.value &&
+        isOwnEditableStatus.value;
+      const result = useOwnUpdate
         ? await housingStore.updateOwnSubmission(
             editSubmissionId.value,
             requestPayload
