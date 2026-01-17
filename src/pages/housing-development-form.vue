@@ -269,6 +269,99 @@
                       />
                     </v-col>
 
+                    <!-- Foto Perumahan -->
+                    <v-col cols="12">
+                      <div class="d-flex align-center justify-space-between mb-2">
+                        <div class="text-subtitle-2">
+                          Foto Perumahan
+                        </div>
+                        <v-chip
+                          size="x-small"
+                          variant="tonal"
+                          color="primary"
+                        >
+                          {{ (housing.existingPhotos?.length || 0) + (housing.photos?.length || 0) }}/{{ MAX_DEV_PHOTOS }}
+                        </v-chip>
+                      </div>
+                      <v-alert
+                        type="info"
+                        variant="tonal"
+                        density="compact"
+                        class="mb-3"
+                      >
+                        Unggah maksimal {{ MAX_DEV_PHOTOS }} foto. Ukuran tiap foto hingga {{ MAX_DEV_PHOTO_SIZE_MB }}MB.
+                      </v-alert>
+                      <div class="d-flex flex-wrap gap-3">
+                        <div
+                          v-for="(photo, photoIndex) in housing.existingPhotos"
+                          :key="`existing-${housing.id}-${photo.id || photoIndex}`"
+                          class="development-photo-card"
+                        >
+                          <v-img
+                            :src="photo.url"
+                            :alt="photo.name"
+                            cover
+                            height="120"
+                            width="160"
+                          />
+                          <div class="text-caption text-truncate mt-1">
+                            {{ photo.name }}
+                          </div>
+                        </div>
+                        <div
+                          v-for="(photo, photoIndex) in housing.photos"
+                          :key="`new-${housing.id}-${photoIndex}`"
+                          class="development-photo-card"
+                        >
+                          <v-img
+                            :src="photo.url"
+                            :alt="photo.name"
+                            cover
+                            height="120"
+                            width="160"
+                          >
+                            <template #placeholder>
+                              <div class="d-flex align-center justify-center fill-height">
+                                <v-progress-circular indeterminate size="20" />
+                              </div>
+                            </template>
+                          </v-img>
+                          <div class="d-flex align-center justify-space-between mt-1">
+                            <div class="text-caption text-truncate">
+                              {{ photo.name }}
+                            </div>
+                            <v-btn
+                              icon="mdi-close"
+                              size="x-small"
+                              variant="text"
+                              color="error"
+                              @click="removeDevelopmentPhoto(housing, photoIndex)"
+                            />
+                          </div>
+                          <div class="text-caption text-medium-emphasis">
+                            {{ formatFileSize(photo.size) }}
+                          </div>
+                        </div>
+                        <v-btn
+                          color="primary"
+                          variant="outlined"
+                          prepend-icon="mdi-camera"
+                          :disabled="!canAddDevelopmentPhotos(housing)"
+                          @click="triggerPhotoInput(housing.id)"
+                        >
+                          Tambah Foto
+                        </v-btn>
+                        <input
+                          :ref="(el) => registerPhotoInput(housing.id, el)"
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          class="file-input-hidden"
+                          @change="(event) => handlePhotoInput(housing, event)"
+                        >
+                      </div>
+                    </v-col>
+
                     <!-- Kebutuhan Jalan Akses -->
                     <v-col cols="12">
                       <v-switch
@@ -528,6 +621,9 @@ const ROAD_MAX = 50000
 const AREA_HINT = `${AREA_MIN}-${AREA_MAX} m2`
 const UNIT_HINT = `${UNIT_MIN}-${UNIT_MAX}`
 const ROAD_HINT = `${ROAD_MIN}-${ROAD_MAX} m`
+const MAX_DEV_PHOTOS = 5
+const MAX_DEV_PHOTO_SIZE_MB = 5
+const MAX_DEV_PHOTO_SIZE = MAX_DEV_PHOTO_SIZE_MB * 1024 * 1024
 
 const rules = {
   areaRange: (value) => {
@@ -598,6 +694,7 @@ const snackbar = ref({
   message: '',
   color: 'success'
 })
+const photoInputRefs = ref({})
 let housingIdCounter = 0
 
 const showSnackbar = (message, color = 'success') => {
@@ -608,6 +705,151 @@ const showSnackbar = (message, color = 'success') => {
   }
 }
 const SUCCESS_REDIRECT_DELAY_MS = 800
+
+const formatFileSize = (bytes) => {
+  const size = Number(bytes)
+  if (!Number.isFinite(size)) return ''
+  if (size < 1024) return `${size} B`
+  const kb = size / 1024
+  if (kb < 1024) return `${kb.toFixed(1)} KB`
+  const mb = kb / 1024
+  return `${mb.toFixed(1)} MB`
+}
+
+const registerPhotoInput = (housingId, el) => {
+  if (!housingId) return
+  if (el) {
+    photoInputRefs.value[housingId] = el
+    return
+  }
+  if (photoInputRefs.value[housingId]) {
+    delete photoInputRefs.value[housingId]
+  }
+}
+
+const triggerPhotoInput = (housingId) => {
+  const input = photoInputRefs.value[housingId]
+  if (input?.click) {
+    input.click()
+  }
+}
+
+const canAddDevelopmentPhotos = (housing) => {
+  const existingCount = (housing?.existingPhotos?.length || 0) + (housing?.photos?.length || 0)
+  return existingCount < MAX_DEV_PHOTOS
+}
+
+const handlePhotoInput = (housing, event) => {
+  if (!housing) return
+  const input = event?.target
+  const files = Array.from(input?.files || [])
+  if (!files.length) {
+    if (input) input.value = ''
+    return
+  }
+
+  const currentCount = (housing.existingPhotos?.length || 0) + (housing.photos?.length || 0)
+  let availableSlots = MAX_DEV_PHOTOS - currentCount
+  if (availableSlots <= 0) {
+    showSnackbar(`Maksimal ${MAX_DEV_PHOTOS} foto per perumahan.`, 'warning')
+    if (input) input.value = ''
+    return
+  }
+
+  if (!Array.isArray(housing.photos)) {
+    housing.photos = []
+  }
+
+  let warning = ''
+  files.forEach((file) => {
+    if (availableSlots <= 0) {
+      if (!warning) {
+        warning = `Maksimal ${MAX_DEV_PHOTOS} foto per perumahan.`
+      }
+      return
+    }
+    if (!file.type || !file.type.startsWith('image/')) {
+      if (!warning) {
+        warning = 'File yang dipilih harus berupa gambar.'
+      }
+      return
+    }
+    if (file.size > MAX_DEV_PHOTO_SIZE) {
+      if (!warning) {
+        warning = `Ukuran ${file.name} melebihi ${MAX_DEV_PHOTO_SIZE_MB}MB.`
+      }
+      return
+    }
+    const url = URL.createObjectURL(file)
+    housing.photos.push({
+      file,
+      url,
+      name: file.name,
+      size: file.size
+    })
+    availableSlots -= 1
+  })
+
+  if (warning) {
+    showSnackbar(warning, 'warning')
+  }
+
+  if (input) input.value = ''
+}
+
+const removeDevelopmentPhoto = (housing, index) => {
+  if (!housing?.photos?.length) return
+  const removed = housing.photos.splice(index, 1)
+  if (removed?.[0]?.url) {
+    URL.revokeObjectURL(removed[0].url)
+  }
+}
+
+const releaseDevelopmentPhotos = (housing) => {
+  if (!housing?.photos?.length) return
+  housing.photos.forEach((photo) => {
+    if (photo?.url) {
+      URL.revokeObjectURL(photo.url)
+    }
+  })
+}
+
+const extractFileName = (value) => {
+  if (!value) return 'Foto'
+  const parts = String(value).split('/')
+  return parts[parts.length - 1] || 'Foto'
+}
+
+const resolvePhotoUrl = (photo) => {
+  if (!photo) return ''
+  const explicitUrl = photo?.fileUrl || photo?.fileURL || photo?.url
+  if (explicitUrl) return explicitUrl
+  const rawPath = photo?.filePath || photo?.file_path
+  if (!rawPath) return ''
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api').replace(/\/$/, '')
+  const normalized = String(rawPath).replace(/^\/+/, '').replace(/^uploads\//, '')
+  const fileBase = baseUrl.endsWith('/api')
+    ? `${baseUrl}/files/`
+    : `${baseUrl}/api/files/`
+  const cleaned = normalized.replace(/^api\/files\//, '').replace(/^files\//, '')
+  return `${fileBase}${cleaned}`
+}
+
+const mapExistingDevelopmentPhotos = (photos) => {
+  if (!Array.isArray(photos)) return []
+  return photos
+    .map((photo, index) => {
+      const url = resolvePhotoUrl(photo)
+      if (!url) return null
+      return {
+        id: photo?.id || null,
+        url,
+        name: extractFileName(url) || `Foto ${index + 1}`,
+        size: Number(photo?.fileSize ?? photo?.file_size ?? 0) || null
+      }
+    })
+    .filter(Boolean)
+}
 
 // Methods
 const addHousing = () => {
@@ -623,6 +865,8 @@ const addHousing = () => {
     panjangJalan: '',
     statusLahan: '',
     locationOverride: false,
+    photos: [],
+    existingPhotos: [],
     location: {
       province: null,
       regency: null,
@@ -635,11 +879,14 @@ const addHousing = () => {
 const removeHousing = (id) => {
   const index = housingDevelopments.value.findIndex(h => h.id === id)
   if (index > -1) {
+    const housing = housingDevelopments.value[index]
+    releaseDevelopmentPhotos(housing)
     housingDevelopments.value.splice(index, 1)
     // Clean up location loading state
     delete locationLoading.value[id]
     delete locationMessages.value[id]
     delete locationMessageTypes.value[id]
+    delete photoInputRefs.value[id]
   }
 }
 
@@ -1127,6 +1374,28 @@ const buildDevelopmentPayload = (development) => {
   }
 }
 
+const appendDevelopmentPhotos = (formPayload, photos) => {
+  if (!formPayload || !Array.isArray(photos)) return
+  photos.forEach((photo) => {
+    if (photo?.file instanceof File) {
+      formPayload.append('developmentPhotos', photo.file, photo.file.name)
+    }
+  })
+}
+
+const buildDevelopmentRequest = (development) => {
+  const payload = buildDevelopmentPayload(development)
+  const photos = development?.photos || []
+  const hasPhotos = photos.some((photo) => photo?.file instanceof File)
+  if (!hasPhotos) {
+    return payload
+  }
+  const formPayload = new FormData()
+  formPayload.append('payload', JSON.stringify(payload))
+  appendDevelopmentPhotos(formPayload, photos)
+  return formPayload
+}
+
 const loadDevelopmentForEdit = async () => {
   if (!editDevelopmentId.value) return
 
@@ -1152,6 +1421,8 @@ const loadDevelopmentForEdit = async () => {
         panjangJalan: development.roadLengthMeters ?? '',
         statusLahan: development.landStatus || '',
         locationOverride: false,
+        photos: [],
+        existingPhotos: mapExistingDevelopmentPhotos(development.photos),
         location: {
           province: development.province || null,
           regency: development.regency || null,
@@ -1249,17 +1520,17 @@ const submitForm = async () => {
     }
 
     if (isEditMode.value) {
-      const payload = buildDevelopmentPayload(targetDevelopments[0])
-      const response = await housingDevelopmentAPI.updateDevelopment(editDevelopmentId.value, payload)
+      const requestPayload = buildDevelopmentRequest(targetDevelopments[0])
+      const response = await housingDevelopmentAPI.updateDevelopment(editDevelopmentId.value, requestPayload)
       if (response?.success === false) {
         throw new Error(response.message || 'Gagal menyimpan perubahan perumahan.')
       }
       showSnackbar('Perubahan perumahan berhasil disimpan!', 'success')
     } else {
-      const payloads = housingDevelopments.value.map(buildDevelopmentPayload)
       let firstResponse = null
-      for (const payload of payloads) {
-        const response = await housingDevelopmentAPI.createDevelopment(payload)
+      for (const housing of housingDevelopments.value) {
+        const requestPayload = buildDevelopmentRequest(housing)
+        const response = await housingDevelopmentAPI.createDevelopment(requestPayload)
         if (response?.success === false) {
           throw new Error(response.message || 'Gagal mengirim data perumahan.')
         }
@@ -1285,6 +1556,9 @@ const submitForm = async () => {
 }
 
 const resetForm = () => {
+  housingDevelopments.value.forEach((housing) => {
+    releaseDevelopmentPhotos(housing)
+  })
   housingDevelopments.value = []
   housingIdCounter = 0
   locationLoading.value = {}
@@ -1315,6 +1589,7 @@ const resetForm = () => {
     villages: false
   }
   isManualLocationSync.value = false
+  photoInputRefs.value = {}
   formRef.value?.resetValidation()
 }
 
@@ -1332,6 +1607,19 @@ onMounted(async () => {
 
 .form-card {
   width: 100%;
+}
+
+.development-photo-card {
+  width: 160px;
+}
+
+.development-photo-card :deep(.v-img) {
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.file-input-hidden {
+  display: none;
 }
 
 @media (max-width: 600px) {

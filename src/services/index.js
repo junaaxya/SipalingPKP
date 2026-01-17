@@ -333,11 +333,19 @@ export const housingDevelopmentAPI = {
   },
 
   createDevelopment: async (payload) => {
-    return await api.post('/housing-development', payload)
+    const isMultipart = typeof FormData !== 'undefined' && payload instanceof FormData
+    const config = isMultipart
+      ? { headers: { 'Content-Type': 'multipart/form-data' } }
+      : undefined
+    return await api.post('/housing-development', payload, config)
   },
 
   updateDevelopment: async (developmentId, payload) => {
-    return await api.put(`/housing-development/${developmentId}`, payload)
+    const isMultipart = typeof FormData !== 'undefined' && payload instanceof FormData
+    const config = isMultipart
+      ? { headers: { 'Content-Type': 'multipart/form-data' } }
+      : undefined
+    return await api.put(`/housing-development/${developmentId}`, payload, config)
   },
 
   verifyDevelopment: async (developmentId, reviewData = {}) => {

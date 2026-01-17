@@ -746,6 +746,38 @@
                       </v-list>
                     </v-col>
                   </v-row>
+                  <v-divider class="my-4" />
+                  <div class="text-subtitle-2 mb-2">
+                    Foto Perumahan
+                  </div>
+                  <v-row v-if="housing.photos && housing.photos.length">
+                    <v-col
+                      v-for="photo in housing.photos"
+                      :key="photo.id || photo.url"
+                      cols="12"
+                      sm="6"
+                      md="4"
+                    >
+                      <v-img
+                        :src="photo.url"
+                        :alt="photo.name"
+                        height="180"
+                        cover
+                        class="detail-photo"
+                      />
+                      <div class="text-caption text-truncate mt-1">
+                        {{ photo.name }}
+                      </div>
+                    </v-col>
+                  </v-row>
+                  <v-alert
+                    v-else
+                    type="info"
+                    variant="tonal"
+                    density="compact"
+                  >
+                    Belum ada foto perumahan yang diunggah.
+                  </v-alert>
                 </v-card-text>
               </v-card>
             </div>
@@ -1321,6 +1353,42 @@ const formatCoordinates = (latitude, longitude) => {
   return `${lat}, ${lng}`
 }
 
+const extractFileName = (value) => {
+  if (!value) return 'Foto'
+  const parts = String(value).split('/')
+  return parts[parts.length - 1] || 'Foto'
+}
+
+const resolvePhotoUrl = (photo) => {
+  if (!photo) return ''
+  const explicitUrl = photo?.fileUrl || photo?.fileURL || photo?.url
+  if (explicitUrl) return explicitUrl
+  const rawPath = photo?.filePath || photo?.file_path
+  if (!rawPath) return ''
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api').replace(/\/$/, '')
+  const normalized = String(rawPath).replace(/^\/+/, '').replace(/^uploads\//, '')
+  const fileBase = baseUrl.endsWith('/api')
+    ? `${baseUrl}/files/`
+    : `${baseUrl}/api/files/`
+  const cleaned = normalized.replace(/^api\/files\//, '').replace(/^files\//, '')
+  return `${fileBase}${cleaned}`
+}
+
+const mapDevelopmentPhotos = (photos) => {
+  if (!Array.isArray(photos)) return []
+  return photos
+    .map((photo, index) => {
+      const url = resolvePhotoUrl(photo)
+      if (!url) return null
+      return {
+        id: photo?.id || null,
+        url,
+        name: extractFileName(url) || `Foto ${index + 1}`
+      }
+    })
+    .filter(Boolean)
+}
+
 const buildHousingDetailItem = (development) => ({
   namaPerumahan: development.developmentName || '',
   namaPengembang: development.developerName || '',
@@ -1330,7 +1398,8 @@ const buildHousingDetailItem = (development) => ({
   jumlahRumahRencana: development.plannedUnitCount ?? null,
   kebutuhanJalanAkses: Boolean(development.hasRoadAccess),
   panjangJalan: development.roadLengthMeters ?? null,
-  statusLahan: development.landStatus || null
+  statusLahan: development.landStatus || null,
+  photos: mapDevelopmentPhotos(development.photos)
 })
 
 const mapDevelopmentListItem = (development) => ({
@@ -2147,6 +2216,11 @@ watch(() => filters.value.status, () => {
 
 .data-table-row--focused {
   background-color: rgba(255, 235, 59, 0.18);
+}
+
+.detail-photo {
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 @media (max-width: 600px) {

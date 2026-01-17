@@ -490,7 +490,7 @@
                   <v-select
                     v-model="formData.pemilik.kriteriaMiskin"
                     label="Kriteria Miskin"
-                    :items="['DTKS', 'SKTM Desa', 'Lainnya']"
+                    :items="kriteriaMiskinOptions"
                     variant="outlined"
                     clearable
                   />
@@ -505,7 +505,10 @@
                     variant="outlined"
                   />
                 </v-col>
-                <v-col v-if="formData.pemilik.kriteriaMiskin" cols="12">
+                <v-col
+                  v-if="isKriteriaMiskinSelected(formData.pemilik.kriteriaMiskin)"
+                  cols="12"
+                >
                   <div class="mt-6">
                     <div
                       class="d-flex flex-column flex-sm-row flex-wrap align-start align-sm-center justify-space-between gap-2 mb-3"
@@ -669,7 +672,7 @@
 
             <!-- Step 3: Data Rumah - Administrasi -->
             <div v-if="currentStep === 3">
-              <h3 class="text-h6 mb-4">3.1 Data Rumah - Administrasi</h3>
+              <h3 class="text-h6 mb-4">3. Data Rumah - Administrasi</h3>
               <v-row>
                 <v-col cols="12" md="6">
                   <v-text-field
@@ -903,7 +906,7 @@
 
             <!-- Step 4: Komposisi Bahan Bangunan -->
             <div v-if="currentStep === 4">
-              <h3 class="text-h6 mb-4">3.2 Aspek Komposisi Bahan Bangunan</h3>
+              <h3 class="text-h6 mb-4">4. Aspek Komposisi Bahan Bangunan</h3>
               <v-row>
                 <v-col cols="12" md="4">
                   <v-select
@@ -1111,7 +1114,7 @@
             <!-- Step 5: Aspek Kesehatan -->
             <div v-if="currentStep === 5">
               <h3 class="text-h6 mb-4">
-                3.3 Aspek Kesehatan (Akses Air Bersih dan Air Minum)
+                5. Aspek Kesehatan (Akses Air Bersih dan Air Minum)
               </h3>
               <v-row>
                 <v-col cols="12" md="6">
@@ -1362,7 +1365,7 @@
 
             <!-- Step 6: Akses Sanitasi -->
             <div v-if="currentStep === 6">
-              <h3 class="text-h6 mb-4">3.4 Akses Sanitasi</h3>
+              <h3 class="text-h6 mb-4">6. Akses Sanitasi</h3>
               <v-row>
                 <v-col cols="12" md="6">
                   <v-select
@@ -1687,7 +1690,7 @@
 
             <!-- Step 7: Akses Persampahan -->
             <div v-if="currentStep === 7">
-              <h3 class="text-h6 mb-4">3.5 Akses Persampahan</h3>
+              <h3 class="text-h6 mb-4">7. Akses Persampahan</h3>
               <v-row>
                 <v-col cols="12" md="6">
                   <v-select
@@ -1909,7 +1912,7 @@
 
             <!-- Step 8: Akses Jalan -->
             <div v-if="currentStep === 8">
-              <h3 class="text-h6 mb-4">3.6 Akses Jalan</h3>
+              <h3 class="text-h6 mb-4">8. Akses Jalan</h3>
               <v-row>
                 <v-col cols="12" md="6">
                   <v-select
@@ -2106,7 +2109,7 @@
 
             <!-- Step 9: Akses Energi -->
             <div v-if="currentStep === 9">
-              <h3 class="text-h6 mb-4">3.7 Akses Energi</h3>
+              <h3 class="text-h6 mb-4">9. Akses Energi</h3>
               <v-row>
                 <v-col cols="12" md="6">
                   <v-select
@@ -2141,22 +2144,27 @@
                   "
                   cols="12"
                 >
-                  <v-text-field
-                    :model-value="formData.energi.kapasitasListrik"
-                    label="Kapasitas Listrik (Watt)"
-                    inputmode="numeric"
-                    pattern="[0-9]*"
-                    :min="ELECTRICITY_MIN"
-                    :max="ELECTRICITY_MAX"
-                    :hint="ELECTRICITY_HINT"
-                    persistent-hint
-                    :rules="[rules.electricityRange]"
+                  <v-select
+                    v-model="formData.energi.kapasitasListrik"
+                    label="Kapasitas Listrik"
+                    :items="kapasitasListrikOptions"
+                    :rules="[rules.required]"
                     variant="outlined"
-                    @update:modelValue="
-                      (val) => {
-                        formData.energi.kapasitasListrik = sanitizeDigits(val);
-                      }
-                    "
+                  />
+                </v-col>
+                <v-col
+                  v-if="
+                    (formData.energi.sumberListrik === 'PLN Sendiri' ||
+                      formData.energi.sumberListrik === 'PLN Menumpang') &&
+                    formData.energi.kapasitasListrik === 'Lainnya'
+                  "
+                  cols="12"
+                >
+                  <v-text-field
+                    v-model="formData.energi.kapasitasListrikLainnya"
+                    label="Kapasitas Listrik Lainnya"
+                    :rules="[rules.required]"
+                    variant="outlined"
                   />
                 </v-col>
               </v-row>
@@ -2315,7 +2323,7 @@
 
             <!-- Step 10: Review and Submit -->
             <div v-if="currentStep === 10">
-              <h3 class="text-h6 mb-4">Tinjau Data</h3>
+              <h3 class="text-h6 mb-4">10. Tinjau Data</h3>
               <v-alert type="info" class="mb-4">
                 {{
                   isEditMode
@@ -2662,6 +2670,7 @@ const formData = reactive({
     sumberListrik: "",
     sumberListrikLainnya: "",
     kapasitasListrik: "",
+    kapasitasListrikLainnya: "",
     photos: [],
   },
   kemiskinan: {
@@ -3058,7 +3067,7 @@ watch(
 watch(
   () => formData.pemilik.kriteriaMiskin,
   (value) => {
-    if (!value) {
+    if (!isKriteriaMiskinSelected(value)) {
       if (formData.kemiskinan.photos.length) {
         releaseSectionPhotos("kemiskinan");
         formData.kemiskinan.photos = [];
@@ -3066,6 +3075,28 @@ watch(
       formData.pemilik.kriteriaMiskinLainnya = "";
     } else if (value !== "Lainnya") {
       formData.pemilik.kriteriaMiskinLainnya = "";
+    }
+  }
+);
+
+watch(
+  () => formData.energi.sumberListrik,
+  (value) => {
+    if (value !== "Lainnya") {
+      formData.energi.sumberListrikLainnya = "";
+    }
+    if (value !== "PLN Sendiri" && value !== "PLN Menumpang") {
+      formData.energi.kapasitasListrik = "";
+      formData.energi.kapasitasListrikLainnya = "";
+    }
+  }
+);
+
+watch(
+  () => formData.energi.kapasitasListrik,
+  (value) => {
+    if (value !== "Lainnya") {
+      formData.energi.kapasitasListrikLainnya = "";
     }
   }
 );
@@ -3348,6 +3379,8 @@ const normalizeLegacyDraft = (draftPemilik) => {
       draftPemilik.kriteriaMiskin = "DTKS";
     } else if (/sktm/i.test(legacy)) {
       draftPemilik.kriteriaMiskin = "SKTM Desa";
+    } else if (/tidak\s+miskin/i.test(legacy)) {
+      draftPemilik.kriteriaMiskin = "Tidak Miskin";
     } else if (legacy) {
       draftPemilik.kriteriaMiskin = "Lainnya";
       draftPemilik.kriteriaMiskinLainnya = legacy;
@@ -3394,7 +3427,36 @@ const toLocationOption = (location) => {
   };
 };
 
+const normalizePlnCapacity = (value) => {
+  if (!value) {
+    return { kapasitasListrik: "", kapasitasListrikLainnya: "" };
+  }
+  const raw = String(value).trim();
+  if (!raw) {
+    return { kapasitasListrik: "", kapasitasListrikLainnya: "" };
+  }
+  const normalizedDigits = raw.replace(/[^\d]/g, "");
+  const matchedOption = kapasitasListrikOptions.find((option) => {
+    if (option === "Lainnya") return false;
+    const optionDigits = option.replace(/[^\d]/g, "");
+    return normalizedDigits && optionDigits === normalizedDigits;
+  });
+  if (matchedOption) {
+    return { kapasitasListrik: matchedOption, kapasitasListrikLainnya: "" };
+  }
+  if (raw.toLowerCase() === "lainnya") {
+    return { kapasitasListrik: "Lainnya", kapasitasListrikLainnya: "" };
+  }
+  return { kapasitasListrik: "Lainnya", kapasitasListrikLainnya: raw };
+};
+
 const resolveKriteriaMiskin = (owner) => {
+  if (owner?.isRegisteredAsPoor === false) {
+    return {
+      kriteriaMiskin: KRITERIA_TIDAK_MISKIN,
+      kriteriaMiskinLainnya: "",
+    };
+  }
   if (!owner?.isRegisteredAsPoor) {
     return { kriteriaMiskin: "", kriteriaMiskinLainnya: "" };
   }
@@ -3532,6 +3594,7 @@ const buildDraftFromSubmission = (submission) => {
   const { rumahPhotos, bangunanPhotos, kemiskinanPhotos } =
     splitHousePhotos(housePhotoList);
   const kriteriaMiskin = resolveKriteriaMiskin(owner);
+  const kapasitasListrik = normalizePlnCapacity(energy.plnCapacity);
 
   return {
     pengisi: {
@@ -3631,7 +3694,8 @@ const buildDraftFromSubmission = (submission) => {
     energi: {
       sumberListrik: mapElectricitySourceFromApi(energy.electricitySource),
       sumberListrikLainnya: energy.electricitySourceOther || "",
-      kapasitasListrik: toText(energy.plnCapacity),
+      kapasitasListrik: kapasitasListrik.kapasitasListrik,
+      kapasitasListrikLainnya: kapasitasListrik.kapasitasListrikLainnya,
       photos: mapExistingPhotos(energy.photos, "Foto Energi"),
     },
     kemiskinan: {
@@ -3978,6 +4042,23 @@ function formatFileSize(bytes) {
 
 // Form options
 const jabatanOptions = ["Perangkat Desa/Kelurahan", "Pemilik Rumah", "Lainnya"];
+const KRITERIA_TIDAK_MISKIN = "Tidak Miskin";
+const kriteriaMiskinOptions = [
+  { title: KRITERIA_TIDAK_MISKIN, value: KRITERIA_TIDAK_MISKIN },
+  { title: "DTKS (Data Terpadu Kesejahteraan Sosial)", value: "DTKS" },
+  { title: "SKTM Desa (Surat Keterangan Tidak Mampu)", value: "SKTM Desa" },
+  { title: "Lainnya", value: "Lainnya" },
+];
+const kapasitasListrikOptions = [
+  "450 VA",
+  "900 VA",
+  "1.300 VA",
+  "2.200 VA",
+  "3.500 VA",
+  "5.500 VA",
+  "6.600 VA",
+  "Lainnya",
+];
 
 const pendidikanOptions = [
   "Tidak Sekolah",
@@ -4028,15 +4109,30 @@ const photoRemovalTargets = {
   jalan: "roadAccess",
   energi: "energyAccess",
 };
+const isKriteriaMiskinSelected = (value) =>
+  Boolean(value && value !== KRITERIA_TIDAK_MISKIN);
 
 const shouldRequirePhotos = (section) => {
   if (isEditMode.value) {
     return false;
   }
   if (section === "kemiskinan") {
-    return Boolean(formData.pemilik.kriteriaMiskin);
+    return isKriteriaMiskinSelected(formData.pemilik.kriteriaMiskin);
   }
   return true;
+};
+
+const resolvePlnCapacity = () => {
+  const isPln =
+    formData.energi.sumberListrik === "PLN Sendiri" ||
+    formData.energi.sumberListrik === "PLN Menumpang";
+  if (!isPln) {
+    return null;
+  }
+  if (formData.energi.kapasitasListrik === "Lainnya") {
+    return formData.energi.kapasitasListrikLainnya?.trim() || null;
+  }
+  return formData.energi.kapasitasListrik || null;
 };
 
 const buildPhotoRemovalPayload = () => {
@@ -4051,6 +4147,12 @@ const buildPhotoRemovalPayload = () => {
 
 const buildUpdatePayload = () => {
   const photoRemovalPayload = buildPhotoRemovalPayload();
+  const isPoor = isKriteriaMiskinSelected(formData.pemilik.kriteriaMiskin);
+  const poorRegistrationAttachment = !isPoor
+    ? null
+    : formData.pemilik.kriteriaMiskin === "Lainnya"
+      ? formData.pemilik.kriteriaMiskinLainnya || "Lainnya"
+      : formData.pemilik.kriteriaMiskin || null;
   return {
   formRespondent: {
     name: formData.pengisi.nama,
@@ -4099,11 +4201,8 @@ const buildUpdatePayload = () => {
       formData.pemilik.bantuanPerumahanStatus === "Ya"
         ? parseInt(formData.pemilik.bantuanPerumahanTahun) || null
         : null,
-    isRegisteredAsPoor: Boolean(formData.pemilik.kriteriaMiskin),
-    poorRegistrationAttachment:
-      formData.pemilik.kriteriaMiskin === "Lainnya"
-        ? formData.pemilik.kriteriaMiskinLainnya || "Lainnya"
-        : formData.pemilik.kriteriaMiskin || null,
+    isRegisteredAsPoor: isPoor,
+    poorRegistrationAttachment,
   },
   houseData: {
     buildingArea: parseFloat(formData.rumah.luasBangunan),
@@ -4199,11 +4298,7 @@ const buildUpdatePayload = () => {
       formData.energi.sumberListrik === "Lainnya"
         ? formData.energi.sumberListrikLainnya
         : null,
-    plnCapacity:
-      formData.energi.sumberListrik === "PLN Sendiri" ||
-      formData.energi.sumberListrik === "PLN Menumpang"
-        ? formData.energi.kapasitasListrik
-        : null,
+    plnCapacity: resolvePlnCapacity(),
   },
   ...(photoRemovalPayload ? { photoRemovals: photoRemovalPayload } : {}),
   };
@@ -4334,6 +4429,13 @@ const submitForm = async () => {
       return;
     }
 
+    const isPoor = isKriteriaMiskinSelected(formData.pemilik.kriteriaMiskin);
+    const poorRegistrationAttachment = !isPoor
+      ? null
+      : formData.pemilik.kriteriaMiskin === "Lainnya"
+        ? formData.pemilik.kriteriaMiskinLainnya || "Lainnya"
+        : formData.pemilik.kriteriaMiskin || null;
+
     // Transform form data to match database schema structure
     const apiFormData = {
       // Form Respondent Data (from pengisi section)
@@ -4396,11 +4498,8 @@ const submitForm = async () => {
           formData.pemilik.bantuanPerumahanStatus === "Ya"
             ? parseInt(formData.pemilik.bantuanPerumahanTahun) || null
             : null,
-        isRegisteredAsPoor: Boolean(formData.pemilik.kriteriaMiskin),
-        poorRegistrationAttachment:
-          formData.pemilik.kriteriaMiskin === "Lainnya"
-            ? formData.pemilik.kriteriaMiskinLainnya || "Lainnya"
-            : formData.pemilik.kriteriaMiskin || null,
+        isRegisteredAsPoor: isPoor,
+        poorRegistrationAttachment,
       },
 
       // House Data
@@ -4518,11 +4617,7 @@ const submitForm = async () => {
           formData.energi.sumberListrik === "Lainnya"
             ? formData.energi.sumberListrikLainnya
             : null,
-        plnCapacity:
-          formData.energi.sumberListrik === "PLN Sendiri" ||
-          formData.energi.sumberListrik === "PLN Menumpang"
-            ? formData.energi.kapasitasListrik
-            : null,
+        plnCapacity: resolvePlnCapacity(),
       },
     };
 

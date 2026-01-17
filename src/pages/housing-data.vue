@@ -1050,36 +1050,6 @@
                       </v-card>
                     </v-col>
                   </v-row>
-                  <v-row v-if="housePhotoGroups.kriteriaPhotos.length > 0" class="mt-4">
-                    <v-col cols="12">
-                      <v-card variant="outlined">
-                        <v-card-title class="text-subtitle-1">
-                          Berkas Kriteria Miskin
-                        </v-card-title>
-                        <v-card-text>
-                          <v-row>
-                            <v-col
-                              v-for="(photo, index) in housePhotoGroups.kriteriaPhotos"
-                              :key="`kriteria-${index}`"
-                              cols="12"
-                              sm="6"
-                              md="4"
-                            >
-                              <v-img
-                                :src="getPhotoUrl(photo)"
-                                height="200"
-                                cover
-                                class="rounded-lg"
-                              />
-                              <div class="text-caption mt-1">
-                                {{ getPhotoLabel(photo, "Berkas Kriteria Miskin") }}
-                              </div>
-                            </v-col>
-                          </v-row>
-                        </v-card-text>
-                      </v-card>
-                    </v-col>
-                  </v-row>
                 </v-container>
               </v-tabs-window-item>
 
@@ -1243,6 +1213,20 @@
                             <v-divider class="my-3" />
                             <v-list-item>
                               <v-list-item-title class="font-weight-bold mb-2">
+                                Koordinat
+                              </v-list-item-title>
+                              <v-list-item-subtitle class="text-h6">
+                                {{
+                                  formatCoordinate(
+                                    selectedSubmission.householdOwner?.latitude,
+                                    selectedSubmission.householdOwner?.longitude
+                                  )
+                                }}
+                              </v-list-item-subtitle>
+                            </v-list-item>
+                            <v-divider class="my-3" />
+                            <v-list-item>
+                              <v-list-item-title class="font-weight-bold mb-2">
                                 Pendidikan
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
@@ -1349,15 +1333,46 @@
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
                                 {{
-                                  selectedSubmission.householdOwner
-                                    ?.isRegisteredAsPoor
-                                    ? selectedSubmission.householdOwner
-                                        .poorRegistrationAttachment || "Ya"
-                                    : "Tidak"
+                                  formatPoorRegistration(
+                                    selectedSubmission.householdOwner
+                                  )
                                 }}
                               </v-list-item-subtitle>
                             </v-list-item>
                           </v-list>
+                        </v-card-text>
+                      </v-card>
+                    </v-col>
+                  </v-row>
+                  <v-row
+                    v-if="housePhotoGroups.kriteriaPhotos.length > 0"
+                    class="mt-4"
+                  >
+                    <v-col cols="12">
+                      <v-card variant="outlined">
+                        <v-card-title class="text-subtitle-1">
+                          Berkas Kriteria Miskin
+                        </v-card-title>
+                        <v-card-text>
+                          <v-row>
+                            <v-col
+                              v-for="(photo, index) in housePhotoGroups.kriteriaPhotos"
+                              :key="`kriteria-${index}`"
+                              cols="12"
+                              sm="6"
+                              md="4"
+                            >
+                              <v-img
+                                :src="getPhotoUrl(photo)"
+                                height="200"
+                                cover
+                                class="rounded-lg"
+                              />
+                              <div class="text-caption mt-1">
+                                {{ getPhotoLabel(photo, "Berkas Kriteria Miskin") }}
+                              </div>
+                            </v-col>
+                          </v-row>
                         </v-card-text>
                       </v-card>
                     </v-col>
@@ -2332,13 +2347,14 @@
                               "
                             >
                               <v-list-item-title class="font-weight-bold mb-2">
-                                Kapasitas Listrik (Watt)
+                                Kapasitas Listrik
                               </v-list-item-title>
                               <v-list-item-subtitle class="text-h6">
                                 {{
-                                  selectedSubmission.energyAccess.plnCapacity
+                                  formatPlnCapacity(
+                                    selectedSubmission.energyAccess?.plnCapacity
+                                  )
                                 }}
-                                Watt
                               </v-list-item-subtitle>
                             </v-list-item>
                           </v-list>
@@ -4696,6 +4712,34 @@ const formatPosition = (value) => {
     lainnya: "Lainnya",
   };
   return mapping[value] || value;
+};
+
+const formatCoordinate = (latitude, longitude) => {
+  const hasLat = latitude !== null && latitude !== undefined && latitude !== "";
+  const hasLng = longitude !== null && longitude !== undefined && longitude !== "";
+  if (!hasLat && !hasLng) return "N/A";
+  return `${hasLat ? latitude : "N/A"}, ${hasLng ? longitude : "N/A"}`;
+};
+
+const formatPoorRegistration = (owner) => {
+  if (!owner) return "N/A";
+  if (owner.isRegisteredAsPoor === true) {
+    return owner.poorRegistrationAttachment || "Ya";
+  }
+  if (owner.isRegisteredAsPoor === false) {
+    return "Tidak Miskin";
+  }
+  return "N/A";
+};
+
+const formatPlnCapacity = (value) => {
+  if (value === null || value === undefined) return "N/A";
+  const raw = String(value).trim();
+  if (!raw) return "N/A";
+  if (/[^0-9.,]/.test(raw)) {
+    return raw;
+  }
+  return `${raw} Watt`;
 };
 
 const formatEducationLevel = (value) => {
