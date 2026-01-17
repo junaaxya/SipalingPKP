@@ -23,6 +23,15 @@
 
         <!-- Form Content -->
         <v-card-text>
+          <v-alert
+            v-if="showEditModeNotice"
+            type="info"
+            variant="tonal"
+            class="mb-4"
+          >
+            Anda sedang dalam mode edit. Perubahan yang disimpan akan memperbarui
+            data perumahan yang ditolak.
+          </v-alert>
           <v-form ref="formRef">
             <!-- Housing Development Cards -->
             <div v-if="housingDevelopments.length === 0">
@@ -304,8 +313,21 @@
                             height="120"
                             width="160"
                           />
-                          <div class="text-caption text-truncate mt-1">
-                            {{ photo.name }}
+                          <div class="d-flex align-center justify-space-between mt-1">
+                            <div class="text-caption text-truncate">
+                              {{ photo.name }}
+                            </div>
+                            <v-btn
+                              v-if="isEditMode"
+                              icon="mdi-close"
+                              size="x-small"
+                              variant="text"
+                              color="error"
+                              @click="removeExistingDevelopmentPhoto(housing, photoIndex)"
+                            />
+                          </div>
+                          <div class="text-caption text-medium-emphasis">
+                            {{ formatFileSize(photo.size) }}
                           </div>
                         </div>
                         <div
@@ -578,6 +600,7 @@ import { ref, watch, computed, onMounted } from 'vue'
 import { definePage } from 'unplugin-vue-router/runtime'
 import { useRouter, useRoute } from 'vue-router'
 import { housingDevelopmentAPI, locationAPI } from '@/services'
+import { useAppStore } from '@/stores/app'
 import { useMapDataStore } from '@/stores/mapData'
 import LocationPickerDialog from '@/components/LocationPickerDialog.vue'
 import { mapReverseGeocodeResponse, resolveLocationId } from '@/utils/locationUtils'
@@ -591,6 +614,7 @@ definePage({
 const router = useRouter()
 const route = useRoute()
 const mapDataStore = useMapDataStore()
+const appStore = useAppStore()
 
 const editDevelopmentId = computed(() => {
   return typeof route.query.edit === 'string' && route.query.edit.trim()
@@ -598,6 +622,9 @@ const editDevelopmentId = computed(() => {
     : null
 })
 const isEditMode = computed(() => Boolean(editDevelopmentId.value))
+const showEditModeNotice = computed(
+  () => isEditMode.value && appStore.isAdminKabupaten
+)
 
 // Form options
 const jenisPerumahanOptions = [
@@ -805,6 +832,20 @@ const removeDevelopmentPhoto = (housing, index) => {
   }
 }
 
+const removeExistingDevelopmentPhoto = (housing, index) => {
+  if (!housing?.existingPhotos?.length) return
+  const target = housing.existingPhotos[index]
+  if (target?.id) {
+    if (!Array.isArray(housing.removedPhotoIds)) {
+      housing.removedPhotoIds = []
+    }
+    if (!housing.removedPhotoIds.includes(target.id)) {
+      housing.removedPhotoIds.push(target.id)
+    }
+  }
+  housing.existingPhotos.splice(index, 1)
+}
+
 const releaseDevelopmentPhotos = (housing) => {
   if (!housing?.photos?.length) return
   housing.photos.forEach((photo) => {
@@ -867,6 +908,7 @@ const addHousing = () => {
     locationOverride: false,
     photos: [],
     existingPhotos: [],
+    removedPhotoIds: [],
     location: {
       province: null,
       regency: null,
@@ -1351,7 +1393,7 @@ const buildDevelopmentPayload = (development) => {
   const coords = parseCoordinates(development.koordinat)
   const location = development.location || {}
   const now = new Date().toISOString()
-  return {
+  const payload = {
     developmentName: development.namaPerumahan,
     developerName: development.namaPengembang || null,
     landArea: parseFloat(development.luasLahan) || 0,
@@ -1372,6 +1414,13 @@ const buildDevelopmentPayload = (development) => {
     status: 'submitted',
     submittedAt: now
   }
+  const removals = Array.isArray(development.removedPhotoIds)
+    ? development.removedPhotoIds.filter(Boolean)
+    : []
+  if (removals.length) {
+    payload.photoRemovals = removals
+  }
+  return payload
 }
 
 const appendDevelopmentPhotos = (formPayload, photos) => {
@@ -1423,6 +1472,7 @@ const loadDevelopmentForEdit = async () => {
         locationOverride: false,
         photos: [],
         existingPhotos: mapExistingDevelopmentPhotos(development.photos),
+        removedPhotoIds: [],
         location: {
           province: development.province || null,
           regency: development.regency || null,
@@ -1558,6 +1608,7 @@ const submitForm = async () => {
 const resetForm = () => {
   housingDevelopments.value.forEach((housing) => {
     releaseDevelopmentPhotos(housing)
+    housing.removedPhotoIds = []
   })
   housingDevelopments.value = []
   housingIdCounter = 0
